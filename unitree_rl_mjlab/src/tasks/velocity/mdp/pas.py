@@ -24,6 +24,7 @@ Two stages, one model/algorithm pair:
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -289,16 +290,48 @@ class PasPPO(PPO):
     return loss_dict
 
 
-class PasOnPolicyRunner(VelocityOnPolicyRunner):
-  """VelocityOnPolicyRunner, but tolerant of ONNX export failing on PasActorModel.
+def _push_checkpoint_to_hf(repo_id: str, checkpoint_path: str) -> None:
+  """Best-effort upload of one checkpoint to a Hugging Face model repo.
 
-  `MLPModel.as_onnx()`'s generic wrapper assumes `get_latent()` is a plain
-  concat-and-normalize (true for a stock actor, false for `PasActorModel`,
-  which encodes/mixes a privileged latent). Until a PAS-specific
-  `as_onnx()`/`as_jit()` override exists (deployment export is a follow-up,
-  not needed for training), skip ONNX export rather than crash training at
-  every `save_interval` checkpoint -- the `.pt` checkpoint (used to resume
-  between Stage 1 and Stage 2) is saved first and is unaffected.
+  No-ops (with a warning) if `huggingface_hub` isn't installed or the upload
+  fails for any reason -- this must never be what breaks a training run.
+  Requires `huggingface_hub.login()` to have already been called (e.g. via
+  an `HF_TOKEN` env var / `huggingface-cli login` in the calling notebook).
+  """
+  try:
+    from huggingface_hub import HfApi
+  except ImportError:
+    print("[WARN] huggingface_hub not installed; skipping checkpoint upload.")
+    return
+  stage = os.environ.get("HF_CHECKPOINT_STAGE", "stage1")
+  filename = os.path.basename(checkpoint_path)
+  try:
+    HfApi().upload_file(
+      path_or_fileobj=checkpoint_path,
+      path_in_repo=f"{stage}/{filename}",
+      repo_id=repo_id,
+      repo_type="model",
+    )
+    print(f"[INFO] Uploaded {filename} to hf.co/{repo_id}/{stage}/")
+  except Exception as exc:  # noqa: BLE001
+    print(f"[WARN] HF checkpoint upload failed, continuing training. ({exc})")
+
+
+class PasOnPolicyRunner(VelocityOnPolicyRunner):
+  """VelocityOnPolicyRunner, plus two training-environment accommodations:
+
+  1. Tolerant of ONNX export failing on `PasActorModel`. `MLPModel.as_onnx()`'s
+     generic wrapper assumes `get_latent()` is a plain concat-and-normalize
+     (true for a stock actor, false here, which encodes/mixes a privileged
+     latent). Until a PAS-specific `as_onnx()`/`as_jit()` override exists
+     (deployment export is a follow-up, not needed for training), skip ONNX
+     export rather than crash training at every `save_interval` checkpoint --
+     the `.pt` checkpoint (used to resume between Stage 1 and Stage 2) is
+     saved first and is unaffected.
+  2. Optionally uploads each `.pt` checkpoint to a Hugging Face model repo,
+     if `HF_CHECKPOINT_REPO` is set in the environment -- for training on
+     ephemeral compute (e.g. a Kaggle session) where local disk doesn't
+     persist across sessions. A no-op otherwise.
   """
 
   def save(self, path: str, infos=None) -> None:
@@ -306,3 +339,6 @@ class PasOnPolicyRunner(VelocityOnPolicyRunner):
       super().save(path, infos)
     except Exception as exc:  # noqa: BLE001
       print(f"[WARN] PasOnPolicyRunner: ONNX export failed, .pt checkpoint still saved. ({exc})")
+    repo_id = os.environ.get("HF_CHECKPOINT_REPO")
+    if repo_id:
+      _push_checkpoint_to_hf(repo_id, path)
