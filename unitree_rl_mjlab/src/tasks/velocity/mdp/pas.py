@@ -338,7 +338,14 @@ class PasOnPolicyRunner(VelocityOnPolicyRunner):
     try:
       super().save(path, infos)
     except Exception as exc:  # noqa: BLE001
-      print(f"[WARN] PasOnPolicyRunner: ONNX export failed, .pt checkpoint still saved. ({exc})")
+      if os.path.exists(path):
+        # super().save() writes the .pt first and only then exports ONNX (see
+        # VelocityOnPolicyRunner.save) -- the file exists, so this is the
+        # documented/expected ONNX-export failure, not a lost checkpoint.
+        print(f"[WARN] PasOnPolicyRunner: ONNX export failed, .pt checkpoint still saved. ({exc})")
+      else:
+        print(f"[ERROR] PasOnPolicyRunner: checkpoint save failed, no .pt written. ({exc})")
+        return
     repo_id = os.environ.get("HF_CHECKPOINT_REPO")
     if repo_id:
       _push_checkpoint_to_hf(repo_id, path)
