@@ -14,6 +14,7 @@ Terrain-adaptive quadruped locomotion for the Unitree Go2, built on a vendored c
 - [`docs/07-pas-implementation.md`](docs/07-pas-implementation.md) — the PAS implementation: two-stage training (`Unitree-Go2-PAS-Oracle` → `Unitree-Go2-PAS-Anneal`), architecture, known gaps.
 - [`a100/`](a100/), [`kaggle/`](kaggle/) — training/eval infra for two compute backends (SLURM A100 cluster, Kaggle free-tier notebooks). Both sync checkpoints through a Hugging Face model repo (`a100/hf_sync.py`) so training survives job resubmission / ephemeral sessions.
 - `unitree_rl_mjlab/` — the vendored simulator/training stack, flattened into this repo (not a submodule) with local modifications layered on top — see `docs/07` for what's project-specific vs. upstream.
+- [`coordination/`](coordination/) — the mailbox for running this repo from two machines at once (SLURM cluster for training, laptop for local eval): heartbeats, inbox notes, eval results. See [`docs/CLAUDE.cluster.md`](docs/CLAUDE.cluster.md) / [`docs/CLAUDE.laptop.md`](docs/CLAUDE.laptop.md) for the role split.
 
 **Layout**: this is the canonical checkout and all job outputs land here — SLURM logs at the top level, training runs and checkpoints under `unitree_rl_mjlab/logs/`, eval artifacts under `unitree_rl_mjlab/eval_ckpts/`. (A second clone at `/dist_home/d_palmani/policyswitching` was removed on 2026-09-05 and its contents merged in.)
 

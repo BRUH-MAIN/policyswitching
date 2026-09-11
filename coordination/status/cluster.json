@@ -1,0 +1,68 @@
+{
+  "last_updated_utc": "2026-09-11T00:00:00Z",
+  "last_commit": null,
+  "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
+  "runs": {
+    "go2_pas_stage1": {
+      "task": "Unitree-Go2-PAS-Oracle",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-pas-saro",
+      "hf_stage": "stage1",
+      "iteration": 39999,
+      "status": "complete",
+      "slurm_job_id": null,
+      "notes": "Stage 1 (oracle) final. Also on cluster local disk at logs/rsl_rl/go2_pas/slurm_stage1/model_39999.pt."
+    },
+    "go2_pas_stage2": {
+      "task": "Unitree-Go2-PAS-Anneal",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-pas-saro",
+      "hf_stage": "stage2",
+      "iteration": 79998,
+      "status": "complete",
+      "slurm_job_id": null,
+      "notes": "Final PAS checkpoint (generalist baseline). anneal_prob is runtime state, NOT stored in the checkpoint -- eval defaults to oracle mode (anneal_prob=1.0) unless --anneal-prob 0.0 is passed explicitly. See findings.md bug #2 before trusting a bare eval number."
+    },
+    "go2_spec_flat": {
+      "task": "Unitree-Go2-Spec-Flat",
+      "source": "local",
+      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_flat/2026-09-06_17-17-15/model_9999.pt",
+      "iteration": 9999,
+      "sha256": null,
+      "status": "complete",
+      "slurm_job_id": "11852",
+      "notes": "Not on HF -- specialist checkpoints only exist on cluster local disk (findings.md bug #4). sha256 not yet computed; cluster_update_status.sh fills this in when next run for this experiment."
+    },
+    "go2_spec_stairs": {
+      "task": "Unitree-Go2-Spec-Stairs",
+      "source": "local",
+      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs/2026-09-05_22-37-43/model_9999.pt",
+      "iteration": 9999,
+      "sha256": null,
+      "status": "complete",
+      "slurm_job_id": "11849",
+      "notes": "Not on HF -- local disk only, see go2_spec_flat notes."
+    },
+    "go2_spec_rough": {
+      "task": "Unitree-Go2-Spec-Rough",
+      "source": "local",
+      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_rough/2026-09-06_12-07-49/model_9999.pt",
+      "iteration": 9999,
+      "sha256": null,
+      "status": "complete",
+      "slurm_job_id": "11851",
+      "notes": "Not on HF -- local disk only, see go2_spec_flat notes."
+    },
+    "go2_spec_gaps": {
+      "task": "Unitree-Go2-Spec-Gaps",
+      "source": "local",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "in_progress",
+      "slurm_job_id": "11914",
+      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out."
+    }
+  },
+  "notes": "Seeded from findings.md as of 2026-09-11 (job log + specialist table) so this heartbeat isn't empty on first use. Cluster session: keep this current via coordination/scripts/cluster_update_status.sh rather than hand-editing."
+}
