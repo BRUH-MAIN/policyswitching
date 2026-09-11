@@ -43,6 +43,13 @@ environment's `site-packages/mjlab`.
   visualize in MuJoCo) → `Sim2Real` (export `policy.onnx`, deploy via
   `deploy/robots/<robot>`).
 
+**Note**: the cheat sheet below uses G1 task IDs since they're mjlab's own
+stock examples, but this project's actual active work is Go2-only — see
+[07-pas-implementation.md](07-pas-implementation.md) and the project
+`README.md` for what's really running. Swap `Unitree-G1-Flat` for
+`Unitree-Go2-PAS-Oracle` / `Unitree-Go2-PAS-Anneal` / `Unitree-Go2-Rough` /
+`Unitree-Go2-Flat` as appropriate.
+
 ## Quick command cheat sheet
 
 ```bash

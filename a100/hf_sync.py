@@ -84,6 +84,13 @@ def main() -> None:
     "--stage1-local-run-name",
     help="Only used for --stage stage2: local dir to download stage1's checkpoint into on stage2's first entry.",
   )
+  parser.add_argument(
+    "--from-scratch",
+    action="store_true",
+    help="Ignore any existing HF checkpoint for THIS stage and restart its budget from 0. "
+    "Stage 2 still bootstraps from stage 1's final checkpoint either way -- that's the "
+    "curriculum, not resumable progress -- so this only discards stage 2's own progress.",
+  )
   args = parser.parse_args()
 
   if args.stage == "stage2" and not args.stage1_local_run_name:
@@ -106,9 +113,10 @@ def main() -> None:
 
   if args.stage == "stage1":
     baseline = 0
-    found = latest_checkpoint(api, hf_repo_id, "stage1")
+    found = None if args.from_scratch else latest_checkpoint(api, hf_repo_id, "stage1")
     if found is None:
-      log("No existing 'stage1' checkpoint on HF -- starting fresh.")
+      log("--from-scratch: ignoring any existing 'stage1' checkpoint." if args.from_scratch
+          else "No existing 'stage1' checkpoint on HF -- starting fresh.")
       elapsed = 0
     else:
       iteration, remote_path = found
@@ -127,7 +135,7 @@ def main() -> None:
       sys.exit(1)
     baseline = stage1_found[0]
 
-    found = latest_checkpoint(api, hf_repo_id, "stage2")
+    found = None if args.from_scratch else latest_checkpoint(api, hf_repo_id, "stage2")
     if found is None:
       # First entry into stage2: resume from stage1's final checkpoint.
       iteration, remote_path = stage1_found

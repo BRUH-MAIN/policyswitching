@@ -46,10 +46,16 @@ pip install -e .
 declared in `setup.py`. Because it's `-e` (editable) on package `src`, edits
 to `src/tasks/...` take effect immediately without reinstalling.
 
-Note the currently-open project (`policyswitching`) has **not** run this
-install yet — `pip show mjlab` and `import mjlab` both fail in the ambient
-Python. Run the steps above (in whatever env you intend to use) before trying
-to run any of the scripts in this repo.
+**Update (2026-09-01)**: this install has since been run, in an isolated venv
+at `/dist_home/d_palmani/.venvs/policyswitching-pas/` bootstrapped from
+`/dist_home/common-apps/conda/bin/python3` rather than the shared conda base
+env — deliberately, to avoid pin conflicts with other projects' dependencies
+sharing this cluster (e.g. a `codeswitching` project's own torch/transformers
+pins). Go2 PAS training has been running on the `asaicomputenode02`/`03`
+SLURM cluster via `a100/train_pas_slurm.sh` since 2026-08-28; see
+[07-pas-implementation.md](07-pas-implementation.md) and the project's
+`README.md` for current status. The steps above remain the reference for
+setting up a *new* environment from scratch.
 
 ## mjlab's own install paths (useful if working outside this repo, e.g. to prototype a standalone task)
 

@@ -177,6 +177,109 @@ def unitree_go2_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   return cfg
 
 
+def _unitree_go2_specialist_env_cfg(
+  sub_terrain_names: tuple[str, ...],
+  play: bool = False,
+  proportions: dict[str, float] | None = None,
+) -> ManagerBasedRlEnvCfg:
+  """Base config for a single-terrain specialist policy.
+
+  Every specialist derives from the *rough* config and differs ONLY in which
+  sub-terrains are active, which matters for a specific downstream reason: the
+  switching module blends the frozen specialists, so they must all share one
+  observation space and one network shape.
+
+  That rules out building the flat specialist on `unitree_go2_flat_env_cfg()`,
+  which switches to a `"plane"` terrain and then deletes the `height_scan`
+  terms from both the actor and critic observation groups (there is no terrain
+  to scan). A specialist trained that way would have a different input width
+  than the other three and could not be blended with them. Using a
+  flat-only *generator* instead keeps the terrain scan present and the
+  observation space identical across all four.
+
+  Rewards are deliberately left identical across specialists too -- per-terrain
+  reward shaping (e.g. extra foot clearance on gaps, stricter orientation
+  penalty on slopes) is a later tuning step, and keeping them uniform for now
+  keeps the specialist-vs-generalist comparison fair.
+
+  `proportions` overrides the default equal-weight split across
+  `sub_terrain_names` -- e.g. `{"stepping_stones": 0.2, "flat": 0.4,
+  "random_rough": 0.4}` for a specialist that needs an easy on-ramp during
+  training but is still evaluated/deployed as "the gaps policy" (see the
+  Gaps specialist below: 100% stepping_stones plateaued in two independent
+  training runs -- reward flat, ~10-step episodes, no improvement over
+  thousands of iterations each time -- almost certainly because a cold-start
+  policy has no easy terrain to learn basic locomotion on before it also has
+  to solve gap-crossing. This mirrors PAS's own gap terrain, which mixes
+  stepping_stones at only 15% into 85% easier ground for the same reason.)
+  """
+  cfg = unitree_go2_rough_env_cfg(play=play)
+
+  assert cfg.scene.terrain is not None
+  assert cfg.scene.terrain.terrain_generator is not None
+
+  # Sub-terrain definitions come from the stock presets; ROUGH_TERRAINS_CFG is
+  # the default set, with ALL_TERRAINS_CFG covering the ones it omits (gaps).
+  available = dict(ALL_TERRAINS_CFG.sub_terrains)
+  available.update(ROUGH_TERRAINS_CFG.sub_terrains)
+
+  missing = [n for n in sub_terrain_names if n not in available]
+  if missing:
+    raise KeyError(
+      f"Unknown sub-terrain(s) {missing}. Available: {sorted(available)}"
+    )
+  if proportions is not None and set(proportions) != set(sub_terrain_names):
+    raise ValueError(
+      f"proportions keys {sorted(proportions)} must exactly match "
+      f"sub_terrain_names {sorted(sub_terrain_names)}"
+    )
+
+  # Equal weight by default; proportions are relative weights, so they need
+  # not sum to 1.0 either way.
+  sub_terrains = {
+    name: replace(available[name], proportion=(proportions or {}).get(name, 1.0))
+    for name in sub_terrain_names
+  }
+  cfg.scene.terrain.terrain_generator = replace(
+    cfg.scene.terrain.terrain_generator, sub_terrains=sub_terrains
+  )
+  return cfg
+
+
+def unitree_go2_spec_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Flat specialist. Flat-only generator (NOT a plane) so height_scan survives."""
+  return _unitree_go2_specialist_env_cfg(("flat",), play=play)
+
+
+def unitree_go2_spec_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Rough specialist: continuous uneven ground (noise + waves), no discrete steps."""
+  return _unitree_go2_specialist_env_cfg(("random_rough", "wave_terrain"), play=play)
+
+
+def unitree_go2_spec_stairs_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs specialist: ascending and descending pyramid stairs."""
+  return _unitree_go2_specialist_env_cfg(
+    ("pyramid_stairs", "pyramid_stairs_inv"), play=play
+  )
+
+
+def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Gap specialist: stepping stones, blended with easier terrain during training.
+
+  100% stepping_stones plateaued in two independent training runs (see
+  `_unitree_go2_specialist_env_cfg`'s docstring) -- blending in flat/rough
+  gives the policy somewhere to learn basic locomotion before it also has to
+  solve gap-crossing, matching PAS's own ~15% gap-terrain mix. The terrain
+  curriculum's difficulty-by-row scaling still applies within each
+  sub-terrain, so this isn't purely an easier task, just a less narrow one.
+  """
+  return _unitree_go2_specialist_env_cfg(
+    ("stepping_stones", "flat", "random_rough"),
+    play=play,
+    proportions={"stepping_stones": 0.2, "flat": 0.4, "random_rough": 0.4},
+  )
+
+
 def unitree_go2_pas_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Go2 config for replicating SARO's PAS low-level policy (arXiv:2407.16412).
 

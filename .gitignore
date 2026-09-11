@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# SLURM job logs (this project)
+go2-*.out
+go2-*.err
+
+# Checkpoint/eval artifacts (this project) -- large binaries, no diff value, and
+# PAS checkpoints are already mirrored to HF (see findings.md); specialists and
+# local eval downloads are reproducible from training runs, not source.
+unitree_rl_mjlab/eval_ckpts/
+unitree_rl_mjlab/stage1/
+unitree_rl_mjlab/stage2/
