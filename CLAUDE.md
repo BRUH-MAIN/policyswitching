@@ -14,6 +14,14 @@ Read [`README.md`](README.md) first for project orientation, [`objective.md`](ob
 - **Numeric comparisons across policies go through `scripts/eval_checkpoint.py` under pinned conditions** — terrain curriculum off, `--terrain`/`--difficulty` explicit, command range pinned (all the default). Its `--keep-curricula` mode reproduces the training config verbatim and is only for checking a checkpoint against its own training log: with the terrain curriculum live, difficulty adapts to the policy under test mid-rollout, so cross-policy numbers are meaningless. For the full policy × terrain × difficulty table use `a100/eval_matrix.py` (`sbatch a100/eval_matrix_slurm.sh`). `scripts/play.py` (play config, near-infinite episodes) is for qualitative/video inspection only.
 - **Never compare `Metrics/twist/error_vel_xy` across policies.** It accumulates over each episode, so it scales with episode length — a policy that falls instantly scores near zero. Use `eval_checkpoint.py`'s per-step linear velocity error.
 
+## Two-machine coordination (cluster + laptop)
+
+This repo is worked on from two machines at once: the SLURM GPU cluster (training) and this laptop, `romen` (local evaluation — 22GB RAM / 8GB VRAM RTX 5060 Laptop GPU, with the `unitree_rl_mjlab` conda env already set up for it). **Before doing anything else this session, read the role file that matches where you're running**: [`docs/CLAUDE.cluster.md`](docs/CLAUDE.cluster.md) on the cluster, [`docs/CLAUDE.laptop.md`](docs/CLAUDE.laptop.md) here. Run `hostname` if you're not sure which.
+
+- `coordination/` is the mailbox: `coordination/status/{cluster,laptop}.json` are heartbeats, `coordination/inbox/to-{cluster,laptop}.md` are "please do X next" notes, `coordination/log/` is dated append-only notes, `coordination/results/` holds eval logs + analysis write-ups. `coordination/scripts/cluster_update_status.sh` and `coordination/scripts/laptop_pull_and_eval.sh` are the two sides' main entry points — see the role files for how each is actually invoked (PAS checkpoints pull straight from HF; specialist checkpoints have no HF copy, findings.md bug #4, and rsync over SSH from the cluster instead).
+- Git is the durable record. Cross-session messaging (`ListAgents`/`SendMessage`, or `/list-agents` + naming sessions via `/rename`) is a same-content nudge on top of it, not a substitute — it requires both sessions signed in via claude.ai with Remote Control on, doesn't carry files, and isn't guaranteed delivered. Write to `coordination/` and commit first; message the other session by name after, if reachable.
+- Never commit checkpoint weights — `.claude/settings.local.json` and the usual checkpoint dirs are gitignored per-machine.
+
 ## Roadmap
 
 The active phased plan (terrain-specialist policies, person-following-based anticipatory switching, evaluation harness) lives at `~/.claude/plans/the-idea-in-one-iridescent-wilkes.md`.

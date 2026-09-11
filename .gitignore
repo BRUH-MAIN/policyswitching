@@ -227,3 +227,7 @@ go2-*.err
 unitree_rl_mjlab/eval_ckpts/
 unitree_rl_mjlab/stage1/
 unitree_rl_mjlab/stage2/
+
+# Per-machine Claude Code overrides (model pin for cluster vs. laptop role,
+# see coordination/settings-examples/) -- not meant to be shared via git.
+.claude/settings.local.json
