@@ -1,6 +1,7 @@
 """Local-disk checkpoint resume for specialist training.
 
-Replaces hf_sync_specialist.py for the specialist tasks. That script assumed
+Replaced hf_sync_specialist.py (since deleted; see git history) for the
+specialist tasks. That script assumed
 checkpoints get pushed to Hugging Face the same way PAS's do -- but PAS's
 upload happens in `PasOnPolicyRunner.save()` (see pas.py), an override that
 only exists on that subclass. Specialists register with the STOCK
@@ -21,7 +22,7 @@ all four specialists' logs/rsl_rl/<experiment>/<run>/ directories survived
 job boundaries intact) -- it's the SLURM walltime that's the constraint, not
 storage -- so this resumes directly from there instead of relying on HF.
 
-Same iteration-accounting logic as hf_sync.py/hf_sync_specialist.py:
+Same iteration-accounting logic as hf_sync.py:
 `OnPolicyRunner.learn(num_learning_iterations=N)` treats N as relative to
 the resume point, not absolute, so this computes and emits
 `--agent.max-iterations <absolute_budget - already_done>`.

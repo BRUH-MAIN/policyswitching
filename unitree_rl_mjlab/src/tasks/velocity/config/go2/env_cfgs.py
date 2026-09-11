@@ -25,6 +25,92 @@ from src.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
 TerrainType = Literal["rough", "obstacles"]
 
+# The project's four geometry-based terrain classes (see objective.md), as mjlab
+# sub-terrain names. Single source of truth for the specialists, the matched
+# generalist and the pinned eval terrains, so "stairs" is the same geometry in
+# training and in every cell of the cross-terrain eval matrix.
+TERRAIN_CLASSES: dict[str, tuple[str, ...]] = {
+  "flat": ("flat",),
+  "rough": ("random_rough", "wave_terrain"),
+  "stairs": ("pyramid_stairs", "pyramid_stairs_inv"),
+  "gaps": ("stepping_stones",),
+}
+
+# --terrain choices for scripts/eval_checkpoint.py: the task's own mix, one
+# class, or all four classes at equal weight.
+EVAL_TERRAINS: tuple[str, ...] = ("native", *TERRAIN_CLASSES, "mixed")
+
+
+def _available_sub_terrains() -> dict:
+  # ROUGH_TERRAINS_CFG is the default set, with ALL_TERRAINS_CFG covering the
+  # ones it omits (gaps). Where both define a sub-terrain, ROUGH's wins.
+  available = dict(ALL_TERRAINS_CFG.sub_terrains)
+  available.update(ROUGH_TERRAINS_CFG.sub_terrains)
+  return available
+
+
+def _class_weighted_proportions(class_weights: dict[str, float]) -> dict[str, float]:
+  """Sub-terrain proportions giving each terrain class its weight, split evenly
+  across that class's sub-terrains (so rough's two sub-terrains don't count
+  double against flat's one)."""
+  return {
+    name: weight / len(TERRAIN_CLASSES[cls])
+    for cls, weight in class_weights.items()
+    for name in TERRAIN_CLASSES[cls]
+  }
+
+
+def apply_eval_conditions(
+  cfg: ManagerBasedRlEnvCfg,
+  terrain: str = "native",
+  difficulty: float | None = None,
+  seed: int | None = None,
+) -> None:
+  """Pin the terrain for cross-policy numeric eval (scripts/eval_checkpoint.py).
+
+  Always removes the `terrain_levels` curriculum. Left in, it promotes an env
+  to harder terrain whenever it walks far enough and demotes it otherwise,
+  during the eval rollout itself -- so a better policy is pushed onto harder
+  ground until it too starts failing, and survival ends up measuring distance
+  to the curriculum's equilibrium instead of capability.
+
+  - `terrain`: "native" keeps the task's own sub-terrain mix; a TERRAIN_CLASSES
+    key swaps in exactly that class; "mixed" uses all four at equal weight.
+  - `difficulty`: None spreads envs uniformly over every difficulty row; a
+    float in [0, 1] collapses the grid to a single row generated at exactly
+    that difficulty.
+  """
+  if terrain not in EVAL_TERRAINS:
+    raise ValueError(f"terrain must be one of {EVAL_TERRAINS}, got {terrain!r}")
+  assert cfg.scene.terrain is not None
+  assert cfg.scene.terrain.terrain_generator is not None
+  gen = cfg.scene.terrain.terrain_generator
+
+  if terrain != "native":
+    classes = TERRAIN_CLASSES if terrain == "mixed" else (terrain,)
+    proportions = _class_weighted_proportions({c: 1.0 for c in classes})
+    available = _available_sub_terrains()
+    gen = replace(
+      gen,
+      sub_terrains={
+        name: replace(available[name], proportion=p) for name, p in proportions.items()
+      },
+    )
+
+  if difficulty is None:
+    cfg.scene.terrain.max_init_terrain_level = None  # uniform over all rows
+  else:
+    if not 0.0 <= difficulty <= 1.0:
+      raise ValueError(f"difficulty must be in [0, 1], got {difficulty}")
+    gen = replace(gen, num_rows=1, difficulty_range=(difficulty, difficulty))
+
+  # curriculum=True here is the generator's column-per-type layout (proportions
+  # become exact column counts rather than per-patch samples), not the
+  # terrain_levels curriculum removed below.
+  gen = replace(gen, curriculum=True, seed=seed if seed is not None else gen.seed)
+  cfg.scene.terrain.terrain_generator = gen
+  cfg.curriculum.pop("terrain_levels", None)
+
 
 def unitree_go2_rough_env_cfg(
   play: bool = False,
@@ -218,10 +304,7 @@ def _unitree_go2_specialist_env_cfg(
   assert cfg.scene.terrain is not None
   assert cfg.scene.terrain.terrain_generator is not None
 
-  # Sub-terrain definitions come from the stock presets; ROUGH_TERRAINS_CFG is
-  # the default set, with ALL_TERRAINS_CFG covering the ones it omits (gaps).
-  available = dict(ALL_TERRAINS_CFG.sub_terrains)
-  available.update(ROUGH_TERRAINS_CFG.sub_terrains)
+  available = _available_sub_terrains()
 
   missing = [n for n in sub_terrain_names if n not in available]
   if missing:
@@ -248,19 +331,17 @@ def _unitree_go2_specialist_env_cfg(
 
 def unitree_go2_spec_flat_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Flat specialist. Flat-only generator (NOT a plane) so height_scan survives."""
-  return _unitree_go2_specialist_env_cfg(("flat",), play=play)
+  return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["flat"], play=play)
 
 
 def unitree_go2_spec_rough_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Rough specialist: continuous uneven ground (noise + waves), no discrete steps."""
-  return _unitree_go2_specialist_env_cfg(("random_rough", "wave_terrain"), play=play)
+  return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["rough"], play=play)
 
 
 def unitree_go2_spec_stairs_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Stairs specialist: ascending and descending pyramid stairs."""
-  return _unitree_go2_specialist_env_cfg(
-    ("pyramid_stairs", "pyramid_stairs_inv"), play=play
-  )
+  return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
 
 
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
@@ -277,6 +358,37 @@ def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
     ("stepping_stones", "flat", "random_rough"),
     play=play,
     proportions={"stepping_stones": 0.2, "flat": 0.4, "random_rough": 0.4},
+  )
+
+
+def unitree_go2_spec_gaps_warm_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Gap specialist, second design: 100% stepping_stones, warm-started.
+
+  The blended Gaps task above trains 80% on flat/rough -- nearly the union of
+  the Flat and Rough specialists' terrain -- so the result is barely a gap
+  specialist and hands the gating network a near-redundant expert. The plateau
+  it was fixing was a cold-start problem, which is what initialization is for:
+  this task keeps the terrain 100% gaps and is meant to start from an existing
+  specialist's weights (a100/warm_start_ckpt.py, via INIT_FROM in
+  a100/train_specialist_slurm.sh) rather than from random init.
+  """
+  return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["gaps"], play=play)
+
+
+def unitree_go2_generalist_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Sensing-matched generalist baseline (arm 1 of the switching comparison).
+
+  One stock-PPO policy over the union of the four specialist terrain classes,
+  each class at equal weight. Built on the same base as the specialists, so it
+  has the identical observation space (raw height_scan included), rewards and
+  runner config -- the only thing that differs from a specialist is terrain
+  breadth. PAS is not a clean arm 1: its deployable estimator-only mode has no
+  height_scan at all, and it adds reward terms (energy, joint_vel_l2) and ~8x
+  the training compute that no specialist got.
+  """
+  proportions = _class_weighted_proportions({c: 1.0 for c in TERRAIN_CLASSES})
+  return _unitree_go2_specialist_env_cfg(
+    tuple(proportions), play=play, proportions=proportions
   )
 
 

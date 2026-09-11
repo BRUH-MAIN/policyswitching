@@ -9,6 +9,8 @@ from mjlab.rl.exporter_utils import (
 )
 from mjlab.rl.runner import MjlabOnPolicyRunner
 
+from .hf_upload import push_checkpoint_to_hf
+
 
 class VelocityOnPolicyRunner(MjlabOnPolicyRunner):
   env: RslRlVecEnvWrapper
@@ -26,3 +28,19 @@ class VelocityOnPolicyRunner(MjlabOnPolicyRunner):
     attach_metadata_to_onnx(onnx_path, metadata)
     if self.logger.logger_type in ["wandb"]:
       wandb.save(policy_path + filename, base_path=os.path.dirname(policy_path))
+
+
+class HfSyncVelocityOnPolicyRunner(VelocityOnPolicyRunner):
+  """VelocityOnPolicyRunner that also pushes every checkpoint to Hugging Face
+  when HF_CHECKPOINT_REPO is set (path prefix: HF_CHECKPOINT_STAGE).
+
+  The stock runner never uploads, which is why the terrain specialists had no
+  off-cluster copy at all (findings.md, bug #4). Unset, this behaves exactly
+  like VelocityOnPolicyRunner.
+  """
+
+  def save(self, path: str, infos=None):
+    super().save(path, infos)
+    repo_id = os.environ.get("HF_CHECKPOINT_REPO")
+    if repo_id:
+      push_checkpoint_to_hf(repo_id, path)

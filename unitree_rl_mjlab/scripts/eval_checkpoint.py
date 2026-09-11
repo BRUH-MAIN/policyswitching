@@ -1,29 +1,50 @@
-"""Headless, deterministic numeric eval for a PAS checkpoint.
+"""Headless numeric eval of a locomotion checkpoint under pinned conditions.
 
-Unlike play.py (which uses the "play" env config with effectively-infinite
-episode length, no curriculum, and a live viewer loop that never exits on
-its own), this reuses the *training* env config -- same finite episode
-length, curriculum, and domain randomization the checkpoint was actually
-trained/logged under -- so the printed stats are directly comparable to a
-training-log "Learning iteration" block. No viewer, no video: it runs N
-steps and prints aggregate stats, then exits.
+Built for comparing DIFFERENT policies against each other (the specialist
+cross-terrain matrix, generalist vs. switching), which is why it does not just
+reuse the training env config verbatim:
 
-Reports two groups of metrics:
+  1. The terrain curriculum is off. With it on, `terrain_levels_vel` promotes
+     an env to harder terrain whenever it walks far enough and demotes it
+     otherwise, during the eval rollout -- a better policy gets pushed onto
+     harder ground until it too starts failing, so survival measures distance
+     to the curriculum's equilibrium rather than capability. Terrain class and
+     difficulty are set explicitly with --terrain / --difficulty instead (see
+     `apply_eval_conditions` in env_cfgs.py).
+  2. The command range is pinned (--lin-vel-x etc., default: the final stage
+     of training's `command_vel` curriculum) and that step-keyed curriculum is
+     removed. Checkpoints restore `common_step_counter` on load, so the old
+     behaviour did land on the final stage -- but only implicitly; this makes
+     the commanded range an explicit, printed eval condition.
+  3. Velocity error is reported per step. The training log's
+     `Metrics/twist/error_vel_xy` accumulates over each episode
+     (mjlab velocity_command._update_metrics), so it grows with episode length
+     and is not comparable across policies that survive for different lengths.
+
+Pass --keep-curricula for the training config verbatim, e.g. to sanity-check
+a number against the checkpoint's own training log.
+
+Reports three groups of metrics:
 
   1. Survival -- episode completions, timeout vs. early-failure split, mean
-     episode length/return. These answer "does it stay upright?"
-  2. Locomotion -- commanded vs. achieved base velocity, tracking error, and
-     distance actually travelled. These answer "does it *go anywhere*?"
+     episode length/return. "Does it stay upright?"
+  2. Locomotion -- commanded vs. achieved base velocity, per-step tracking
+     error, distance travelled, stalled-while-commanded %. "Does it go
+     anywhere?" Group 2 exists because group 1 cannot distinguish walking from
+     bracing: stage1_model_31800.pt scored 80.5% survival / +39.5 return while
+     translating a measured zero metres over an 8-second rollout. Always read
+     the two groups together.
+  3. Smoothness -- per-step action rate and actuator-force rate over the whole
+     rollout. The whole-episode baseline that transition-boundary jerk
+     (objective.md) gets normalised against.
 
-Group 2 exists because group 1 cannot distinguish a policy that walks from
-one that braces in place and never falls: stage1_model_31800.pt scored 80.5%
-survival / +39.5 return while translating a measured zero metres over an
-8-second rollout. Bracing in place actively maximises the energy,
-joint_vel_l2 and action_rate_l2 penalty terms, so a degenerate policy can
-look healthy on survival alone. Always read the two groups together.
+--json-out writes every number plus the eval conditions, for aggregation by
+a100/summarize_eval_matrix.py.
 """
 
 import argparse
+import json
+import math
 import os
 from dataclasses import asdict
 
@@ -31,11 +52,19 @@ import torch
 
 os.environ.setdefault("MUJOCO_GL", "egl")
 
-import src.tasks  # noqa: F401  (registers Unitree-Go2-PAS-* tasks)
+import src.tasks  # noqa: F401  (registers Unitree-Go2-* tasks)
 from mjlab.envs import ManagerBasedRlEnv
 from mjlab.rl import RslRlVecEnvWrapper
 from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 from mjlab.utils.torch import configure_torch_backends
+
+from src.tasks.velocity.config.go2.env_cfgs import EVAL_TERRAINS, apply_eval_conditions
+
+# Final stage of the `command_vel` curriculum in velocity_env_cfg.py: the range
+# every policy in this repo was trained to convergence on.
+TRAIN_FINAL_LIN_VEL_X = (-1.0, 2.0)
+TRAIN_FINAL_LIN_VEL_Y = (-1.0, 1.0)
+TRAIN_FINAL_ANG_VEL_Z = (-1.0, 1.0)
 
 
 def resolve_hf_checkpoint(repo_id: str, stage: str, cache_dir: str) -> str:
@@ -68,11 +97,35 @@ def main():
   ap.add_argument("--task", default="Unitree-Go2-PAS-Oracle")
   ap.add_argument("--checkpoint", help="Local .pt path. Omit to pull from --hf-repo.")
   ap.add_argument("--hf-repo", help="HF model repo to pull the latest checkpoint from.")
-  ap.add_argument("--hf-stage", default="stage2", choices=["stage1", "stage2"])
+  ap.add_argument("--hf-stage", default="stage2", help="HF subdir, e.g. stage2.")
   ap.add_argument("--hf-cache", default="eval_ckpts", help="Where HF downloads land.")
   ap.add_argument("--num-envs", type=int, default=1024)
   ap.add_argument("--steps", type=int, default=1200)
+  ap.add_argument("--seed", type=int, default=0, help="Env, terrain-generator and torch seed.")
   ap.add_argument("--command-name", default="twist")
+  ap.add_argument(
+    "--terrain",
+    default="native",
+    choices=EVAL_TERRAINS,
+    help="'native' = the task's own sub-terrain mix; a class name = only that class; "
+    "'mixed' = all four classes at equal weight.",
+  )
+  ap.add_argument(
+    "--difficulty",
+    type=float,
+    default=None,
+    help="Pin terrain difficulty to this value in [0, 1]. Omit to spread envs "
+    "uniformly over all difficulty rows.",
+  )
+  ap.add_argument("--lin-vel-x", type=float, nargs=2, default=TRAIN_FINAL_LIN_VEL_X, metavar=("MIN", "MAX"))
+  ap.add_argument("--lin-vel-y", type=float, nargs=2, default=TRAIN_FINAL_LIN_VEL_Y, metavar=("MIN", "MAX"))
+  ap.add_argument("--ang-vel-z", type=float, nargs=2, default=TRAIN_FINAL_ANG_VEL_Z, metavar=("MIN", "MAX"))
+  ap.add_argument(
+    "--keep-curricula",
+    action="store_true",
+    help="Use the training env config verbatim (terrain + command curricula live). "
+    "Only for comparing against a checkpoint's own training log -- NOT across policies.",
+  )
   ap.add_argument(
     "--moving-command-threshold",
     type=float,
@@ -96,20 +149,61 @@ def main():
       "the model's own value untouched."
     ),
   )
+  ap.add_argument(
+    "--ablate-height-scan",
+    action="store_true",
+    help=(
+      "Replace the actor's height_scan input with the policy's own normalizer mean "
+      "(i.e. 'average terrain', normalized input 0) every step. If a policy's numbers "
+      "barely move, it isn't using exteroception. Stock-PPO policies only (not PAS)."
+    ),
+  )
+  ap.add_argument("--label", default=None, help="Name for this policy in --json-out.")
+  ap.add_argument("--json-out", default=None, help="Write all metrics + eval conditions here.")
   args = ap.parse_args()
 
   if not args.checkpoint and not args.hf_repo:
     ap.error("pass --checkpoint <path> or --hf-repo <repo_id>")
+  if args.keep_curricula and (args.terrain != "native" or args.difficulty is not None):
+    ap.error("--keep-curricula can't be combined with --terrain/--difficulty")
   checkpoint = args.checkpoint or resolve_hf_checkpoint(
     args.hf_repo, args.hf_stage, args.hf_cache
   )
 
   configure_torch_backends()
+  torch.manual_seed(args.seed)
   device = "cuda:0" if torch.cuda.is_available() else "cpu"
   print(f"[INFO] device={device} task={args.task} checkpoint={checkpoint}")
 
   env_cfg = load_env_cfg(args.task, play=False)
   env_cfg.scene.num_envs = args.num_envs
+  env_cfg.seed = args.seed
+  conditions: dict = {"keep_curricula": args.keep_curricula, "seed": args.seed}
+  if args.keep_curricula:
+    print("[WARN] --keep-curricula: terrain difficulty adapts to the policy mid-rollout;")
+    print("       these numbers are NOT comparable across policies.")
+  else:
+    apply_eval_conditions(
+      env_cfg, terrain=args.terrain, difficulty=args.difficulty, seed=args.seed
+    )
+    env_cfg.curriculum.pop("command_vel", None)
+    ranges = env_cfg.commands[args.command_name].ranges
+    ranges.lin_vel_x = tuple(args.lin_vel_x)
+    ranges.lin_vel_y = tuple(args.lin_vel_y)
+    ranges.ang_vel_z = tuple(args.ang_vel_z)
+    conditions.update(
+      terrain=args.terrain,
+      difficulty=args.difficulty,
+      lin_vel_x=list(args.lin_vel_x),
+      lin_vel_y=list(args.lin_vel_y),
+      ang_vel_z=list(args.ang_vel_z),
+    )
+    print(
+      f"[INFO] Eval conditions: terrain={args.terrain} "
+      f"difficulty={'uniform over rows' if args.difficulty is None else args.difficulty} "
+      f"lin_vel_x={tuple(args.lin_vel_x)} lin_vel_y={tuple(args.lin_vel_y)} "
+      f"ang_vel_z={tuple(args.ang_vel_z)} seed={args.seed} (curricula off)"
+    )
   agent_cfg = load_rl_cfg(args.task)
 
   env = ManagerBasedRlEnv(cfg=env_cfg, device=device)
@@ -141,10 +235,41 @@ def main():
     if args.anneal_prob is None and actor.anneal_prob >= 1.0:
       print("[WARN] Evaluating in ORACLE mode. For a Stage-2 checkpoint this does NOT")
       print("       test the distilled estimator -- pass --anneal-prob 0.0 for that.")
+    conditions["anneal_prob"] = float(actor.anneal_prob)
 
   policy = runner.get_inference_policy(device=device)
 
-  robot = env.unwrapped.scene["robot"]
+  unwrapped = env.unwrapped
+
+  # Height-scan ablation: find the height_scan slice of the actor group and the
+  # policy's normalizer mean for it. Filling with the mean feeds a normalized
+  # input of exactly 0 -- no terrain information, but not out of distribution.
+  scan_slice = None
+  scan_fill = None
+  if args.ablate_height_scan:
+    if hasattr(actor, "anneal_prob"):
+      raise SystemExit("[ERROR] --ablate-height-scan is for stock-PPO policies; PAS "
+                       "encodes height_scan separately (use --anneal-prob 0.0 instead).")
+    om = unwrapped.observation_manager
+    start = 0
+    for name, shape in zip(om.active_terms["actor"], om.group_obs_term_dim["actor"]):
+      size = math.prod(shape)
+      if name == "height_scan":
+        scan_slice = slice(start, start + size)
+        break
+      start += size
+    normalizer = getattr(actor, "obs_normalizer", None)
+    if scan_slice is None or not hasattr(normalizer, "_mean"):
+      raise SystemExit("[ERROR] --ablate-height-scan: no height_scan term / obs normalizer on this actor.")
+    if normalizer._mean.shape[-1] != math.prod(om.group_obs_dim["actor"]):
+      raise SystemExit("[ERROR] --ablate-height-scan: actor normalizer doesn't match the actor obs group.")
+    scan_fill = normalizer._mean[0, scan_slice].detach().clone()
+    conditions["ablate_height_scan"] = True
+    print(f"[INFO] Height-scan ablation ON: actor obs[{scan_slice.start}:{scan_slice.stop}] "
+          "replaced with the policy's normalizer mean every step.")
+  robot = unwrapped.scene["robot"]
+  action_manager = unwrapped.action_manager
+  dt = unwrapped.step_dt
 
   obs, _ = env.reset()
   n = args.num_envs
@@ -168,10 +293,26 @@ def main():
   moving_cmd_steps = 0
   stalled_steps = 0
 
+  # Smoothness accumulators. Rates need two consecutive in-episode steps, so an
+  # env is excluded on the step it resets AND the step after (a reset zeroes
+  # prev_action and teleports the robot, which would read as a huge spike).
+  smooth_samples = 0
+  smooth_steps = 0
+  sum_action_rate = 0.0
+  sum_force_rate = 0.0
+  sum_force_rate_p99 = 0.0
+
   prev_pos = robot.data.root_link_pos_w[:, :2].clone()
+  prev_force = robot.data.actuator_force.clone()
+  prev_done = torch.ones(n, dtype=torch.bool, device=device)
 
   for step in range(args.steps):
     with torch.inference_mode():
+      if scan_slice is not None:
+        actor_obs = obs["actor"].clone()
+        actor_obs[:, scan_slice] = scan_fill
+        obs = obs.clone()
+        obs["actor"] = actor_obs
       actions = policy(obs)
     obs, rew, dones, extras = env.step(actions)
     ep_len += 1
@@ -180,10 +321,11 @@ def main():
     done_mask = dones.bool()
 
     with torch.inference_mode():
-      command = env.unwrapped.command_manager.get_command(args.command_name)
+      command = unwrapped.command_manager.get_command(args.command_name)
       lin_vel_b = robot.data.root_link_lin_vel_b
       ang_vel_b = robot.data.root_link_ang_vel_b
       pos_xy = robot.data.root_link_pos_w[:, :2]
+      force = robot.data.actuator_force
 
       # An env that just reset teleported to a new spawn, so its position
       # delta is meaningless -- exclude those envs from this step's stats.
@@ -211,7 +353,22 @@ def main():
           .item()
         )
 
+      smooth_valid = valid & ~prev_done
+      n_smooth = int(smooth_valid.sum().item())
+      if n_smooth:
+        action_rate = torch.sum(
+          torch.square(action_manager.action - action_manager.prev_action), dim=1
+        )
+        force_rate = torch.linalg.norm(force - prev_force, dim=1) / dt
+        smooth_samples += n_smooth
+        smooth_steps += 1
+        sum_action_rate += float(action_rate[smooth_valid].sum())
+        sum_force_rate += float(force_rate[smooth_valid].sum())
+        sum_force_rate_p99 += float(torch.quantile(force_rate[smooth_valid], 0.99))
+
       prev_pos = pos_xy.clone()
+      prev_force = force.clone()
+      prev_done = done_mask.clone()
 
     if done_mask.any():
       timeouts = extras.get("time_outs")
@@ -233,51 +390,100 @@ def main():
     if (step + 1) % 100 == 0:
       print(f"[step {step + 1}/{args.steps}] episodes so far: {total_episodes}")
 
+  result: dict = {
+    "label": args.label,
+    "task": args.task,
+    "checkpoint": checkpoint,
+    "num_envs": n,
+    "steps": args.steps,
+    "conditions": conditions,
+  }
+
   print("\n===== EVAL RESULT =====")
   print(f"Steps simulated: {args.steps}  |  parallel envs: {n}")
   print(f"Checkpoint: {checkpoint}")
 
   print("\n-- survival --")
   print(f"Episodes completed: {total_episodes}")
+  survival: dict = {"episodes": total_episodes}
   if total_episodes:
+    survival.update(
+      survival_pct=100 * total_timeouts / total_episodes,
+      fall_pct=100 * total_fails / total_episodes,
+      mean_ep_len=sum_ep_len_at_end / total_episodes,
+      mean_return=sum_return_at_end / total_episodes,
+    )
     print(f"  time_out (survived full episode): {total_timeouts} "
-          f"({100 * total_timeouts / total_episodes:.1f}%)")
+          f"({survival['survival_pct']:.1f}%)")
     print(f"  failed early (fell / illegal contact / etc): {total_fails} "
-          f"({100 * total_fails / total_episodes:.1f}%)")
-    print(f"  mean episode length at end: {sum_ep_len_at_end / total_episodes:.1f}")
-    print(f"  mean episode return: {sum_return_at_end / total_episodes:.3f}")
+          f"({survival['fall_pct']:.1f}%)")
+    print(f"  mean episode length at end: {survival['mean_ep_len']:.1f}")
+    print(f"  mean episode return: {survival['mean_return']:.3f}")
   else:
     print("  No episodes completed in this window -- increase --steps.")
+  result["survival"] = survival
 
   print("\n-- locomotion --")
+  locomotion: dict = {}
   if not locomotion_samples:
     print("  No valid samples collected.")
   else:
     mean_cmd = sum_cmd_speed / locomotion_samples
     mean_actual = sum_actual_speed / locomotion_samples
-    dt = env.unwrapped.step_dt
+    locomotion.update(
+      mean_cmd_speed=mean_cmd,
+      mean_actual_speed=mean_actual,
+      achieved_pct_of_cmd=100 * mean_actual / mean_cmd if mean_cmd > 1e-6 else None,
+      lin_vel_error_per_step=sum_lin_vel_error / locomotion_samples,
+      ang_vel_error_per_step=sum_ang_vel_error / locomotion_samples,
+      distance_rate=sum_distance / locomotion_samples / dt,
+      stalled_pct=100 * stalled_steps / moving_cmd_steps if moving_cmd_steps else None,
+    )
     achieved = f"  mean achieved speed:   {mean_actual:.3f} m/s"
-    if mean_cmd > 1e-6:
-      achieved += f"  ({100 * mean_actual / mean_cmd:.0f}% of commanded)"
+    if locomotion["achieved_pct_of_cmd"] is not None:
+      achieved += f"  ({locomotion['achieved_pct_of_cmd']:.0f}% of commanded)"
     print(f"  mean commanded speed:  {mean_cmd:.3f} m/s")
     print(achieved)
-    print(f"  mean linear vel error: {sum_lin_vel_error / locomotion_samples:.3f} m/s")
-    print(f"  mean angular vel error:{sum_ang_vel_error / locomotion_samples:.3f} rad/s")
-    print(f"  mean distance travelled per env per second: "
-          f"{sum_distance / locomotion_samples / dt:.3f} m/s")
+    print(f"  linear vel error, per step:  {locomotion['lin_vel_error_per_step']:.3f} m/s"
+          "  <- the cross-policy tracking metric (not error_vel_xy)")
+    print(f"  angular vel error, per step: {locomotion['ang_vel_error_per_step']:.3f} rad/s")
+    print(f"  mean distance travelled per env per second: {locomotion['distance_rate']:.3f} m/s")
     print(f"  total distance travelled (all envs): {sum_distance:.0f} m")
     if moving_cmd_steps:
       print(f"  stalled while commanded to move "
             f"(cmd > {args.moving_command_threshold} m/s, achieved < "
             f"{args.stalled_speed_threshold} m/s): "
             f"{stalled_steps}/{moving_cmd_steps} "
-            f"({100 * stalled_steps / moving_cmd_steps:.1f}%)")
+            f"({locomotion['stalled_pct']:.1f}%)")
       if stalled_steps / moving_cmd_steps > 0.5:
         print("  [WARN] Stalled for most of the steps where movement was commanded --")
         print("         this policy is likely bracing in place, not locomoting,")
         print("         regardless of how good the survival numbers above look.")
     else:
       print(f"  no steps with commanded speed > {args.moving_command_threshold} m/s")
+  result["locomotion"] = locomotion
+
+  print("\n-- smoothness (whole rollout) --")
+  smoothness: dict = {}
+  if not smooth_samples:
+    print("  No valid samples collected.")
+  else:
+    smoothness.update(
+      action_rate_l2=sum_action_rate / smooth_samples,
+      actuator_force_rate=sum_force_rate / smooth_samples,
+      actuator_force_rate_p99=sum_force_rate_p99 / smooth_steps,
+    )
+    print(f"  action rate (sum sq. change per step): {smoothness['action_rate_l2']:.4f}")
+    print(f"  actuator force rate:     {smoothness['actuator_force_rate']:.1f} N*m/s (mean)")
+    print(f"  actuator force rate p99: {smoothness['actuator_force_rate_p99']:.1f} N*m/s "
+          "(per-step 99th pct across envs, averaged over steps)")
+  result["smoothness"] = smoothness
+
+  if args.json_out:
+    os.makedirs(os.path.dirname(os.path.abspath(args.json_out)), exist_ok=True)
+    with open(args.json_out, "w") as f:
+      json.dump(result, f, indent=2)
+    print(f"\n[INFO] Wrote {args.json_out}")
 
 
 if __name__ == "__main__":

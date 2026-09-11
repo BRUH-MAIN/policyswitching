@@ -1,13 +1,15 @@
 from mjlab.tasks.registry import register_mjlab_task
 from src.tasks.velocity.mdp.pas import PasOnPolicyRunner
-from src.tasks.velocity.rl import VelocityOnPolicyRunner
+from src.tasks.velocity.rl import HfSyncVelocityOnPolicyRunner, VelocityOnPolicyRunner
 
 from .env_cfgs import (
   unitree_go2_flat_env_cfg,
+  unitree_go2_generalist_env_cfg,
   unitree_go2_pas_env_cfg,
   unitree_go2_rough_env_cfg,
   unitree_go2_spec_flat_env_cfg,
   unitree_go2_spec_gaps_env_cfg,
+  unitree_go2_spec_gaps_warm_env_cfg,
   unitree_go2_spec_rough_env_cfg,
   unitree_go2_spec_stairs_env_cfg,
 )
@@ -54,16 +56,29 @@ register_mjlab_task(
 # specialist only ever sees one terrain, so it has nothing to disambiguate.
 # All four share an identical observation space and network shape so the gating
 # network can blend them -- see `_unitree_go2_specialist_env_cfg`.
+# GapsWarm is the 100%-stepping_stones redesign of Gaps, meant to be
+# warm-started (see `unitree_go2_spec_gaps_warm_env_cfg`).
 for _spec_name, _spec_cfg_fn in (
   ("Flat", unitree_go2_spec_flat_env_cfg),
   ("Rough", unitree_go2_spec_rough_env_cfg),
   ("Stairs", unitree_go2_spec_stairs_env_cfg),
   ("Gaps", unitree_go2_spec_gaps_env_cfg),
+  ("GapsWarm", unitree_go2_spec_gaps_warm_env_cfg),
 ):
   register_mjlab_task(
     task_id=f"Unitree-Go2-Spec-{_spec_name}",
     env_cfg=_spec_cfg_fn(),
     play_env_cfg=_spec_cfg_fn(play=True),
     rl_cfg=unitree_go2_ppo_runner_cfg(),
-    runner_cls=VelocityOnPolicyRunner,
+    runner_cls=HfSyncVelocityOnPolicyRunner,
   )
+
+# Sensing-matched generalist baseline: same observation space, rewards and
+# runner as the specialists, trained over all four terrain classes.
+register_mjlab_task(
+  task_id="Unitree-Go2-Generalist",
+  env_cfg=unitree_go2_generalist_env_cfg(),
+  play_env_cfg=unitree_go2_generalist_env_cfg(play=True),
+  rl_cfg=unitree_go2_ppo_runner_cfg(),
+  runner_cls=HfSyncVelocityOnPolicyRunner,
+)

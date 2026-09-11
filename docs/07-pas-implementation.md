@@ -217,9 +217,9 @@ sequenceDiagram
 ## 8. Running it
 
 ```bash
-cd /home/rohan/rl/policyswitching/unitree_rl_mjlab
+cd /dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab
 export MUJOCO_GL=egl
-export PYTHONPATH=/home/rohan/rl/policyswitching/unitree_rl_mjlab:$PYTHONPATH
+export PYTHONPATH=/dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab:$PYTHONPATH
 
 # Stage 1 (oracle)
 python scripts/train.py Unitree-Go2-PAS-Oracle \
