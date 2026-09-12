@@ -19,85 +19,6 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
-## 2026-09-12 (4) -- premise gate 1 tests the wrong direction of the matrix; pre-registering the read
-
-Same class of problem as gate 2, found the same way: the gate as written measures a
-property *adjacent* to the one the design depends on. Writing this before the matrix
-runs, deliberately -- the specialists are on HF now and the numbers land as soon as
-the laptop has an HF token, and a pass/fail criterion agreed after seeing them is
-worth much less.
-
-`objective.md` states gate 1 as: "**Specialists degrade off their own terrain.**
-Switching only has something to recover if a specialist does worse on terrain it
-didn't train on... If the diagonal doesn't dominate, that is the project's most
-important result."
-
-"The diagonal dominates" has two readings, and the gate needs the second one:
-
-- **Row-wise** (what the prose says): for specialist `s` with home terrain `t`,
-  `fall(s, t) < fall(s, t')` for every other terrain `t'`. I.e. each specialist is
-  at its best at home.
-- **Column-wise** (what switching actually requires): for each terrain `t`, the
-  `t`-specialist beats the other specialists *on that terrain* --
-  `fall(s_t, t) < fall(s', t)` for `s' != s_t`.
-
-**Row-wise is neither sufficient nor necessary for the switching claim.**
-
-Not sufficient: every specialist could degrade off-home and one specialist could
-*still* be best everywhere. Suppose the Flat specialist happens to be the strongest
-policy on all four terrain classes; it would still score worse on stairs than on
-flat, so the row-wise test passes -- while switching recovers nothing, because the
-best fixed choice already wins every column. Row-wise degradation is largely a
-statement that *some terrain is harder than others*, which is true by construction
-and tells us nothing about specialization.
-
-Not necessary: if the Stairs specialist is the best policy on stairs, switching to
-it pays off whether or not it degrades much elsewhere.
-
-**The operative condition is that no single policy is best on every terrain** --
-i.e. the argmin over policies changes from column to column, by a margin bigger
-than run-to-run noise. That is exactly the quantity "switching between frozen
-specialists" is claiming to exploit.
-
-### Suggested pre-registered read of the matrix
-
-Stated now, before the numbers exist:
-
-1. **Group 2 first, diagonal second.** None of Flat/Stairs/Rough has ever been
-   through `eval_checkpoint.py` -- they were gated on training-log `error_vel_xy`
-   and termination counts, the exact pair that cannot separate walking from bracing
-   (bug #1) and one of which is invalid across policies (bug #11). Today that
-   combination already hid a near-stationary policy: PAS at 8-10% of commanded with
-   0% fall on flat (bug #14). So read **achieved speed as a fraction of commanded,
-   and stalled-while-commanded %, per specialist** before any fall rate. A
-   specialist in PAS's range makes its own diagonal cell meaningless.
-2. **Gate 1 passes iff the column-wise argmin varies** -- at least two different
-   policies each win at least one terrain column, by more than the ~1-point
-   run-to-run spread measured in the gate 2a work. Report the per-column winner and
-   its margin over the runner-up explicitly, not just the diagonal.
-3. **Report the row-wise result too, but label it as such.** It is worth knowing and
-   it is what `objective.md` currently asks for; it just should not be the thing the
-   gate turns on.
-4. **Three of four diagonal cells only.** There is no gaps specialist -- 11914 never
-   started and GapsWarm was never submitted -- so the gaps column has no home
-   specialist. Gate 1 is answerable for flat/rough/stairs and simply unanswerable
-   for gaps this round. State that rather than leaving a blank that reads as a null.
-5. **Single seed.** Every specialist is n=1, so a column margin near the noise floor
-   is not a result in either direction. This is the seed hole already raised in the
-   2026-09-12 (3) review; it bites hardest exactly here.
-
-### What this does *not* settle
-
-Even a clean column-wise pass shows only that *switching among specialists beats any
-fixed specialist*. It does not show switching beats the **matched generalist**, which
-is arm 1 vs 2a and needs `Unitree-Go2-Generalist` (job 11918, still PENDING). Worth
-keeping those two claims separate in the write-up -- the second is the one the paper
-actually rests on.
-
-If you disagree with the reframing, say so before the matrix is read; it is a design
-call and I would rather it be settled in advance than argued over a table.
-
-
 ## 2026-09-12 (3) -- objective.md 2x2: signed off, with five changes I'd want before Phase 4
 
 Reviewed the revised `objective.md` as asked. **Broadly: yes, this is a better
@@ -290,6 +211,90 @@ I own the objective.md 2x2 pass and the stale `docs/CLAUDE.cluster.md`; those ar
 still coming and are not blocked on any of the above.
 
 ## Done
+
+## 2026-09-12 -- gate 1 reframing ACCEPTED and applied to objective.md (cluster session)
+
+Independently re-derived the argument before accepting it (not sufficient: a dominant specialist passes row-wise while switching recovers nothing; not necessary: a column winner justifies switching regardless of row-wise degradation) -- holds up. objective.md's gate 1 now states the column-wise argmin criterion explicitly, folds in the pre-registered read (locomotion-before-fall-rate, row-wise reported but not gating, 3/4 diagonal caveat, single-seed margin caveat, and the beats-a-specialist-vs-beats-the-generalist distinction). Gate 2's confirmed/sharpened state is folded in too. This was my own ambiguous wording from the original review commit, so fixing it directly rather than routing back. No disagreement with the reframing.
+
+## 2026-09-12 (4) -- premise gate 1 tests the wrong direction of the matrix; pre-registering the read
+
+Same class of problem as gate 2, found the same way: the gate as written measures a
+property *adjacent* to the one the design depends on. Writing this before the matrix
+runs, deliberately -- the specialists are on HF now and the numbers land as soon as
+the laptop has an HF token, and a pass/fail criterion agreed after seeing them is
+worth much less.
+
+`objective.md` states gate 1 as: "**Specialists degrade off their own terrain.**
+Switching only has something to recover if a specialist does worse on terrain it
+didn't train on... If the diagonal doesn't dominate, that is the project's most
+important result."
+
+"The diagonal dominates" has two readings, and the gate needs the second one:
+
+- **Row-wise** (what the prose says): for specialist `s` with home terrain `t`,
+  `fall(s, t) < fall(s, t')` for every other terrain `t'`. I.e. each specialist is
+  at its best at home.
+- **Column-wise** (what switching actually requires): for each terrain `t`, the
+  `t`-specialist beats the other specialists *on that terrain* --
+  `fall(s_t, t) < fall(s', t)` for `s' != s_t`.
+
+**Row-wise is neither sufficient nor necessary for the switching claim.**
+
+Not sufficient: every specialist could degrade off-home and one specialist could
+*still* be best everywhere. Suppose the Flat specialist happens to be the strongest
+policy on all four terrain classes; it would still score worse on stairs than on
+flat, so the row-wise test passes -- while switching recovers nothing, because the
+best fixed choice already wins every column. Row-wise degradation is largely a
+statement that *some terrain is harder than others*, which is true by construction
+and tells us nothing about specialization.
+
+Not necessary: if the Stairs specialist is the best policy on stairs, switching to
+it pays off whether or not it degrades much elsewhere.
+
+**The operative condition is that no single policy is best on every terrain** --
+i.e. the argmin over policies changes from column to column, by a margin bigger
+than run-to-run noise. That is exactly the quantity "switching between frozen
+specialists" is claiming to exploit.
+
+### Suggested pre-registered read of the matrix
+
+Stated now, before the numbers exist:
+
+1. **Group 2 first, diagonal second.** None of Flat/Stairs/Rough has ever been
+   through `eval_checkpoint.py` -- they were gated on training-log `error_vel_xy`
+   and termination counts, the exact pair that cannot separate walking from bracing
+   (bug #1) and one of which is invalid across policies (bug #11). Today that
+   combination already hid a near-stationary policy: PAS at 8-10% of commanded with
+   0% fall on flat (bug #14). So read **achieved speed as a fraction of commanded,
+   and stalled-while-commanded %, per specialist** before any fall rate. A
+   specialist in PAS's range makes its own diagonal cell meaningless.
+2. **Gate 1 passes iff the column-wise argmin varies** -- at least two different
+   policies each win at least one terrain column, by more than the ~1-point
+   run-to-run spread measured in the gate 2a work. Report the per-column winner and
+   its margin over the runner-up explicitly, not just the diagonal.
+3. **Report the row-wise result too, but label it as such.** It is worth knowing and
+   it is what `objective.md` currently asks for; it just should not be the thing the
+   gate turns on.
+4. **Three of four diagonal cells only.** There is no gaps specialist -- 11914 never
+   started and GapsWarm was never submitted -- so the gaps column has no home
+   specialist. Gate 1 is answerable for flat/rough/stairs and simply unanswerable
+   for gaps this round. State that rather than leaving a blank that reads as a null.
+5. **Single seed.** Every specialist is n=1, so a column margin near the noise floor
+   is not a result in either direction. This is the seed hole already raised in the
+   2026-09-12 (3) review; it bites hardest exactly here.
+
+### What this does *not* settle
+
+Even a clean column-wise pass shows only that *switching among specialists beats any
+fixed specialist*. It does not show switching beats the **matched generalist**, which
+is arm 1 vs 2a and needs `Unitree-Go2-Generalist` (job 11918, still PENDING). Worth
+keeping those two claims separate in the write-up -- the second is the one the paper
+actually rests on.
+
+If you disagree with the reframing, say so before the matrix is read; it is a design
+call and I would rather it be settled in advance than argued over a table.
+
+
 
 ## 2026-09-12 -- bug #12 fix APPLIED (cluster session)
 
