@@ -96,7 +96,9 @@ def scan_slice_for_group(env, group: str) -> slice:
 
 def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
             warmup: int, seed: int, device: str, spawn_spread: float = 3.0):
-  """Roll out zero actions on one terrain class; return (samples, env_ids, noise_halfwidth).
+  """Roll out zero actions on one terrain class.
+
+  Returns (samples, env_ids, noise_halfwidth, grid_shape).
 
   Noise is disabled on the scan term so the collected values are clean; the
   post-scale noise half-width is returned so the caller can add it analytically.
@@ -127,6 +129,17 @@ def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
     half = min(spawn_spread, cfg.scene.terrain.terrain_generator.size[0] / 2 - 1.0)
     reset_base.params["pose_range"]["x"] = (-half, half)
     reset_base.params["pose_range"]["y"] = (-half, half)
+
+  # Ray-grid shape, derived from the sensor pattern rather than hardcoded, so a
+  # conv model reshapes correctly if the scan geometry ever changes.
+  pattern = cfg.scene.sensors[0].pattern if hasattr(cfg.scene, "sensors") else None
+  grid_shape = None
+  for sensor in getattr(cfg.scene, "sensors", ()) or ():
+    if getattr(sensor, "name", None) == "terrain_scan":
+      pattern = sensor.pattern
+      res = pattern.resolution
+      grid_shape = (round(pattern.size[0] / res) + 1, round(pattern.size[1] / res) + 1)
+      break
 
   group, term = find_height_scan_term(cfg)
   scale = term.scale if term.scale is not None else 1.0
@@ -164,7 +177,12 @@ def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
   finally:
     env.close()
 
-  return torch.cat(samples), torch.cat(env_ids), noise_half
+  x = torch.cat(samples)
+  if grid_shape is not None and grid_shape[0] * grid_shape[1] != x.shape[1]:
+    print(f"[WARN] ray-grid shape {grid_shape} doesn't match {x.shape[1]} rays; "
+          "conv model will be skipped.")
+    grid_shape = None
+  return x, torch.cat(env_ids), noise_half, grid_shape
 
 
 def fit_logreg(x_tr, y_tr, x_te, y_te, num_classes: int, epochs: int, device: str):
@@ -201,6 +219,61 @@ def fit_logreg(x_tr, y_tr, x_te, y_te, num_classes: int, epochs: int, device: st
   }
 
 
+def fit_cnn(x_tr, y_tr, x_te, y_te, num_classes: int, grid_shape, epochs: int,
+            device: str, seed: int = 0):
+  """Small conv net over the ray grid.
+
+  The linear probe can only key on per-ray mean differences, which is why it does
+  badly on stairs: a staircase's signature is spatial structure (a repeating step
+  edge), not a shift in average height. This tests whether that structure is
+  recoverable at the same noise level. Train accuracy is reported alongside test
+  so overfitting is visible rather than buried -- with ~7.7k samples and an
+  env-wise split, a conv net has enough capacity to memorise.
+  """
+  torch.manual_seed(seed)
+  rows, cols = grid_shape
+  mean, std = x_tr.mean(), x_tr.std().clamp_min(1e-8)
+
+  def prep(x):
+    return ((x - mean) / std).reshape(-1, 1, rows, cols).to(device)
+
+  x_tr_d, x_te_d = prep(x_tr), prep(x_te)
+  y_tr_d, y_te_d = y_tr.to(device), y_te.to(device)
+
+  model = torch.nn.Sequential(
+    torch.nn.Conv2d(1, 16, 3, padding=1), torch.nn.ReLU(),
+    torch.nn.Conv2d(16, 32, 3, padding=1), torch.nn.ReLU(),
+    torch.nn.AdaptiveAvgPool2d(2), torch.nn.Flatten(),
+    torch.nn.Linear(32 * 4, num_classes),
+  ).to(device)
+  opt = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=1e-3)
+  loss_fn = torch.nn.CrossEntropyLoss()
+
+  for _ in range(epochs):
+    model.train()
+    perm = torch.randperm(x_tr_d.shape[0], device=device)
+    for i in range(0, len(perm), 512):
+      idx = perm[i:i + 512]
+      opt.zero_grad()
+      loss_fn(model(x_tr_d[idx]), y_tr_d[idx]).backward()
+      opt.step()
+
+  model.eval()
+  with torch.no_grad():
+    train_acc = (model(x_tr_d).argmax(1) == y_tr_d).float().mean().item()
+    pred = model(x_te_d).argmax(1)
+    confusion = torch.zeros(num_classes, num_classes, dtype=torch.long)
+    for t, q in zip(y_te_d.cpu(), pred.cpu()):
+      confusion[t, q] += 1
+  per_class = (confusion.diag().float() / confusion.sum(1).clamp_min(1).float()).tolist()
+  return {
+    "accuracy": (confusion.diag().sum().item() / max(confusion.sum().item(), 1)),
+    "train_accuracy": train_acc,
+    "per_class_accuracy": per_class,
+    "confusion": confusion.tolist(),
+  }
+
+
 def main() -> None:
   ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
   ap.add_argument("--task", default="Unitree-Go2-Generalist",
@@ -217,17 +290,22 @@ def main() -> None:
                        "platform of a pyramid_stairs patch. 0 leaves the task's value alone.")
   ap.add_argument("--test-frac", type=float, default=0.25, help="Fraction of ENVS held out.")
   ap.add_argument("--seed", type=int, default=42)
-  ap.add_argument("--epochs", type=int, default=200, help="LBFGS iterations.")
+  ap.add_argument("--epochs", type=int, default=200, help="LBFGS iterations (linear model).")
+  ap.add_argument("--cnn-epochs", type=int, default=60, help="Epochs for the conv model.")
+  ap.add_argument("--models", nargs="+", default=["linear", "cnn"], choices=["linear", "cnn"],
+                  help="Run both by default, on the SAME collected data and split, so the "
+                       "comparison isn't confounded by a different draw.")
   ap.add_argument("--device", default="cuda:0")
   ap.add_argument("--json-out", default=None)
   args = ap.parse_args()
 
   torch.manual_seed(args.seed)
-  xs, ys, envs, noise_half = [], [], [], None
+  xs, ys, envs, noise_half, grid_shape = [], [], [], None, None
   for label, terrain in enumerate(args.classes):
     print(f"\n=== collecting '{terrain}' ({label + 1}/{len(args.classes)}) ===", flush=True)
-    x, e, nh = collect(args.task, terrain, args.num_envs, args.steps,
-                       args.stride, args.warmup, args.seed, args.device, args.spawn_spread)
+    x, e, nh, gs = collect(args.task, terrain, args.num_envs, args.steps,
+                           args.stride, args.warmup, args.seed, args.device, args.spawn_spread)
+    grid_shape = gs if grid_shape is None else grid_shape
     if noise_half is None:
       noise_half = nh
     elif abs(noise_half - nh) > 1e-12:
@@ -251,9 +329,19 @@ def main() -> None:
   noisy = x + (torch.rand_like(x) * 2 - 1) * noise_half
 
   results = {}
-  for name, data in (("clean", x), ("noisy", noisy)):
-    results[name] = fit_logreg(data[~is_test], y[~is_test], data[is_test], y[is_test],
-                               len(args.classes), args.epochs, args.device)
+  for model_name in args.models:
+    if model_name == "cnn" and grid_shape is None:
+      print("[WARN] no ray-grid shape available; skipping the conv model.")
+      continue
+    for cond, data in (("clean", x), ("noisy", noisy)):
+      key = cond if model_name == "linear" else f"{cond}_cnn"
+      if model_name == "linear":
+        results[key] = fit_logreg(data[~is_test], y[~is_test], data[is_test], y[is_test],
+                                  len(args.classes), args.epochs, args.device)
+      else:
+        results[key] = fit_cnn(data[~is_test], y[~is_test], data[is_test], y[is_test],
+                               len(args.classes), grid_shape, args.cnn_epochs,
+                               args.device, args.seed)
 
   chance = 1.0 / len(args.classes)
   print("\n" + "=" * 62)
@@ -266,9 +354,14 @@ def main() -> None:
   print(f"envs (effective) : {len(uniq) - n_test} train / {n_test} test  <- split by env")
   print(f"noise half-width : +/-{noise_half:.5f} in scaled units")
   print(f"spawn spread     : +/-{args.spawn_spread:g} m within each 8x8 m patch")
-  for name in ("clean", "noisy"):
+  if grid_shape:
+    print(f"ray grid         : {grid_shape[0]} x {grid_shape[1]}")
+  for name in [k for k in ("clean", "noisy", "clean_cnn", "noisy_cnn") if k in results]:
     r = results[name]
     print(f"\n--- {name} ---")
+    if "train_accuracy" in r:
+      print(f"train accuracy   : {r['train_accuracy']:.3f}  (vs held-out below; a large "
+            "gap means it memorised)")
     print(f"held-out accuracy: {r['accuracy']:.3f}  ({r['accuracy'] / chance:.2f}x chance)")
     for cls, acc in zip(args.classes, r["per_class_accuracy"]):
       print(f"    {cls:<8}: {acc:.3f}")
@@ -276,8 +369,10 @@ def main() -> None:
     print(f"    {'':<8}" + "".join(f"{c:>9}" for c in args.classes))
     for cls, row in zip(args.classes, r["confusion"]):
       print(f"    {cls:<8}" + "".join(f"{v:>9}" for v in row))
-  drop = results["clean"]["accuracy"] - results["noisy"]["accuracy"]
-  print(f"\ncost of injected noise: {drop:+.3f} accuracy")
+  for suffix, label in (("", "linear"), ("_cnn", "cnn")):
+    if f"clean{suffix}" in results and f"noisy{suffix}" in results:
+      drop = results[f"clean{suffix}"]["accuracy"] - results[f"noisy{suffix}"]["accuracy"]
+      print(f"\ncost of injected noise ({label}): {drop:+.3f} accuracy")
   print("=" * 62)
 
   if args.json_out:
@@ -290,6 +385,7 @@ def main() -> None:
       "rays": x.shape[1],
       "noise_half_width_scaled": noise_half,
       "split": "by env",
+      "grid_shape": grid_shape,
       "spawn_spread_m": args.spawn_spread,
       "train_envs": len(uniq) - n_test,
       "test_envs": n_test,

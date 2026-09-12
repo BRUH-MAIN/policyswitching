@@ -16,22 +16,37 @@ dissociate in both directions (see `coordination/inbox/to-cluster.md`,
 directly — labelled scans per class, multinomial logistic regression, held-out
 accuracy — with no RL and no checkpoint, so it runs while the nodes are drained.
 
-## Headline
+## Headline (revised after the CNN follow-up — see that section)
 
-**Partial pass, and the part that passes is not the part the design needs.** The
-scan identifies `gaps` almost perfectly and separates `flat`/`rough`/`stairs`
-weakly. Under the noise the policy actually sees, 4-way accuracy is 0.549 against
-0.25 chance — but that number is carried by gaps.
+**The scan supports a three-way distinction — `gaps`, `flat`, and
+"rough-or-stairs" — and cannot split rough from stairs at this noise level with
+either model tried.** Best held-out 4-way accuracy under realistic noise is
+**0.617** (conv net) against 0.25 chance.
+
+The linear-probe section below is kept because it is what the first verdict rested
+on, and because the linear-vs-CNN gap is itself the finding: the original
+"stairs is barely above chance" conclusion was a limitation of the probe, not a
+property of the sensor.
+
+## Linear probe (first pass)
+
+Under the noise the policy actually sees, 4-way accuracy is 0.549 against 0.25
+chance — but that number is carried by gaps.
 
 | | clean | noisy (as the policy sees it) |
 |---|---|---|
-| overall (4-way, chance 0.25) | 0.632 | **0.549** |
-| flat | 0.648 | 0.419 |
-| rough | 0.562 | 0.506 |
-| stairs | 0.339 | **0.336** |
-| gaps | 0.964 | **0.974** |
+| overall (4-way, chance 0.25) | 0.623 | **0.543** |
+| flat | 0.647 | 0.410 |
+| rough | 0.532 | 0.506 |
+| stairs | 0.357 | **0.330** |
+| gaps | 0.936 | **0.966** |
 
-Injected noise costs 8.3 accuracy points overall. `stairs` sits at 0.336 — barely
+(An earlier identical invocation gave 0.632 / 0.549 overall. Run-to-run spread is
+~1 point, from simulator nondeterminism in collection — worth knowing before
+reading a 1-point difference as signal. All numbers quoted in this document come
+from the final run, which is the one in the committed JSON.)
+
+Injected noise costs 8.0 accuracy points overall. `stairs` sits at 0.330 — barely
 above the 0.33 you would get by guessing uniformly among the three non-gap classes.
 Confusion is concentrated in the flat/rough/stairs block; gaps almost never leaks
 into it or out of it.
@@ -85,30 +100,65 @@ artifact.
 ## What this means for the design
 
 1. **A 4-way reactive terrain classifier on this scan is not viable as specified.**
-   Gap/non-gap is reliable. Flat vs rough vs stairs is close to a coin toss under
-   realistic noise, and stairs — the class with the most distinctive geometry, which
-   ought to be the *easiest* — is the worst.
-2. **The fix is the noise magnitude, not the scale.** Scaling multiplies signal and
-   noise alike and cannot change SNR. `Unoise(±0.1 m)` is the problem: it is applied
-   pre-scale, against ≤10 cm of relief. Either reduce it towards the terrain relief,
-   or raise the terrain difficulty range so the relief clears the noise. This is a
-   config decision on the cluster side.
-3. **Or narrow the taxonomy.** If the noise level is realistic and must stay, the
-   honest move is to let the switching module discriminate gap/non-gap from the scan
-   and take the rest from proprioception — a smaller claim, but one the sensing
-   actually supports.
+   Gaps is reliable (0.97) and flat is workable (0.60). Rough vs stairs is the
+   failure: neither model separates them, and the conv net's apparent stairs gain
+   comes out of rough one-for-one.
+2. **If the lever is sensing, it is the noise magnitude, not the scale.** Scaling
+   multiplies signal and noise alike and cannot change SNR. `Unoise(±0.1 m)` is
+   applied pre-scale against ≤10 cm of relief. Reducing it, or raising the terrain
+   difficulty range so the relief clears the noise, would only need to buy
+   separation for the rough/stairs pair now.
+4. **Or narrow the taxonomy — and the concession is smaller than it first looked.**
+   Merging rough and stairs into one "uneven" class leaves a 3-way switch
+   (gaps / flat / uneven) that the sensing supports at roughly 0.6–0.97 per class,
+   rather than collapsing all the way to gap-vs-non-gap.
+
+**None of these is a config tweak, and none is mine or the cluster's to pick.** The
+noise level and difficulty range are global training settings that every
+already-trained policy was trained under, so changing either makes future runs
+inconsistent with existing checkpoints; and the taxonomy is a change to what the
+project claims. Flagged to the user by the cluster session.
+
+## CNN follow-up — the linear caveat was load-bearing
+
+Ran a small conv net (2 conv layers → adaptive pool → linear) over the 17×11 ray
+grid, on the **same collected data, same env-wise split, same clean/noisy pair** as
+the linear probe, so the comparison isn't a different draw.
+
+| | linear clean | linear noisy | **CNN clean** | **CNN noisy** |
+|---|---|---|---|---|
+| overall | 0.623 | 0.543 | 0.778 | **0.617** |
+| flat | 0.647 | 0.410 | 1.000 | 0.604 |
+| rough | 0.532 | 0.506 | 0.511 | **0.200** |
+| stairs | 0.357 | 0.330 | 0.508 | **0.643** |
+| gaps | 0.936 | 0.966 | 0.985 | 0.970 |
+
+**Stairs was not undetectable — it was not linearly separable.** Under realistic
+noise it goes 0.330 → 0.643 once the model can see spatial structure, which is what
+a staircase's signature actually is. Reporting the linear result as a lower bound
+rather than as "gate 2 fails" was therefore the right call.
+
+**But the headline gain is not what it looks like.** Note rough *collapses*
+(0.506 → 0.200) exactly as stairs improves, with 291 of 530 rough samples predicted
+as stairs. Averaging the pair: linear noisy (0.506 + 0.330)/2 = 0.418; CNN noisy
+(0.200 + 0.643)/2 = 0.422. **Identical.** The conv net does not resolve rough vs
+stairs — it reallocates between them, and buys its real gain on flat (0.410 →
+0.604) and by keeping gaps clean. Any future model that reports a big stairs number
+should be checked for the same trade before it is believed.
+
+**Not overfitting.** Held-out accuracy exceeded train accuracy in both conditions
+(clean 0.778 test vs 0.749 train; noisy 0.617 vs 0.604), so the conv net is not
+memorising the 7.7k training samples — the env-wise split held.
 
 ## Caveats — read before quoting these numbers
 
-- **This is a linear classifier, so these are a lower bound.** A CNN or MLP over the
-  17×11 ray grid could do better, particularly for stairs, whose signature is
-  spatial structure rather than a mean shift. The gap/non-gap-vs-rest conclusion is
-  robust to that (it rests on a 20σ mean separation and a near-zero one), but
-  "stairs is undetectable" is not established — only "stairs is not linearly
-  separable from flat at this noise level".
+- Two model classes were tried. A larger or better-tuned network might separate
+  rough from stairs, but the fact that a conv net moved the confusion around
+  without reducing it is weak evidence that the pair is genuinely not separable at
+  this noise level, rather than merely awkward to model.
 - A quick variance-feature probe under the *old* (centre-spawn) protocol scored
   flat 1.00 / stairs 0.00, i.e. it collapsed the two rather than separating them.
-  Worth repeating under the corrected spread before concluding anything from it.
+  Not repeated under the corrected spread; superseded by the CNN result.
 - Zero actions throughout, so the robot holds its default pose. This measures the
   terrain, not the gait, which is what a classifier reads — but a moving robot's
   scan distribution will differ.
@@ -116,7 +166,18 @@ artifact.
 
 ## Suggested next step
 
-Re-run with a small CNN over the ray grid before accepting "flat/rough/stairs are
-indistinguishable". If a CNN also fails, gate 2 fails as specified and the noise
-level has to change before Phase 4 — which is exactly the decision `objective.md`
-says this gate exists to force.
+The CNN follow-up is **done** (above) and it narrows the question rather than
+answering it: the blocker is specifically **rough vs stairs**, not the scan as a
+whole. That makes the three levers cheaper to reason about than when this was
+"three of four classes are indistinguishable":
+
+- reducing the scan noise, or raising the terrain difficulty range, only has to
+  buy enough separation for one pair;
+- narrowing the taxonomy is now a smaller concession than it looked — merging
+  rough and stairs into one "uneven" class preserves a 3-way switch
+  (gaps / flat / uneven) that the sensing demonstrably supports at ~0.6–0.97 per
+  class, rather than dropping to gap-vs-non-gap.
+
+All three remain the user's call, not a config tweak: the noise level and
+difficulty range are global training settings that every already-trained policy was
+trained under, and the taxonomy is a change to what the project claims.
