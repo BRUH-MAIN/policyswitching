@@ -35,13 +35,18 @@ chance — but that number is carried by gaps.
 
 | | clean | noisy (as the policy sees it) |
 |---|---|---|
-| overall (4-way, chance 0.25) | 0.632 | **0.549** |
-| flat | 0.648 | 0.419 |
-| rough | 0.562 | 0.506 |
-| stairs | 0.339 | **0.336** |
-| gaps | 0.964 | **0.974** |
+| overall (4-way, chance 0.25) | 0.623 | **0.543** |
+| flat | 0.647 | 0.410 |
+| rough | 0.532 | 0.506 |
+| stairs | 0.357 | **0.330** |
+| gaps | 0.936 | **0.966** |
 
-Injected noise costs 8.3 accuracy points overall. `stairs` sits at 0.336 — barely
+(An earlier identical invocation gave 0.632 / 0.549 overall. Run-to-run spread is
+~1 point, from simulator nondeterminism in collection — worth knowing before
+reading a 1-point difference as signal. All numbers quoted in this document come
+from the final run, which is the one in the committed JSON.)
+
+Injected noise costs 8.0 accuracy points overall. `stairs` sits at 0.330 — barely
 above the 0.33 you would get by guessing uniformly among the three non-gap classes.
 Confusion is concentrated in the flat/rough/stairs block; gaps almost never leaks
 into it or out of it.
@@ -98,15 +103,21 @@ artifact.
    Gaps is reliable (0.97) and flat is workable (0.60). Rough vs stairs is the
    failure: neither model separates them, and the conv net's apparent stairs gain
    comes out of rough one-for-one.
-2. **The fix is the noise magnitude, not the scale.** Scaling multiplies signal and
-   noise alike and cannot change SNR. `Unoise(±0.1 m)` is the problem: it is applied
-   pre-scale, against ≤10 cm of relief. Either reduce it towards the terrain relief,
-   or raise the terrain difficulty range so the relief clears the noise. This is a
-   config decision on the cluster side.
-3. **Or narrow the taxonomy.** If the noise level is realistic and must stay, the
-   honest move is to let the switching module discriminate gap/non-gap from the scan
-   and take the rest from proprioception — a smaller claim, but one the sensing
-   actually supports.
+2. **If the lever is sensing, it is the noise magnitude, not the scale.** Scaling
+   multiplies signal and noise alike and cannot change SNR. `Unoise(±0.1 m)` is
+   applied pre-scale against ≤10 cm of relief. Reducing it, or raising the terrain
+   difficulty range so the relief clears the noise, would only need to buy
+   separation for the rough/stairs pair now.
+4. **Or narrow the taxonomy — and the concession is smaller than it first looked.**
+   Merging rough and stairs into one "uneven" class leaves a 3-way switch
+   (gaps / flat / uneven) that the sensing supports at roughly 0.6–0.97 per class,
+   rather than collapsing all the way to gap-vs-non-gap.
+
+**None of these is a config tweak, and none is mine or the cluster's to pick.** The
+noise level and difficulty range are global training settings that every
+already-trained policy was trained under, so changing either makes future runs
+inconsistent with existing checkpoints; and the taxonomy is a change to what the
+project claims. Flagged to the user by the cluster session.
 
 ## CNN follow-up — the linear caveat was load-bearing
 
