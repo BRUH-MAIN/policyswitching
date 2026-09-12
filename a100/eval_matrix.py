@@ -47,20 +47,34 @@ LOCAL_POLICIES = (
   ("generalist", "Unitree-Go2-Generalist", "go2_generalist", None),
 )
 PAS_TASK = "Unitree-Go2-PAS-Anneal"
+# Cluster-local fast path -- if this exact file exists, use it directly and skip
+# the HF round-trip. Not assumed to exist: the laptop side (docs/CLAUDE.laptop.md)
+# pulls PAS straight from HF via --hf-repo into eval_ckpts/, never populating this
+# path, so PAS_HF_REPO/PAS_HF_STAGE below is the path that actually runs there.
 PAS_CHECKPOINT = "logs/rsl_rl/go2_pas/2026-09-05_17-59-43_stage2/model_79998.pt"
+PAS_HF_REPO = "RohanRamesh/go2-pas-saro"
+PAS_HF_STAGE = "stage2"
 
 
 @dataclass
 class Policy:
   label: str
   task: str
-  checkpoint: str
   home: str | None = None
+  checkpoint: str | None = None  # local path; mutually exclusive with hf_repo
+  hf_repo: str | None = None
+  hf_stage: str | None = None
   extra_args: list[str] = field(default_factory=list)
   ablatable: bool = True  # reads raw height_scan through a stock MLP
 
+  def checkpoint_args(self) -> list[str]:
+    if self.checkpoint is not None:
+      return ["--checkpoint", self.checkpoint]
+    assert self.hf_repo is not None
+    return ["--hf-repo", self.hf_repo, "--hf-stage", self.hf_stage]
 
-def resolve_policies(mjlab_dir: Path, min_iteration: int) -> list[Policy]:
+
+def resolve_policies(mjlab_dir: Path, min_iteration: int, pas_checkpoint: str | None) -> list[Policy]:
   policies = []
   for label, task, experiment, home in LOCAL_POLICIES:
     found = latest_local_checkpoint(str(mjlab_dir), experiment)
@@ -72,18 +86,30 @@ def resolve_policies(mjlab_dir: Path, min_iteration: int) -> list[Policy]:
       print(f"[SKIP] {label}: latest checkpoint is iteration {iteration} < --min-iteration {min_iteration}")
       continue
     ckpt = mjlab_dir / "logs" / "rsl_rl" / experiment / run_dir / f"model_{iteration}.pt"
-    policies.append(Policy(label, task, str(ckpt), home))
+    policies.append(Policy(label, task, home, checkpoint=str(ckpt)))
     print(f"[POLICY] {label}: {ckpt}")
 
-  pas = mjlab_dir / PAS_CHECKPOINT
-  if pas.is_file():
+  # PAS: prefer an explicit --pas-checkpoint override, then the cluster-local
+  # fast path, then fall back to HF -- the only one that works unmodified on
+  # the laptop, which never writes PAS_CHECKPOINT's literal path (see above).
+  pas_local = Path(pas_checkpoint) if pas_checkpoint else mjlab_dir / PAS_CHECKPOINT
+  if pas_local.is_file():
     for label, prob in (("pas_oracle", "1.0"), ("pas_estimator", "0.0")):
       policies.append(
-        Policy(label, PAS_TASK, str(pas), None, ["--anneal-prob", prob], ablatable=False)
+        Policy(label, PAS_TASK, None, checkpoint=str(pas_local),
+               extra_args=["--anneal-prob", prob], ablatable=False)
       )
-      print(f"[POLICY] {label}: {pas} (--anneal-prob {prob})")
+      print(f"[POLICY] {label}: {pas_local} (--anneal-prob {prob})")
   else:
-    print(f"[SKIP] PAS: {pas} not found")
+    print(f"[INFO] PAS: {pas_local} not found locally; falling back to "
+          f"hf.co/{PAS_HF_REPO}/{PAS_HF_STAGE} (eval_checkpoint.py caches this once, "
+          "under eval_ckpts/, then reuses it for every PAS cell)")
+    for label, prob in (("pas_oracle", "1.0"), ("pas_estimator", "0.0")):
+      policies.append(
+        Policy(label, PAS_TASK, None, hf_repo=PAS_HF_REPO, hf_stage=PAS_HF_STAGE,
+               extra_args=["--anneal-prob", prob], ablatable=False)
+      )
+      print(f"[POLICY] {label}: hf.co/{PAS_HF_REPO}/{PAS_HF_STAGE} (--anneal-prob {prob})")
   return policies
 
 
@@ -92,7 +118,7 @@ def cell_name(label: str, terrain: str, difficulty: float, seed: int, ablate: bo
 
 
 def run_matrix(args: argparse.Namespace, mjlab_dir: Path, out_dir: Path) -> int:
-  policies = resolve_policies(mjlab_dir, args.min_iteration)
+  policies = resolve_policies(mjlab_dir, args.min_iteration, args.pas_checkpoint)
   if args.only:
     policies = [p for p in policies if p.label in args.only]
 
@@ -118,7 +144,7 @@ def run_matrix(args: argparse.Namespace, mjlab_dir: Path, out_dir: Path) -> int:
     cmd = [
       sys.executable, "scripts/eval_checkpoint.py",
       "--task", p.task,
-      "--checkpoint", p.checkpoint,
+      *p.checkpoint_args(),
       "--terrain", terrain,
       "--difficulty", str(difficulty),
       "--seed", str(seed),
@@ -244,9 +270,13 @@ def main() -> None:
   parser.add_argument("--ablation-difficulties", type=float, nargs="+", default=[0.5])
   parser.add_argument("--no-ablation", action="store_true")
   parser.add_argument("--seeds", type=int, nargs="+", default=[0])
-  parser.add_argument("--num-envs", type=int, default=1024)
+  parser.add_argument("--num-envs", type=int, default=1024,
+                       help="Cluster A100 default; an 8GB laptop GPU should pass ~128-256.")
   parser.add_argument("--steps", type=int, default=1200)
   parser.add_argument("--min-iteration", type=int, default=9999)
+  parser.add_argument("--pas-checkpoint", default=None,
+                       help="Local PAS .pt path override. Default: PAS_CHECKPOINT if that "
+                       "exact file exists (cluster), else fall back to HF -- see resolve_policies.")
   parser.add_argument("--only", nargs="+", help="Restrict to these policy labels.")
   parser.add_argument("--force", action="store_true", help="Re-run cells that already have JSON.")
   parser.add_argument("--dry-run", action="store_true", help="Print the cell commands without running.")

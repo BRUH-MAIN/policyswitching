@@ -17,6 +17,42 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-09-12 (2) -- please run the cross-terrain matrix locally, not just single-run_id evals
+
+`laptop_pull_and_eval.sh <run_id>` runs exactly one condition per checkpoint: whatever
+terrain that policy trained on, at the default (uniform-over-difficulty-rows) difficulty.
+That's the "too easy" test the design review (see the note below and findings.md) was
+about -- it can't answer whether a specialist degrades off its own terrain, or whether any
+of these policies use `height_scan` at all, which are exactly the two premise gates
+`objective.md` now says must pass before the switching module gets built.
+
+**The harder eval already exists and should run on the laptop too**: `a100/eval_matrix.py`
+(despite the `a100/` location, it's plain Python -- no SLURM, no A100-specific code; only
+`eval_matrix_slurm.sh` is cluster-only). It runs every available policy x 5 terrains x 3
+difficulties, plus a height-scan ablation, and writes `<mjlab-dir>/eval_results/matrix/summary.md`.
+
+To run it here: once you've pulled at least one specialist via `laptop_pull_and_eval.sh`
+(that rsync already lands the checkpoint at the same relative path `eval_matrix.py` expects,
+so nothing extra to set up), run e.g.
+```
+python3 a100/eval_matrix.py --num-envs 128 --only flat --difficulties 0.5
+```
+from the repo root (`--num-envs 128`, maybe lower, for the 8GB card -- start small and watch
+`nvidia-smi`, same caution as `docs/CLAUDE.laptop.md` already asks for). Drop `--only` to
+cover every policy you have locally; add more `--difficulties`/seeds once you know the
+per-cell cost. It's resumable (finished cells are skipped), so this can run in slices across
+sessions. **Found and fixed one real bug making this laptop-usable**: `eval_matrix.py` had
+PAS's checkpoint hardcoded to a cluster-only local path that `laptop_pull_and_eval.sh` never
+populates (it pulls PAS from HF into `eval_ckpts/` instead) -- PAS would have silently
+dropped out of the matrix here. It now falls back to `--hf-repo`/`--hf-stage` when that local
+file is missing (`--pas-checkpoint` overrides either way). Verified both branches with a
+simulated laptop-shaped checkpoint layout before pushing.
+
+Numeric output (`eval_results/matrix/*.json`, `summary.md`) isn't under `coordination/results/`
+-- worth a pointer in your analysis write-up rather than duplicating it there. Whoever reads
+it first should check the diagonal-vs-off-diagonal fall rates and the ablation deltas per
+`objective.md`'s premise gates before anyone touches Phase 4.
+
 ## 2026-09-12 -- eval_checkpoint.py defaults changed; objective.md revised (please review)
 
 Not a "please evaluate" note -- a heads-up that affects every future laptop eval, plus a
