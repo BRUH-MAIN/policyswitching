@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-12T14:49:29Z",
+  "last_updated_utc": "2026-09-12T14:49:37Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -37,13 +37,15 @@
     },
     "go2_spec_stairs": {
       "task": "Unitree-Go2-Spec-Stairs",
-      "source": "local",
-      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs/2026-09-05_22-37-43/model_9999.pt",
+      "source": "hf",
+      "path_on_cluster": null,
       "iteration": 9999,
       "sha256": null,
       "status": "complete",
       "slurm_job_id": "11849",
-      "notes": "Not on HF -- local disk only, see go2_spec_flat notes."
+      "notes": "Not on HF -- local disk only, see go2_spec_flat notes.",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs"
     },
     "go2_spec_rough": {
       "task": "Unitree-Go2-Spec-Rough",
