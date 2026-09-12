@@ -62,13 +62,24 @@ from src.tasks.velocity.config.go2.env_cfgs import TERRAIN_CLASSES  # noqa: E402
 
 
 def find_height_scan_term(cfg):
-  """Return (group_name, term_cfg) for the height_scan observation term."""
+  """Return (group_name, term_cfg) for the height_scan observation term.
+
+  Groups are `ObservationGroupCfg` dataclasses holding their terms in `.terms`,
+  so this looks there rather than at the group's own fields. 'actor' is preferred
+  over 'critic' when both carry a scan: the actor group is what a deployed
+  classifier would read.
+  """
+  found = {}
   for group_name, group in cfg.observations.items():
-    terms = group if isinstance(group, dict) else vars(group)
-    for term_name, term_cfg in terms.items():
-      if term_name == "height_scan":
-        return group_name, term_cfg
-  raise SystemExit("[ERROR] no 'height_scan' observation term found in this task's config.")
+    terms = group if isinstance(group, dict) else getattr(group, "terms", {})
+    if "height_scan" in terms:
+      found[group_name] = terms["height_scan"]
+  if not found:
+    raise SystemExit("[ERROR] no 'height_scan' observation term found in this task's config.")
+  for preferred in ("actor", "policy"):
+    if preferred in found:
+      return preferred, found[preferred]
+  return next(iter(found.items()))
 
 
 def scan_slice_for_group(env, group: str) -> slice:
@@ -84,7 +95,7 @@ def scan_slice_for_group(env, group: str) -> slice:
 
 
 def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
-            warmup: int, seed: int, device: str):
+            warmup: int, seed: int, device: str, spawn_spread: float = 3.0):
   """Roll out zero actions on one terrain class; return (samples, env_ids, noise_halfwidth).
 
   Noise is disabled on the scan term so the collected values are clean; the
@@ -101,6 +112,21 @@ def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
   # not necessarily in this checkout yet.
   apply_eval_conditions(cfg, terrain=terrain, difficulty=None, seed=seed)
   cfg.curriculum.pop("command_vel", None)
+
+  # Spread spawns across the terrain patch. The task's own reset_base randomizes
+  # only +/-0.5 m around the patch origin, which is 1/64th of an 8x8 m patch and
+  # sits dead centre -- and the centre of a `pyramid_stairs` patch is its flat top
+  # platform, wider than the 1.6x1.0 m scan. Sampling there makes stairs
+  # indistinguishable from flat by construction (measured: identical mean, ray-std
+  # and across-sample std to 4 decimals), which is a property of where we stood,
+  # not of the sensor. Keep a margin so the scan footprint stays on the patch.
+  if spawn_spread > 0:
+    reset_base = cfg.events.get("reset_base")
+    if reset_base is None:
+      raise SystemExit("[ERROR] no 'reset_base' event to widen; pass --spawn-spread 0 to skip.")
+    half = min(spawn_spread, cfg.scene.terrain.terrain_generator.size[0] / 2 - 1.0)
+    reset_base.params["pose_range"]["x"] = (-half, half)
+    reset_base.params["pose_range"]["y"] = (-half, half)
 
   group, term = find_height_scan_term(cfg)
   scale = term.scale if term.scale is not None else 1.0
@@ -185,6 +211,10 @@ def main() -> None:
   ap.add_argument("--steps", type=int, default=200, help="Sampled steps after warmup.")
   ap.add_argument("--stride", type=int, default=20, help="Keep every Nth step (samples are correlated).")
   ap.add_argument("--warmup", type=int, default=30, help="Discard steps while the robot settles.")
+  ap.add_argument("--spawn-spread", type=float, default=3.0,
+                  help="Half-width (m) of the spawn box within each terrain patch. The task's "
+                       "own reset_base uses 0.5, which keeps every robot on the flat top "
+                       "platform of a pyramid_stairs patch. 0 leaves the task's value alone.")
   ap.add_argument("--test-frac", type=float, default=0.25, help="Fraction of ENVS held out.")
   ap.add_argument("--seed", type=int, default=42)
   ap.add_argument("--epochs", type=int, default=200, help="LBFGS iterations.")
@@ -197,7 +227,7 @@ def main() -> None:
   for label, terrain in enumerate(args.classes):
     print(f"\n=== collecting '{terrain}' ({label + 1}/{len(args.classes)}) ===", flush=True)
     x, e, nh = collect(args.task, terrain, args.num_envs, args.steps,
-                       args.stride, args.warmup, args.seed, args.device)
+                       args.stride, args.warmup, args.seed, args.device, args.spawn_spread)
     if noise_half is None:
       noise_half = nh
     elif abs(noise_half - nh) > 1e-12:
@@ -235,6 +265,7 @@ def main() -> None:
   print(f"samples          : {(~is_test).sum().item()} train / {is_test.sum().item()} test")
   print(f"envs (effective) : {len(uniq) - n_test} train / {n_test} test  <- split by env")
   print(f"noise half-width : +/-{noise_half:.5f} in scaled units")
+  print(f"spawn spread     : +/-{args.spawn_spread:g} m within each 8x8 m patch")
   for name in ("clean", "noisy"):
     r = results[name]
     print(f"\n--- {name} ---")
@@ -259,6 +290,7 @@ def main() -> None:
       "rays": x.shape[1],
       "noise_half_width_scaled": noise_half,
       "split": "by env",
+      "spawn_spread_m": args.spawn_spread,
       "train_envs": len(uniq) - n_test,
       "test_envs": n_test,
       "results": results,
