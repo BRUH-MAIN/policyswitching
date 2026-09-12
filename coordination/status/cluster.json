@@ -61,7 +61,27 @@
       "sha256": null,
       "status": "in_progress",
       "slurm_job_id": "11914",
-      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out."
+      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out. 2026-09-12: still PENDING, never started (all nodes drained since 2026-09-10). Note the blended mix trains 80% on non-gap terrain, making this barely a gap specialist -- see go2_spec_gapswarm and findings.md 'Terrain specialists'."
+    },
+    "go2_spec_gapswarm": {
+      "task": "Unitree-Go2-Spec-GapsWarm",
+      "source": "local",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "not_submitted",
+      "slurm_job_id": null,
+      "notes": "Gaps redesign (2026-09-12): 100% stepping_stones, warm-started from the Rough specialist via a100/warm_start_ckpt.py, instead of diluting the training terrain the way attempt 3 does. Built and verified but NOT submitted -- open decision whether to cancel 11914 in favour of it or run both. Seeded here so cluster_update_status.sh has a task name to attach to (the script itself never writes the 'task' field that laptop_pull_and_eval.sh requires)."
+    },
+    "go2_generalist": {
+      "task": "Unitree-Go2-Generalist",
+      "source": "local",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "in_progress",
+      "slurm_job_id": "11918",
+      "notes": "Sensing-matched generalist baseline (arm 1 of the revised objective.md comparison): stock PPO over all four terrain classes at equal class weight, identical observation space / rewards / runner / 10k-iteration budget to a specialist. Replaces PAS as arm 1 -- PAS estimator-only reads no height_scan, adds reward terms no specialist has, and got ~8x the env steps. Submitted 2026-09-12, PENDING (nodes drained). Local disk only, like the specialists."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11 (job log + specialist table) so this heartbeat isn't empty on first use. Cluster session: keep this current via coordination/scripts/cluster_update_status.sh rather than hand-editing."
