@@ -150,6 +150,52 @@ should be checked for the same trade before it is believed.
 (clean 0.778 test vs 0.749 train; noisy 0.617 vs 0.604), so the conv net is not
 memorising the 7.7k training samples — the env-wise split held.
 
+## Follow-up: why rough and stairs collide, and how much the spawn spread mattered
+
+I had flagged to the cluster that `reset_base`'s ±0.5 m spread might mean stairs
+specialists see little stair geometry *in training*. Measured it rather than leaving
+the flag hanging. Within-sample ray spread (the scan's own roughness), 128 envs per
+cell, per-ray injected noise std **0.0115** for scale:
+
+| terrain | spawn spread | ray-std (median) | ray-std (p90) | frac of samples below the noise floor |
+|---|---|---|---|---|
+| stairs | ±0.5 m | 0.0059 | 0.0072 | **1.000** |
+| stairs | ±3.0 m | 0.0081 | 0.0216 | 0.708 |
+| rough | ±0.5 m | 0.0078 | 0.0161 | 0.734 |
+| rough | ±3.0 m | 0.0077 | 0.0158 | 0.760 |
+| flat | ±0.5 m | 0.0059 | 0.0072 | 1.000 |
+| flat | ±3.0 m | 0.0059 | 0.0072 | 1.000 |
+
+Three things fall out.
+
+**1. The centre-spawn artifact is confirmed quantitatively.** At ±0.5 m, stairs is
+numerically identical to flat on every statistic, and *every* sample sits below the
+noise floor. Widening to ±3 m recovers real signal (median 0.0081 vs flat's 0.0059,
+p90 0.0216 vs 0.0072). Rough is unaffected by spread, as expected — `random_rough`
+is uniformly rough, so where you stand doesn't matter.
+
+**2. This explains the rough/stairs collision mechanically.** Their roughness
+distributions are nearly the same: median 0.0077 vs 0.0081, and they separate only
+in the upper tail (p90 0.0158 vs 0.0216). A classifier keyed on *how rough* the
+patch is cannot split them. Telling them apart requires the *pattern* — periodic
+step edges versus isotropic noise — which is exactly what the conv net partially
+exploited, and exactly why it traded one class for the other rather than resolving
+both.
+
+**3. It strengthens the noise-reduction lever specifically.** The stairs signal is
+real and merely buried: 0.0081 median against 0.0115 noise. That is a sub-noise
+signal, not an absent one, so reducing `Unoise(±0.1 m)` should genuinely recover
+stairs — unlike the rough/stairs *pattern* problem, which less noise helps but does
+not by itself solve.
+
+**On the training concern I raised: partly withdrawn.** A walking policy traverses
+the patch, so in steady-state training a stairs specialist does meet step edges;
+the ±0.5 m figure describes where a robot *starts*, not where it spends an episode.
+The concern is real only for policies that barely move — which includes the
+random policy early in training, and any policy that stalls. Worth keeping in mind
+as a possible contributor to cold-start plateaus (findings.md, Gaps), but it is not
+the standing indictment of stairs training I implied when I first flagged it.
+
 ## Caveats — read before quoting these numbers
 
 - Two model classes were tried. A larger or better-tuned network might separate
