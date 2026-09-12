@@ -19,6 +19,121 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-09-12 (3) -- objective.md 2x2: signed off, with five changes I'd want before Phase 4
+
+Reviewed the revised `objective.md` as asked. **Broadly: yes, this is a better
+design than what it replaced**, and I'm not asking to reopen the structure. The
+2x2 genuinely de-confounds blending from anticipation, the geometric smoothness
+window is the right call over event-keyed (an event-keyed metric would have
+favoured arm 3 by construction), replacing PAS with a sensing-matched generalist
+as arm 1 removes three confounds at once, and the premise gates are the right
+instinct. I re-derived the height-scan noise arithmetic independently and it is
+exactly right: mjlab's pipeline is compute -> noise -> clip -> scale (confirmed in
+`observation_manager.py`), so `Unoise(+/-0.1)` gives std 0.2/sqrt(12) = 0.05774 m,
+times `scale=1/max_distance=1/5.0` = **0.011547** scaled, against a measured
+normalizer std of ~0.012. The conclusion stands.
+
+Five things I'd change. #1 and #2 affect whether the headline claim is
+interpretable at all; #3-#5 are smaller.
+
+### 1. Arm 2b must be *retrained* without look-ahead inputs, not masked at eval
+
+`objective.md` defines 2b as "the arm-3 gating network with look-ahead inputs
+masked". If that means eval-time masking of a network trained *with* those inputs,
+it invalidates the headline comparison: the lesioned network runs off-distribution,
+so part of any 2b-vs-3 gap is "arm 2b is a damaged arm 3" rather than "anticipation
+helps". Since 2b vs 3 *is* the contribution, this is the one confound the design
+cannot afford.
+
+The statistical plan's phrasing ("the gating network (arms 2b, 3) trains with >=3
+seeds") suggests you already intend 2b to be separately trained, in which case this
+is only an ambiguity in the comparison table -- but it's worth making explicit,
+because the cheap reading is the wrong one and someone implementing Phase 4 from
+the table alone would plausibly implement the mask. Suggest: "2b -- the arm-3
+gating architecture retrained from scratch with the look-ahead inputs absent".
+
+### 2. Premise gate 2 tests the wrong thing for the decision it gates
+
+The gate asks "do policies use the height scan?" and tests it by ablating the scan
+and watching fall rate / velocity error. But what the switching design actually
+needs is that the scan is **terrain-discriminative** -- the reactive classifier and
+the gating network's current-terrain input both need to tell flat from rough from
+stairs from gaps. Those are different properties, and they can dissociate in both
+directions:
+
+- the scan can be uninformative *to the locomotion policy* (proprioception is
+  enough at these mild difficulties: stairs <=10 cm, rough 2-10 cm) while still
+  being perfectly sufficient for a classifier -- the ablation says "fix the terrain
+  signal", and the project stalls on a non-problem;
+- the scan can measurably help locomotion (foot placement) while still not
+  separating the classes cleanly -- the ablation says "green light", and the
+  classifier built in Phase 4 quietly underperforms.
+
+The direct test is cheap and doesn't involve RL at all: collect height-scan
+observations labelled by terrain class from the existing envs and fit a small
+supervised classifier (even logistic regression on the 187 dims), then report
+per-class accuracy and the confusion matrix. That measures exactly the quantity
+Phase 4 depends on, costs minutes on the laptop, needs no checkpoint, and is
+**not blocked by the drain or the HF backfill** -- unlike everything else in both
+gates. I'd add it as gate 2a and keep the ablation as gate 2b, since the ablation
+still answers a real question (whether specialist advantage is exteroceptive or
+just terrain-specific gait tuning).
+
+I'm happy to run the classifier study from the laptop -- say the word and I'll pick
+it up rather than routing it back to you.
+
+### 3. The statistical plan doesn't cover the comparison it calls out as headline
+
+">=3 seeds" is scoped to the gating network (2b, 3). But **1 vs 2a -- "the effect
+of specialization" -- is single-seed on both sides**, and premise gate 1 (which the
+document itself calls "the project's most important result" if it fails) rests
+entirely on single-seed specialists. For an effect the document repeatedly predicts
+will be "real but modest", n=1 vs n=1 cannot support a claim in either direction:
+a null result is uninterpretable (bad seed vs. no effect) and a positive one is
+unreplicated.
+
+The generalist at least should get the same >=3 seeds as the gating network -- it's
+arm 1 of the headline table, it's a stock-PPO run, and `SEED=<n>` already exists in
+`train_specialist_slurm.sh`. For the specialists, "frozen assets, train once" is a
+defensible budget decision, but then gate 1's verdict needs to be reported with
+that caveat attached rather than as a clean pass/fail.
+
+### 4. Boundary smoothness has a survivorship problem
+
+Transition-boundary smoothness is measurable only on episodes that survive to reach
+a boundary. An arm with a higher fall rate contributes fewer crossings, and the ones
+it does contribute come disproportionately from its better episodes -- so the arm
+that falls most can look *smoothest*. The per-policy whole-rollout normalization
+doesn't fix this and may worsen it: a policy that falls early has a short rollout
+whose "whole-rollout" baseline is itself dominated by boundary-adjacent steps.
+
+Suggest reporting crossing count per arm alongside the metric, and either
+conditioning on matched survival or restricting the comparison to episodes that
+completed the course. Same family as bugs #1 and #11 -- a metric that answers a
+different question than the one asked.
+
+### 5. Promote 3b from optional to standard
+
+3b (hard + anticipatory) is listed as "optional, cheap". It's the cell that makes
+the 2x2 an actual factorial and gives the hard/soft x reactive/anticipatory
+interaction. Since it's just argmax of arm 3's already-trained gate, it costs one
+extra eval pass and no training. Cheap enough that leaving it out is a worse trade
+than running it.
+
+### Not changes, but worth recording
+
+- The four scope decisions and the PAS relationship section are right as written;
+  no objection.
+- The preview-horizon sweep correctly avoids the confound I went looking for --
+  running 2b at each lead distance too means "gain vs horizon" is a within-distance
+  difference, so lead distance changing the task doesn't contaminate it. Worth a
+  parenthetical in the doc making that explicit, since it's load-bearing and easy
+  to drop when implementing.
+- Sequencing note: with the nodes drained, gate 2a (the classifier study) and the
+  HF backfill are the only two things on the critical path that can actually run
+  today. Both are GPU-free.
+
+
 ## 2026-09-12 (3) -- bug #12 fix candidate CONFIRMED, ready to apply
 
 Ran the test the previous entry proposed: same PAS oracle checkpoint, `--terrain flat
