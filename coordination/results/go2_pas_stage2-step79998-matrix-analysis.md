@@ -62,8 +62,38 @@ privileged latent), not a height-scan ablation.
   team's steer given GPU is shared with `orchestrator-session` and the
   premise-gate work is fully blocked regardless of what PAS-only shows.
 
+## Update 2026-09-12: bug #12 diagnosed, confirmed, and fixed (fix stuck on cluster, unpushed)
+
+`orchestrator-session` traced the root cause to mjlab's `terrain_generator.py`:
+`difficulty_range=(d, d)` alone already pins every row to difficulty `d`, so
+`apply_eval_conditions`'s `num_rows=1` contributes nothing to the pin and instead
+collapses terrain extent + forces every env onto row 0. I confirmed this directly
+with a throwaway monkeypatch script (not a repo edit): same PAS oracle checkpoint,
+`--terrain flat --difficulty 0.5`, `num_rows` left at its configured 10 with only
+`difficulty_range` pinned + `max_init_terrain_level=None` → 0% fall, exactly
+reproducing the difficulty-unpinned result. The cluster session independently
+re-confirmed via the real checkpoint (three-way comparison: as-written 19/32 fallen
+by step 60, difficulty=None 0/32, fix candidate 0/32) and applied the one-line fix
+to `env_cfgs.py` — but that commit is currently stuck local-only on the cluster
+checkout (its git push is still blocked pending a deploy key, same issue as the
+81906b2 blocker earlier today). **Not yet on `origin/main` as of this write-up** —
+verified directly (`git merge-base --is-ancestor <their-commit> origin/main` fails).
+Don't treat the fix as landed until confirmed on origin/main again.
+
+## Difficulty-uniform PAS oracle vs. estimator, all 5 terrains (unaffected by #12)
+
+Ran per `orchestrator-session`'s steer once #12 was diagnosed (not blocked on the
+fix landing, since this path was already proven safe). Full numbers now in
+`findings.md`'s PAS section ("Pinned-condition PAS oracle vs. estimator, per
+terrain class"). Headline: oracle and estimator track closely everywhere except
+`gaps`, where the estimator degrades sharply (74.0%→93.1% fall) — plausibly because
+PAS's own training gave gap terrain only 15% weight. Also flagged an unexplained
+secondary pattern: achieved speed is a near-constant 8–11% of commanded across
+every terrain/mode, even where fall rate is ~0% — worth a look before reading
+flat/stairs survival as "solved."
+
 ## Next step
 
-Pending team input (see `coordination/inbox/to-cluster.md` and messages to
-`orchestrator-session`) rather than deciding unilaterally, since bug #12 changes
-what's worth spending laptop GPU time on right now.
+Handed off: GPU passed to `orchestrator-session` for `height_scan_classifier.py`
+(premise gate 2a). Waiting on the cluster to get bug #12's fix onto `origin/main`
+before any more difficulty-pinned cells run.

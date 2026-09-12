@@ -1,0 +1,90 @@
+{
+  "gate": "2a_height_scan_discriminability",
+  "task": "Unitree-Go2-Generalist",
+  "classes": [
+    "flat",
+    "rough",
+    "stairs",
+    "gaps"
+  ],
+  "chance": 0.25,
+  "num_envs_per_class": 256,
+  "rays": 187,
+  "noise_half_width_scaled": 0.020000000000000004,
+  "split": "by env",
+  "spawn_spread_m": 3.0,
+  "train_envs": 768,
+  "test_envs": 256,
+  "results": {
+    "clean": {
+      "accuracy": 0.63203125,
+      "per_class_accuracy": [
+        0.6481481194496155,
+        0.5622641444206238,
+        0.3393442630767822,
+        0.9639344215393066
+      ],
+      "confusion": [
+        [
+          525,
+          30,
+          255,
+          0
+        ],
+        [
+          135,
+          298,
+          97,
+          0
+        ],
+        [
+          211,
+          184,
+          207,
+          8
+        ],
+        [
+          4,
+          8,
+          10,
+          588
+        ]
+      ]
+    },
+    "noisy": {
+      "accuracy": 0.54921875,
+      "per_class_accuracy": [
+        0.4185185134410858,
+        0.505660355091095,
+        0.3360655605792999,
+        0.9737704992294312
+      ],
+      "confusion": [
+        [
+          339,
+          238,
+          233,
+          0
+        ],
+        [
+          124,
+          268,
+          138,
+          0
+        ],
+        [
+          159,
+          240,
+          205,
+          6
+        ],
+        [
+          2,
+          5,
+          9,
+          594
+        ]
+      ]
+    }
+  }
+}
