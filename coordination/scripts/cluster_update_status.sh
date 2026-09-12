@@ -12,13 +12,26 @@
 #     coordination/scripts/cluster_update_status.sh go2_pas_stage2 79998 \
 #       hf RohanRamesh/go2-pas-saro stage2 [slurm_job_id]
 #
-#   Specialists (go2_spec_flat/stairs/rough/gaps) -- checkpoints live ONLY on
-#   cluster local disk (the stock VelocityOnPolicyRunner has no HF upload
-#   logic), so this hashes the file directly:
+#   Specialists -- historically cluster-local-disk only (findings.md bug #4).
+#   Use 'local' mode for those; it hashes the file directly:
 #     coordination/scripts/cluster_update_status.sh go2_spec_gaps 9999 \
 #       local unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/<run_dir>/model_9999.pt [slurm_job_id]
 #
+#   As of 2026-09-12 specialists back up to a PRIVATE HF repo instead (user
+#   decision -- go2-pas-saro is public, so specialists do not go there). Once a
+#   specialist is on HF, register it in 'hf' mode so the laptop pulls it over
+#   HF rather than the rsync path, which no longer works (no SSH key on the
+#   laptop -- see coordination/log/2026-09-12-laptop.md):
+#     coordination/scripts/cluster_update_status.sh go2_spec_flat 9999 \
+#       hf <private-repo> go2_spec_flat [slurm_job_id]
+#
 # Run from the repo root (paths above are relative to it).
+#
+# TASK: laptop_pull_and_eval.sh hard-errors on a run whose "task" field is
+# missing, and this script is what creates a run entry in the first place. The
+# task name is derived from the run_id below; for a run_id not in that map, set
+# TASK explicitly:
+#     TASK=Unitree-Go2-Spec-Foo coordination/scripts/cluster_update_status.sh go2_spec_foo ...
 
 set -euo pipefail
 
@@ -51,17 +64,44 @@ case "$MODE" in
     ;;
 esac
 
+# Derive the task name from the run_id unless TASK is set explicitly. Done here,
+# before git touches anything, so an unknown run_id fails immediately instead of
+# writing a status entry that laptop_pull_and_eval.sh will reject with
+# "task MISSING" once it is already committed and pushed.
+if [ -z "${TASK:-}" ]; then
+  case "$RUN_ID" in
+    go2_pas_stage1)    TASK="Unitree-Go2-PAS-Oracle" ;;
+    go2_pas_stage2)    TASK="Unitree-Go2-PAS-Anneal" ;;
+    go2_generalist)    TASK="Unitree-Go2-Generalist" ;;
+    go2_spec_gapswarm) TASK="Unitree-Go2-Spec-GapsWarm" ;;
+    go2_spec_flat)     TASK="Unitree-Go2-Spec-Flat" ;;
+    go2_spec_rough)    TASK="Unitree-Go2-Spec-Rough" ;;
+    go2_spec_stairs)   TASK="Unitree-Go2-Spec-Stairs" ;;
+    go2_spec_gaps)     TASK="Unitree-Go2-Spec-Gaps" ;;
+    *)
+      echo "[ERROR] no task name known for run_id '$RUN_ID'." >&2
+      echo "        laptop_pull_and_eval.sh requires it and hard-errors without it." >&2
+      echo "        Re-run with TASK set explicitly, e.g.:" >&2
+      echo "          TASK=Unitree-Go2-Spec-Foo $0 $*" >&2
+      echo "        (and add the mapping to this script's case block if it is a keeper)." >&2
+      exit 1
+      ;;
+  esac
+fi
+echo "[INFO] run_id '$RUN_ID' -> task '$TASK'"
+
 git pull --rebase
 
-python3 - "$RUN_ID" "$ITERATION" "$MODE" "$HF_REPO" "$HF_STAGE" "$LOCAL_PATH" "$SHA256" "$JOB_ID" <<'PY'
+python3 - "$RUN_ID" "$ITERATION" "$MODE" "$HF_REPO" "$HF_STAGE" "$LOCAL_PATH" "$SHA256" "$JOB_ID" "$TASK" <<'PY'
 import json, sys, datetime
 
-run_id, iteration, mode, hf_repo, hf_stage, local_path, sha256, job_id = sys.argv[1:9]
+run_id, iteration, mode, hf_repo, hf_stage, local_path, sha256, job_id, task = sys.argv[1:10]
 path = "coordination/status/cluster.json"
 data = json.load(open(path))
-data["last_updated_utc"] = datetime.datetime.utcnow().isoformat() + "Z"
+data["last_updated_utc"] = datetime.datetime.now(datetime.timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
 
 run = data["runs"].setdefault(run_id, {})
+run["task"] = task
 run["iteration"] = int(iteration)
 run["status"] = "complete"  # cluster session: edit to "in_progress"/"timeout" by hand if this call is a checkpoint-in-progress update, not a finish.
 if mode == "hf":
