@@ -283,14 +283,21 @@ def summarize(out_dir: Path) -> str:
   ablation_keys = sorted({(k[0], k[1], k[2]) for k in cells if k[3]})
   if ablation_keys:
     lines += ["## Height-scan ablation", "",
-              "Same cell with the actor's height_scan replaced by its normalizer mean. "
-              "Near-zero deltas = the policy isn't using exteroception.", "",
-              "| policy | terrain | difficulty | fall % (scan → none) | error (scan → none) |",
-              "|---|---|---|---|---|"]
+              "Same cell with the actor's height_scan replaced by its normalizer mean.", "",
+              "**Only meaningful on `generalist` (home terrain = none below).** A specialist "
+              "trained on one terrain class saw a near-constant scan throughout training "
+              "(objective.md gate 2) -- ablating it substitutes an already-near-constant "
+              "input with a constant, so a near-zero delta is close to guaranteed regardless "
+              "of whether a policy trained on varied terrain could use the scan. Specialist "
+              "rows below are run-but-not-evidence, kept for context, not proof of anything.", "",
+              "| policy | home | terrain | difficulty | fall % (scan → none) | error (scan → none) |",
+              "|---|---|---|---|---|---|"]
     for label, t, d in sorted(ablation_keys, key=lambda k: (order.index(k[0]) if k[0] in order else 99, k[1], k[2])):
       with_scan, no_scan = (label, t, d, False), (label, t, d, True)
+      home = homes.get(label)
+      home_str = home if home is not None else ("none (generalist)" if label in homes else "n/a")
       lines.append(
-        f"| {label} | {t} | {d:g} "
+        f"| {label} | {home_str} | {t} | {d:g} "
         f"| {_fmt(metric(with_scan, 'survival', 'fall_pct'), '.1f')} → {_fmt(metric(no_scan, 'survival', 'fall_pct'), '.1f')} "
         f"| {_fmt(metric(with_scan, 'locomotion', 'lin_vel_error_per_step'), '.2f')} → "
         f"{_fmt(metric(no_scan, 'locomotion', 'lin_vel_error_per_step'), '.2f')} |"
