@@ -108,7 +108,7 @@ artifact.
    applied pre-scale against ≤10 cm of relief. Reducing it, or raising the terrain
    difficulty range so the relief clears the noise, would only need to buy
    separation for the rough/stairs pair now.
-4. **Or narrow the taxonomy — and the concession is smaller than it first looked.**
+3. **Or narrow the taxonomy — and the concession is smaller than it first looked.**
    Merging rough and stairs into one "uneven" class leaves a 3-way switch
    (gaps / flat / uneven) that the sensing supports at roughly 0.6–0.97 per class,
    rather than collapsing all the way to gap-vs-non-gap.
