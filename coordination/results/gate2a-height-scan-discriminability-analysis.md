@@ -108,10 +108,13 @@ artifact.
    applied pre-scale against ≤10 cm of relief. Reducing it, or raising the terrain
    difficulty range so the relief clears the noise, would only need to buy
    separation for the rough/stairs pair now.
-3. **Or narrow the taxonomy — and the concession is smaller than it first looked.**
+3. **Or narrow the taxonomy — the only one of the three sufficient on its own.**
    Merging rough and stairs into one "uneven" class leaves a 3-way switch
    (gaps / flat / uneven) that the sensing supports at roughly 0.6–0.97 per class,
-   rather than collapsing all the way to gap-vs-non-gap.
+   rather than collapsing all the way to gap-vs-non-gap. The measured zero-noise
+   ceiling (below) is what makes this the strong option: the pair tops out at ~0.51
+   each even with a perfect sensor, so the sensing levers cannot close it, whereas
+   merging removes it by construction and carries no training risk.
 
 **None of these is a config tweak, and none is mine or the cluster's to pick.** The
 noise level and difficulty range are global training settings that every
@@ -182,11 +185,30 @@ step edges versus isotropic noise — which is exactly what the conv net partial
 exploited, and exactly why it traded one class for the other rather than resolving
 both.
 
-**3. It strengthens the noise-reduction lever specifically.** The stairs signal is
-real and merely buried: 0.0081 median against 0.0115 noise. That is a sub-noise
-signal, not an absent one, so reducing `Unoise(±0.1 m)` should genuinely recover
-stairs — unlike the rough/stairs *pattern* problem, which less noise helps but does
-not by itself solve.
+**3. It strengthens the noise-reduction lever, but the clean condition already
+bounds how far that lever goes.** The stairs signal is real and merely buried —
+0.0081 median against 0.0115 noise — so reducing `Unoise(±0.1 m)` genuinely recovers
+stairs. How far is not a matter of speculation: **the "clean" column of the CNN
+table above *is* the zero-noise limit**, i.e. the best case any noise reduction can
+ever achieve.
+
+| condition | flat | gaps | rough | stairs | rough/stairs pair avg |
+|---|---|---|---|---|---|
+| CNN, full noise | 0.604 | 0.970 | 0.200 | 0.643 | 0.421 |
+| CNN, **zero noise** (the ceiling) | 1.000 | 0.985 | 0.511 | 0.508 | **0.510** |
+
+Removing the noise entirely lifts the rough/stairs pair from 0.421 to 0.510 — a
+real ~9-point gain, so noise reduction is not futile for that pair. But at that
+ceiling rough and stairs still sit at ~0.51 each while flat reaches 1.000 and gaps
+0.985 in the *same* condition. The pair remains the weakest link by a wide margin
+even with a perfect sensor.
+
+An earlier version of this write-up, and a message to the cluster session, claimed
+noise reduction could "only buy stairs-vs-flat, never rough-vs-stairs". That was too
+strong and is corrected here: noise obscures spatial pattern as well as magnitude,
+so the two are not cleanly separable levers. The measured ceiling is the honest
+form of the argument, and a stronger one — it is an observation, not an
+extrapolation.
 
 **On the training concern I raised: partly withdrawn.** A walking policy traverses
 the patch, so in steady-state training a stairs specialist does meet step edges;
