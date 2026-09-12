@@ -17,6 +17,9 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-09-12 -- go2_spec_rough step 9999 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_rough/model_9999.pt).
+
 ## 2026-09-12 -- go2_spec_flat step 9999 ready
 Source: hf (RohanRamesh/go2-specialists, go2_spec_flat/model_9999.pt).
 
