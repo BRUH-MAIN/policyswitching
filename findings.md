@@ -60,7 +60,7 @@ Two-stage training: Stage 1 ("oracle," `Unitree-Go2-PAS-Oracle`) trains an actor
 
 **Critical eval gotcha**: `anneal_prob` (how much the actor trusts the true latent vs. the estimator's prediction) is **runtime state on `PasActorModel`, not stored in the checkpoint** — it's reset to `initial_anneal_prob=1.0` on load. Every eval silently runs in oracle mode unless `eval_checkpoint.py --anneal-prob 0.0` is passed explicitly. By the end of Stage 2 training, `anneal_prob ≈ 0.9998^40000 ≈ 0.0003` — i.e. the policy was almost always trained/tested using the *estimator's* prediction, not the oracle latent — so oracle-mode eval is actually evaluating an operating regime the final policy barely used during training.
 
-*2026-09-12:* every number in this table was measured with the terrain curriculum live (bug #10). Each is valid as "this checkpoint under its training conditions", but they are **not comparable to other policies' numbers**. Pinned-condition PAS numbers come from job 11919.
+*2026-09-12:* every number in this table was measured with the terrain curriculum live (bug #10). Each is valid as "this checkpoint under its training conditions", but they are **not comparable to other policies' numbers**. Superseded for `model_79998` by the per-terrain table below; job 11919 (once it runs) provides the equivalent for the specialists/generalist.
 
 | checkpoint | mode | survival | mean ep. length | achieved/commanded speed | stalled-while-commanded |
 |---|---|---|---|---|---|
@@ -75,6 +75,27 @@ Two-stage training: Stage 1 ("oracle," `Unitree-Go2-PAS-Oracle`) trains an actor
 **Open call, not yet resolved**: PAS oracle-mode is a legitimate *sim-only* baseline (with a privileged-information advantage no specialist has), but estimator-only — the only mode a real robot could run — falls roughly twice as often as oracle and hasn't clearly gotten better at walking as it's gotten better at surviving. Whether that's worth further Stage-2 investment before anchoring the generalist-baseline comparison on it, or whether it's accepted as-is (sim ablations were always meant to carry the empirical weight, per the original project framing), is an open decision.
 
 *Correction 2026-09-12:* the privileged-information caveat above points the wrong way. Every specialist reads raw `height_scan`, so **oracle** PAS (encoded height scan + base velocity + friction) is the roughly sensing-matched comparison, and **estimator-only** (no height scan at all) is the unfairly handicapped one. The open call is also moot: PAS is no longer arm 1. It adds reward terms no specialist has (`energy`, `joint_vel_l2`) and got ~8× a specialist's env steps (80k vs. 10k iterations at the same 8192 envs × 24 steps). The sensing-matched arm 1 is `Unitree-Go2-Generalist` (job 11918), and PAS is reported separately as a replication result.
+
+### Pinned-condition PAS oracle vs. estimator, per terrain class (2026-09-12, laptop)
+
+`model_79998`, 128 envs, 1200 steps, `--terrain <class>` with **no `--difficulty`** (uniform spread over rows) — run directly via `eval_checkpoint.py` rather than `a100/eval_matrix.py`, which has no flag to omit `--difficulty`. Chosen specifically because this is the one path proven unaffected by bug #12 (the fix was still stuck on the cluster checkout, unpushed, at the time these ran). Supersedes the bug-#10/#11 table above for `model_79998`.
+
+| terrain | mode | fall % | mean ep. length | achieved/commanded | stalled % |
+|---|---|---|---|---|---|
+| flat | oracle | 0.0 | 1000.0 | 8% | 31.4% |
+| flat | estimator | 0.8 | 994.6 | 8% | 30.4% |
+| rough | oracle | 49.1 | 545.9 | 11% | 22.2% |
+| rough | estimator | 46.7 | 586.9 | 11% | 21.5% |
+| stairs | oracle | 0.0 | 1000.0 | 8% | 31.4% |
+| stairs | estimator | 0.8 | 994.5 | 8% | 30.6% |
+| gaps | oracle | 74.0 | 317.7 | 8% | 32.1% |
+| gaps | estimator | 93.1 | 97.4 | 10% | 31.0% |
+| mixed | oracle | 44.6 | 608.6 | 9% | 28.8% |
+| mixed | estimator | 59.4 | 455.0 | 10% | 27.6% |
+
+**Reading these**: oracle and estimator track closely on flat/stairs/rough/mixed (within a few points), but diverge sharply on `gaps` (74.0% vs 93.1% fall, and mean episode length drops from 317.7 to 97.4 steps). The distilled proprioception-only latent holds up on the terrain PAS's native mix weighted heavily, but degrades specifically on gap-crossing — the one class PAS's own training gave only 15% weight to (see "Terrain specialists" below and objective.md's Gaps redesign). This is a real signal, not a bug-#12 artifact: none of these cells go through the pinned-difficulty path.
+
+**Second observation, not yet explained.** Achieved speed sits at a near-constant 8–11% of commanded across every terrain and both modes, including `flat`/`stairs` where fall rate is ~0%. This is not bug #1's exact failure mode (the robot is moving, ~0.08–0.11 m/s, not translating zero metres), but a policy surviving nearly every episode while achieving under a tenth of its commanded speed, with 28–32% of commanded-to-move steps stalled in every single cell regardless of terrain or mode, is exactly the group-1-looks-perfect/group-2-says-otherwise pattern `eval_checkpoint.py`'s own docstring warns about. Worth investigating before treating flat/stairs survival as "PAS has these solved" — not yet root-caused (candidates: pinned command range now includes fast commands PAS rarely saw late in training if its own command curriculum differed; overly conservative policy behavior; or something about the command range pin itself interacting with PAS specifically, since the specialists have not yet been measured the same way to know if this is PAS-specific or common to every policy under these pinned conditions).
 
 ## Terrain specialists
 
