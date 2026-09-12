@@ -55,6 +55,11 @@ PAS_CHECKPOINT = "logs/rsl_rl/go2_pas/2026-09-05_17-59-43_stage2/model_79998.pt"
 PAS_HF_REPO = "RohanRamesh/go2-pas-saro"
 PAS_HF_STAGE = "stage2"
 
+# Specialists back up to a SEPARATE, PRIVATE repo (user decision, 2026-09-12) --
+# NOT go2-pas-saro, which is public and holds only PAS. hf_stage = experiment name,
+# matching train_specialist_slurm.sh's HF_CHECKPOINT_STAGE="$EXPERIMENT_NAME".
+SPECIALIST_HF_REPO = "RohanRamesh/go2-specialists"
+
 
 @dataclass
 class Policy:
@@ -74,20 +79,53 @@ class Policy:
     return ["--hf-repo", self.hf_repo, "--hf-stage", self.hf_stage]
 
 
+def _hf_stages_with_checkpoints(repo_id: str) -> set[str] | None:
+  """Stage prefixes (first path segment) that have a model_*.pt in repo_id.
+
+  Returns None -- treat as "nothing available", not an error -- if the repo
+  can't be listed at all: doesn't exist yet, private without a working token,
+  huggingface_hub not installed. eval_matrix.py must stay usable with zero HF
+  access configured (that's the local-only cluster case), so a missing/
+  unreachable specialist repo is exactly as normal as a missing local checkpoint.
+  """
+  try:
+    from huggingface_hub import HfApi
+    files = HfApi().list_repo_files(repo_id, repo_type="model")
+  except Exception as exc:  # noqa: BLE001
+    print(f"[INFO] Could not list hf.co/{repo_id} ({exc}) -- HF fallback for specialists disabled.")
+    return None
+  return {f.split("/", 1)[0] for f in files if f.endswith(".pt")}
+
+
 def resolve_policies(mjlab_dir: Path, min_iteration: int, pas_checkpoint: str | None) -> list[Policy]:
   policies = []
+  specialist_hf_stages: set[str] | None = None  # fetched lazily, once, only if needed
   for label, task, experiment, home in LOCAL_POLICIES:
     found = latest_local_checkpoint(str(mjlab_dir), experiment)
-    if found is None:
-      print(f"[SKIP] {label}: no checkpoint under logs/rsl_rl/{experiment}/")
+    if found is not None:
+      iteration, run_dir = found
+      if iteration < min_iteration:
+        print(f"[SKIP] {label}: latest checkpoint is iteration {iteration} < --min-iteration {min_iteration}")
+        continue
+      ckpt = mjlab_dir / "logs" / "rsl_rl" / experiment / run_dir / f"model_{iteration}.pt"
+      policies.append(Policy(label, task, home, checkpoint=str(ckpt)))
+      print(f"[POLICY] {label}: {ckpt}")
       continue
-    iteration, run_dir = found
-    if iteration < min_iteration:
-      print(f"[SKIP] {label}: latest checkpoint is iteration {iteration} < --min-iteration {min_iteration}")
-      continue
-    ckpt = mjlab_dir / "logs" / "rsl_rl" / experiment / run_dir / f"model_{iteration}.pt"
-    policies.append(Policy(label, task, home, checkpoint=str(ckpt)))
-    print(f"[POLICY] {label}: {ckpt}")
+
+    # Not on local disk (findings.md bug #4/#13: e.g. the laptop, which has no
+    # SSH route to cluster local disk). Fall back to the private specialist
+    # HF repo -- but only if it actually has this experiment's checkpoint, so
+    # a policy that hasn't trained ANYWHERE yet (GapsWarm, Generalist before
+    # their jobs run) gets a clean [SKIP] here rather than a per-cell download
+    # failure for every terrain x difficulty combination later.
+    if specialist_hf_stages is None:
+      specialist_hf_stages = _hf_stages_with_checkpoints(SPECIALIST_HF_REPO) or set()
+    if experiment in specialist_hf_stages:
+      policies.append(Policy(label, task, home, hf_repo=SPECIALIST_HF_REPO, hf_stage=experiment))
+      print(f"[POLICY] {label}: hf.co/{SPECIALIST_HF_REPO}/{experiment}")
+    else:
+      print(f"[SKIP] {label}: no checkpoint under logs/rsl_rl/{experiment}/ "
+            f"or hf.co/{SPECIALIST_HF_REPO}/{experiment}/")
 
   # PAS: prefer an explicit --pas-checkpoint override, then the cluster-local
   # fast path, then fall back to HF -- the only one that works unmodified on

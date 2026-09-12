@@ -21,8 +21,10 @@
 #              Rough specialist for GapsWarm; unset for everything else. Only applied when
 #              the experiment has no checkpoint yet.
 #   HF_TOKEN   if set, every checkpoint is also pushed to hf.co/$HF_CHECKPOINT_REPO
-#              (default RohanRamesh/go2-pas-saro) under <experiment>/ -- the off-cluster
-#              backup specialists never had. Unset = local disk only.
+#              (default RohanRamesh/go2-specialists, a PRIVATE repo -- NOT go2-pas-saro,
+#              which is public and the user explicitly declined publishing specialists to)
+#              under <experiment>/ -- the off-cluster backup specialists never had.
+#              Unset = local disk only.
 #   BUDGET, NUM_ENVS, SAVE_INTERVAL, GPU_IDS, REPO_DIR, VENV_DIR
 #
 # Deliberately requests a 1-day walltime rather than the 3 days train_pas_slurm.sh uses.
@@ -95,7 +97,13 @@ export MUJOCO_GL=egl
 export PYTHONPATH="$MJLAB_DIR:${PYTHONPATH:-}"
 
 if [ -n "${HF_TOKEN:-}" ]; then
-  export HF_CHECKPOINT_REPO="${HF_CHECKPOINT_REPO:-RohanRamesh/go2-pas-saro}"
+  # NOT go2-pas-saro: that repo is public and holds only PAS. Specialists back up to
+  # a separate PRIVATE repo (user decision, 2026-09-12) -- push_checkpoint_to_hf()
+  # (rl/hf_upload.py) uploads to whatever exists at this id; it does not create the
+  # repo. If this default repo doesn't exist yet, run
+  # a100/backfill_specialist_hf.py once first (create_repo(..., private=True)) or
+  # create it manually before submitting.
+  export HF_CHECKPOINT_REPO="${HF_CHECKPOINT_REPO:-RohanRamesh/go2-specialists}"
   export HF_CHECKPOINT_STAGE="$EXPERIMENT_NAME"
   echo "[INFO] Checkpoints will also be pushed to hf.co/$HF_CHECKPOINT_REPO/$HF_CHECKPOINT_STAGE/"
 else
