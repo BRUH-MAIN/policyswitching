@@ -35,6 +35,21 @@ CLUSTER_REPO_PATH="${CLUSTER_REPO_PATH:-/dist_home/d_palmani/c-08/policyswitchin
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 MJLAB_DIR="$REPO_ROOT/unitree_rl_mjlab"
+
+# Load HF_TOKEN from the repo-root .env if it isn't already in the environment.
+# Needed since 2026-09-12: specialists back up to the PRIVATE repo
+# RohanRamesh/go2-specialists, so an anonymous pull 401s. Nothing else in this
+# repo reads .env (python-dotenv isn't installed), and huggingface_hub only
+# looks at the environment or ~/.cache/huggingface/token -- so without this the
+# pull fails for specialists while PAS still succeeds from the public repo,
+# which would look like a partial result rather than a credentials problem.
+if [ -z "${HF_TOKEN:-}" ] && [ -f "$REPO_ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$REPO_ROOT/.env"
+  set +a
+  [ -n "${HF_TOKEN:-}" ] && echo "==> Loaded HF_TOKEN from .env"
+fi
 CONDA_ENV="${CONDA_ENV:-unitree_rl_mjlab}"
 NUM_ENVS="${NUM_ENVS:-256}"   # empirically fits this laptop's 8GB VRAM as of 2026-09-11, see coordination/status/laptop.json
 STEPS="${STEPS:-1200}"        # match the cluster's eval horizon so numbers are comparable
