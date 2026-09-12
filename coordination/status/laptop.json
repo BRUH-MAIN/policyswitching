@@ -9,8 +9,8 @@
   "evaluated": {
     "go2_pas_stage2": {
       "iteration": 79998,
-      "verdict": "oracle 75.5% survival / estimator-only (deployable) 42.0% survival, err_vel_xy 2.09 oracle -- see findings.md PAS results table",
-      "via": "cluster (a100/eval_numeric_slurm.sh, 1024 envs), jobs 11874/11875 -- not yet re-run through this laptop pipeline"
+      "verdict": "SUPERSEDED (bug #10/#11, curriculum live + episode-accumulated error) -- see findings.md PAS results table. Pinned-condition re-run (2026-09-12, laptop, a100/eval_matrix.py --only pas_oracle --difficulties 0.5, 128 envs): flat 98.9% fall, rough 99.3%, stairs 0.8%, gaps 67.5%, mixed 39.1% -- DO NOT TREAT AS CAPABILITY DATA, see findings.md bug #12 (difficulty-pinning path itself produces near-total failure on flat/rough independent of policy; isolated by re-running flat with no --difficulty: 0% fall). pas_estimator not yet run. See coordination/results/go2_pas_stage2-step79998-matrix-analysis.md.",
+      "via": "cluster (a100/eval_numeric_slurm.sh, 1024 envs), jobs 11874/11875 for the original (now superseded) number; laptop (a100/eval_matrix.py, 128 envs) for the 2026-09-12 pinned-condition re-run"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

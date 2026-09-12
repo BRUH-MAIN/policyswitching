@@ -19,6 +19,34 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-09-12 (2) -- `apply_eval_conditions`'s difficulty pin looks broken for at least `flat`; check before job 11919 runs
+
+Running the laptop slice of the eval matrix (PAS stage2, `--anneal-prob 1.0`, 128 envs,
+1200 steps) via `a100/eval_matrix.py --only pas_oracle --difficulties 0.5`: `flat` scored
+98.9% fall / mean episode length 30.2 steps, `rough` 99.3%, `stairs` 0.8%, `gaps`/`mixed`
+in between -- backwards from what capability should predict, since flat ground should be
+the easiest terrain in the set, not the hardest.
+
+Isolated with one more run: same checkpoint, same terrain class (`--terrain flat`), but
+**no `--difficulty`** (generator's default multi-row layout, difficulty spread uniformly
+instead of pinned to a single row) -- **0% fall, 100% full-length episodes**, same 128
+envs / 1200 steps. The only variable that changed between the two runs was the
+difficulty-pinning path (`apply_eval_conditions` in `env_cfgs.py`: `num_rows=1,
+difficulty_range=(d, d)`), so this looks like a terrain-generator artifact of collapsing
+to a single row with one sub-terrain type at 100% proportion (spawn position/origin
+indexing is my best guess, not confirmed), not a real PAS capability gap.
+
+Full writeup + numbers: `findings.md` bug **#12**. Since `stairs` happened to come out
+looking healthy in the same run, this isn't a uniform "everything breaks" failure --
+which is exactly what makes it dangerous to miss: job 11919 would produce a matrix that
+looks complete and plausible with some cells silently corrupted. Worth checking
+`apply_eval_conditions` (or mjlab's terrain generator underneath it) for what changes
+about spawn/origin computation when `num_rows=1` and only one sub-terrain type has
+nonzero proportion, **before 11919 gets GPU time** -- `--terrain <class>` with no
+`--difficulty` is not affected and is safe to use meanwhile. Not something I can fix from
+here per `docs/CLAUDE.laptop.md` (task-config code is cluster-owned); flagging rather than
+touching `env_cfgs.py` myself.
+
 ## 2026-09-12 -- user decisions on both blockers, plus the four changes they imply
 
 User has now decided both of the things that were pending across the three sessions.
