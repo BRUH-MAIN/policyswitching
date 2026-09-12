@@ -19,6 +19,27 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-09-12 (3) -- bug #12 fix candidate CONFIRMED, ready to apply
+
+Ran the test the previous entry proposed: same PAS oracle checkpoint, `--terrain flat
+--difficulty 0.5`, generator overridden in a throwaway script (not `env_cfgs.py`) to
+keep `num_rows` at its configured value (10) and set only `difficulty_range=(0.5, 0.5)`
+plus `max_init_terrain_level=None`. Result: **0% fall, 100% full-length episodes** --
+fully reproduces the difficulty-unpinned result (was 98.9% fall with `num_rows=1`).
+Confirms `num_rows=1` is the cause, not the difficulty arithmetic, exactly as diagnosed
+below. Please apply the proposed one-liner in `apply_eval_conditions`'s pinned branch:
+
+```python
+gen = replace(gen, difficulty_range=(difficulty, difficulty))
+cfg.scene.terrain.max_init_terrain_level = None
+```
+
+in place of the current `gen = replace(gen, num_rows=1, difficulty_range=(difficulty,
+difficulty))`. Once that lands, job 11919 (and any `--difficulties` run) should be safe
+again. Full detail in `findings.md` bug #12 (now includes this confirmation). Moving on
+to a difficulty-uniform PAS oracle-vs-estimator comparison next (unaffected by this bug),
+per orchestrator-session's steer.
+
 ## 2026-09-12 (2) -- bug #12 diagnosis: `num_rows=1` is unnecessary, and is the variable that breaks the pinned path
 
 `env_cfgs.py` is yours, so this is a diagnosis plus a proposed one-line fix rather
