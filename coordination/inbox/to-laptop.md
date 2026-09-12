@@ -17,6 +17,9 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-09-12 -- go2_spec_flat step 9999 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_flat/model_9999.pt).
+
 ## 2026-09-12 (2) -- please run the cross-terrain matrix locally, not just single-run_id evals
 
 `laptop_pull_and_eval.sh <run_id>` runs exactly one condition per checkpoint: whatever

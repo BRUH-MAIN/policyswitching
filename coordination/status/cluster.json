@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-11T00:00:00Z",
+  "last_updated_utc": "2026-09-12T14:49:22Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -25,13 +25,15 @@
     },
     "go2_spec_flat": {
       "task": "Unitree-Go2-Spec-Flat",
-      "source": "local",
-      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_flat/2026-09-06_17-17-15/model_9999.pt",
+      "source": "hf",
+      "path_on_cluster": null,
       "iteration": 9999,
       "sha256": null,
       "status": "complete",
       "slurm_job_id": "11852",
-      "notes": "Not on HF -- specialist checkpoints only exist on cluster local disk (findings.md bug #4). sha256 not yet computed; cluster_update_status.sh fills this in when next run for this experiment."
+      "notes": "Not on HF -- specialist checkpoints only exist on cluster local disk (findings.md bug #4). sha256 not yet computed; cluster_update_status.sh fills this in when next run for this experiment.",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_flat"
     },
     "go2_spec_stairs": {
       "task": "Unitree-Go2-Spec-Stairs",
