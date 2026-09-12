@@ -77,8 +77,8 @@ def apply_eval_conditions(
   - `terrain`: "native" keeps the task's own sub-terrain mix; a TERRAIN_CLASSES
     key swaps in exactly that class; "mixed" uses all four at equal weight.
   - `difficulty`: None spreads envs uniformly over every difficulty row; a
-    float in [0, 1] collapses the grid to a single row generated at exactly
-    that difficulty.
+    float in [0, 1] pins every row to exactly that difficulty (rows still
+    exist -- see the bug note below for why collapsing them was wrong).
   """
   if terrain not in EVAL_TERRAINS:
     raise ValueError(f"terrain must be one of {EVAL_TERRAINS}, got {terrain!r}")
@@ -102,7 +102,28 @@ def apply_eval_conditions(
   else:
     if not 0.0 <= difficulty <= 1.0:
       raise ValueError(f"difficulty must be in [0, 1], got {difficulty}")
-    gen = replace(gen, num_rows=1, difficulty_range=(difficulty, difficulty))
+    # NOT num_rows=1. mjlab's curriculum generator computes each row's
+    # difficulty as `lower + (upper - lower) * frac` -- with
+    # difficulty_range=(d, d), (upper - lower) is 0, so every row already
+    # gets exactly d regardless of num_rows; collapsing the grid was
+    # unnecessary for pinning. It was also actively wrong: forcing every env
+    # onto one 8m-wide row, combined with max_init_terrain_level (still 5
+    # from the base config -- this branch never touched it) clamping to
+    # min(5, num_rows-1)=0, produced near-total immediate failure independent
+    # of policy or terrain class (a 0.8m-tall, 1-row grid, not a real
+    # difficulty effect). Confirmed via direct rollout on PAS-oracle,
+    # --terrain flat: 98.9% fall / ~30-step episodes with num_rows=1 vs. 0%
+    # fall / full-length episodes with num_rows left alone -- see findings.md
+    # bug #12. Only reset max_init_terrain_level, so envs spread across every
+    # (now same-difficulty) row instead of piling into row 0 of an untouched
+    # multi-row grid.
+    gen = replace(gen, difficulty_range=(difficulty, difficulty))
+    assert gen.difficulty_range == (difficulty, difficulty), (
+      "difficulty pin didn't take -- would silently produce plausible-looking "
+      "wrong numbers rather than a loud failure (this is exactly how bug #12 "
+      "went undetected); check TerrainGeneratorCfg field name/type."
+    )
+    cfg.scene.terrain.max_init_terrain_level = None
 
   # curriculum=True here is the generator's column-per-type layout (proportions
   # become exact column counts rather than per-patch samples), not the
