@@ -19,6 +19,75 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-09-12 (2) -- bug #12 diagnosis: `num_rows=1` is unnecessary, and is the variable that breaks the pinned path
+
+`env_cfgs.py` is yours, so this is a diagnosis plus a proposed one-line fix rather
+than a patch. Context: bug #12 in findings.md -- `apply_eval_conditions`'s
+difficulty-pinning path scores PAS oracle at 98.9% fall on `flat` and 99.3% on
+`rough` while `stairs` scores 0.8%, backwards from what capability predicts. The
+laptop isolated it to the pinning path by re-running the same checkpoint and
+terrain with no `--difficulty`: 0% fall, 100% full-length episodes.
+
+**The pin does not need `num_rows=1`.** In mjlab's `terrain_generator.py`,
+`_generate_curriculum_terrains` sets each patch's difficulty as:
+
+```python
+lower, upper = self.cfg.difficulty_range
+difficulty = (sub_row + self.np_rng.uniform()) / self.cfg.num_rows
+difficulty = lower + (upper - lower) * difficulty
+```
+
+When `lower == upper == d`, the second line evaluates to exactly `d` for **every**
+row, independent of `num_rows` and independent of the random draw. So
+`difficulty_range=(d, d)` on its own already pins every patch at exactly the
+requested difficulty. The `num_rows=1` in
+
+```python
+gen = replace(gen, num_rows=1, difficulty_range=(difficulty, difficulty))
+```
+
+contributes nothing to the pinning, and is exactly the variable the laptop's
+isolation implicates. It also collapses the terrain's x-extent to a single patch
+and forces every env onto row 0 (`_compute_env_origins_curriculum` then clamps
+`max_init_terrain_level=5` to `min(5, num_rows-1) = 0`, so the spread over rows
+that the unpinned path gets is gone too -- note the `difficulty is None` branch
+sets `max_init_terrain_level = None` explicitly while the pinned branch never
+touches it).
+
+**Proposed fix**, to be confirmed by the test below rather than applied blind:
+
+```python
+gen = replace(gen, difficulty_range=(difficulty, difficulty))
+cfg.scene.terrain.max_init_terrain_level = None  # all rows now identical difficulty
+```
+
+i.e. drop `num_rows=1` from the pinned branch and let envs spread across rows that
+are all generated at difficulty `d`. This keeps the pin exact, restores the terrain
+extent, and makes the pinned and unpinned paths differ only in difficulty -- which
+is what the eval condition was supposed to mean.
+
+**Caveat, please don't skip it.** The laptop measured mean episode length 30.2
+steps on the failing `flat` cells -- under a second. That is too fast to be
+"walked off the end of a one-patch-deep terrain", and points at something wrong at
+spawn/reset on a 1-row grid rather than at the difficulty arithmetic. So treat the
+above as "`num_rows=1` is the culprit, and here is a fix candidate that removes it",
+not as a confirmed causal chain. If the test still fails, the next suspect is env
+origin z / initial base height on a 1-row grid, not the difficulty computation.
+
+The laptop is running the check now, without editing `env_cfgs.py`: same checkpoint,
+same terrain, generator overridden in a throwaway script to keep the configured
+`num_rows` and set only `difficulty_range=(0.5, 0.5)` plus
+`max_init_terrain_level=None`. If `flat`'s fall rate collapses from 98.9% toward
+~0%, that confirms it. Result will follow here and in findings.md #12.
+
+**Until this is settled, job 11919 as designed produces suspect numbers in every
+difficulty-pinned cell** -- all of `--difficulties 0.25/0.5/0.75`, not just `flat`.
+`stairs` looking healthy in the same run is the asymmetric partial breakage that
+would make the matrix plausible-looking but wrong. Worth holding 11919 (it is
+PENDING anyway) until the fix lands, rather than spending its 12h walltime on cells
+we would discard. `--terrain <class>` with no `--difficulty` is unaffected and safe.
+
+
 ## 2026-09-12 (2) -- `apply_eval_conditions`'s difficulty pin looks broken for at least `flat`; check before job 11919 runs
 
 Running the laptop slice of the eval matrix (PAS stage2, `--anneal-prob 1.0`, 128 envs,
