@@ -19,268 +19,63 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
-## 2026-09-13 -- `mixed` terrain saturates every policy at ~97%; it can't discriminate the 2x2 arms
+## 2026-09-13 -- SOLVED: the `mixed` anomaly was `fall_pct`'s aggregation, not the terrain
 
-From the first real cross-terrain matrix (37 cells, difficulty 0.5, laptop). Not a bug
--- diagnosed and explained -- but a design problem for the arm comparison, since
-`objective.md` runs the entire 2x2 on held-out **mixed**-terrain courses.
+**Supersedes the drift-based framing this entry previously carried.** Two hypotheses
+were raised and both are now dead; the real cause is a metric bug. Rewritten rather
+than appended so nobody acts on the retracted version.
 
-**Observation.** Every policy is 39-49 points worse on `mixed` than the average of its
-own four single-class columns:
+**Cause: `fall_pct = total_fails / total_episodes` (`eval_checkpoint.py:412`) pools
+per *episode*, not per *env*.** Over a fixed 1200 steps an env that dies every ~15
+steps contributes ~80 episodes while one that survives contributes 1, so whichever
+sub-population dies fastest dominates the statistic. Episode counts for the flat
+specialist: flat 128, rough 235, stairs 192, **gaps 7736**. In `mixed` the quarter of
+envs on gaps therefore produce ~93% of all episodes, and the pooled number is
+essentially the gaps number.
 
-| policy | flat | rough | stairs | gaps | mean | observed mixed | excess |
-|---|---|---|---|---|---|---|---|
-| flat spec | 0.0 | 65.5 | 65.6 | 100.0 | 57.8 | 96.9 | +39.1 |
-| rough spec | 0.0 | 27.2 | 60.2 | 100.0 | 46.9 | 96.2 | +49.3 |
-| stairs spec | 0.0 | 49.2 | 42.6 | 100.0 | 47.9 | 97.1 | +49.1 |
-| pas_estimator | 0.8 | 33.3 | 0.8 | 94.3 | 32.3 | 76.0 | +43.7 |
+Predicting `mixed` as an *episode-weighted* rather than env-weighted average of the
+four single-class cells reproduces it exactly:
 
-**Ruled out: allocation skew.** Replicated `_generate_curriculum_terrains`' cumsum
-column assignment and `_compute_env_origins_curriculum`'s env->column mapping from
-config alone (no GPU). Under `mixed`, 20 columns split 5 flat / 3 random_rough / 2
-wave / 3 pyramid_stairs / 2 pyramid_stairs_inv / 5 stepping_stones -> **exactly 0.250
-of envs per class**. Gaps is not over-allocated. (Minor: within-class sub-terrain
-splits differ from standalone -- rough is 3/2 in mixed vs 10/10 -- far too small to
-matter here.)
+| policy | env-weighted | episode-weighted | observed | error |
+|---|---|---|---|---|
+| flat spec | 57.8 | 96.7 | 96.9 | +0.2 |
+| rough spec | 46.9 | 96.5 | 96.2 | -0.3 |
+| stairs spec | 47.9 | 97.4 | 97.1 | -0.3 |
+| pas_estimator | 32.3 | 74.6 | 76.0 | +1.3 |
 
-**Mechanism: lateral drift into gap columns.** If the 25% of envs that start on gaps
-fall ~100%, the other 75% must be falling at 95.9 / 94.9 / 96.1% (flat / rough /
-stairs specialists) to produce the observed totals -- against 43.7 / 29.1 / 30.6% for
-those same classes standalone. The structural difference is that in `mixed` a
-column's neighbours are a *different* class and 25% of columns are stepping stones.
-Columns are 8 m wide and robots spawn within +/-0.5 m of centre, so ~3.5 m of lateral
-travel reaches a boundary -- easily reached in a 24 s episode with
-`lin_vel_y` commanded in [-1, 1].
+Confirmed from the other side: under an episode-length-unbiased measure -- falls per
+robot-minute, `total_fails / (num_envs * steps * dt)` -- `mixed` becomes the mean of
+its four classes, ratios 0.95 / 0.95 / 0.96 / 1.09. **The terrain is fine.**
 
-*(Recorded because it nearly went the other way: an initial dose-response test seemed
-to rule drift out, because total path length didn't predict the excess. That test was
-invalid -- total path is not lateral displacement, and all three specialists sit at a
-common ~96-97% ceiling, so the "excess" is set by the prediction rather than by
-drift.)*
+**Ruled out along the way** (recorded so they aren't re-investigated): column
+allocation is exactly 25% of envs per class under `mixed`, verified by replicating
+the generator's cumsum assignment from config; and commanded lateral drift is dead --
+re-running `mixed` and `rough` with `--lin-vel-y 0 0` moved neither (96.9->96.6,
+65.5->63.7), the opposite of the predicted dissociation.
 
-**Why this needs a design decision, not a fix.** As configured, `mixed` is closer to
-"can you survive wandering into a gap field" than to "a course spanning several
-terrain classes". It pins every specialist at ~97%, so **no 2x2 arm can be
-distinguished from another on it** -- hard vs soft, reactive vs anticipatory would all
-read ~97%. It also sits badly with the transition-smoothness metric, which is defined
-in geometric windows around terrain-class boundaries: that presupposes boundaries the
-robot crosses *deliberately along its path*, not random lateral drift.
+### What to change
 
-Three options, all yours:
-1. **Exclude gaps from the mixed course.** Cheapest, and defensible right now given
-   there is no gaps specialist anyway (11914 never ran, GapsWarm never submitted) --
-   a switching module with no gaps expert cannot be asked to handle gap terrain.
-   Needs a class-subset option; `EVAL_TERRAINS` currently offers only native / one
-   class / all four.
-2. **Design the mixed course as a traversal** -- ordered bands of terrain class along
-   the robot's commanded direction of travel, so boundary crossings are controlled and
-   countable. This is what the smoothness metric actually assumes, and it would make
-   "transition" a measurable event rather than an accident of drift.
-3. **Constrain lateral command** on mixed courses so envs stay in their column, making
-   mixed a true per-class average. Simplest, but it removes transitions entirely --
-   which defeats the point of evaluating switching there.
+1. **Report an episode-length-unbiased survival measure.** `fall_pct` is "fraction of
+   attempts ending in a fall", not "fraction of robots that fall", and `survival_pct`
+   shares its denominator so it carries the identical bias -- there is currently no
+   unbiased survival number in `eval_checkpoint.py`'s output. Falls per robot-minute
+   (or per metre travelled) is the natural fix and needs only the counts already
+   tracked.
+2. **Never compare `fall_pct` across policies with different survival times**, even on
+   a single terrain -- exactly the rule bug #11 established for `error_vel_xy`. On
+   `rough`, `fall_pct` puts the flat and rough specialists 2.4x apart while the hazard
+   rate puts them 3.3x apart.
+3. **The 2x2 arms can still be compared on mixed terrain** -- the saturation was an
+   artefact, so this is no longer blocking. An ordered-traversal mixed course with
+   controlled, countable class boundaries is still worth building, but now for the
+   transition-smoothness metric (which assumes deliberate crossings) rather than to
+   rescue the arm comparison.
 
-I'd favour 2, with 1 as the interim so the arms can be compared before a gaps expert
-exists. Testable prediction for whichever route: a mixed course without the gaps class
-should land near the average of flat/rough/stairs.
-
-
-## 2026-09-12 (3) -- objective.md 2x2: signed off, with five changes I'd want before Phase 4
-
-Reviewed the revised `objective.md` as asked. **Broadly: yes, this is a better
-design than what it replaced**, and I'm not asking to reopen the structure. The
-2x2 genuinely de-confounds blending from anticipation, the geometric smoothness
-window is the right call over event-keyed (an event-keyed metric would have
-favoured arm 3 by construction), replacing PAS with a sensing-matched generalist
-as arm 1 removes three confounds at once, and the premise gates are the right
-instinct. I re-derived the height-scan noise arithmetic independently and it is
-exactly right: mjlab's pipeline is compute -> noise -> clip -> scale (confirmed in
-`observation_manager.py`), so `Unoise(+/-0.1)` gives std 0.2/sqrt(12) = 0.05774 m,
-times `scale=1/max_distance=1/5.0` = **0.011547** scaled, against a measured
-normalizer std of ~0.012. The conclusion stands.
-
-Five things I'd change. #1 and #2 affect whether the headline claim is
-interpretable at all; #3-#5 are smaller.
-
-### 1. Arm 2b must be *retrained* without look-ahead inputs, not masked at eval
-
-`objective.md` defines 2b as "the arm-3 gating network with look-ahead inputs
-masked". If that means eval-time masking of a network trained *with* those inputs,
-it invalidates the headline comparison: the lesioned network runs off-distribution,
-so part of any 2b-vs-3 gap is "arm 2b is a damaged arm 3" rather than "anticipation
-helps". Since 2b vs 3 *is* the contribution, this is the one confound the design
-cannot afford.
-
-The statistical plan's phrasing ("the gating network (arms 2b, 3) trains with >=3
-seeds") suggests you already intend 2b to be separately trained, in which case this
-is only an ambiguity in the comparison table -- but it's worth making explicit,
-because the cheap reading is the wrong one and someone implementing Phase 4 from
-the table alone would plausibly implement the mask. Suggest: "2b -- the arm-3
-gating architecture retrained from scratch with the look-ahead inputs absent".
-
-### 2. Premise gate 2 tests the wrong thing for the decision it gates
-
-The gate asks "do policies use the height scan?" and tests it by ablating the scan
-and watching fall rate / velocity error. But what the switching design actually
-needs is that the scan is **terrain-discriminative** -- the reactive classifier and
-the gating network's current-terrain input both need to tell flat from rough from
-stairs from gaps. Those are different properties, and they can dissociate in both
-directions:
-
-- the scan can be uninformative *to the locomotion policy* (proprioception is
-  enough at these mild difficulties: stairs <=10 cm, rough 2-10 cm) while still
-  being perfectly sufficient for a classifier -- the ablation says "fix the terrain
-  signal", and the project stalls on a non-problem;
-- the scan can measurably help locomotion (foot placement) while still not
-  separating the classes cleanly -- the ablation says "green light", and the
-  classifier built in Phase 4 quietly underperforms.
-
-The direct test is cheap and doesn't involve RL at all: collect height-scan
-observations labelled by terrain class from the existing envs and fit a small
-supervised classifier (even logistic regression on the 187 dims), then report
-per-class accuracy and the confusion matrix. That measures exactly the quantity
-Phase 4 depends on, costs minutes on the laptop, needs no checkpoint, and is
-**not blocked by the drain or the HF backfill** -- unlike everything else in both
-gates. I'd add it as gate 2a and keep the ablation as gate 2b, since the ablation
-still answers a real question (whether specialist advantage is exteroceptive or
-just terrain-specific gait tuning).
-
-I'm happy to run the classifier study from the laptop -- say the word and I'll pick
-it up rather than routing it back to you.
-
-### 3. The statistical plan doesn't cover the comparison it calls out as headline
-
-">=3 seeds" is scoped to the gating network (2b, 3). But **1 vs 2a -- "the effect
-of specialization" -- is single-seed on both sides**, and premise gate 1 (which the
-document itself calls "the project's most important result" if it fails) rests
-entirely on single-seed specialists. For an effect the document repeatedly predicts
-will be "real but modest", n=1 vs n=1 cannot support a claim in either direction:
-a null result is uninterpretable (bad seed vs. no effect) and a positive one is
-unreplicated.
-
-The generalist at least should get the same >=3 seeds as the gating network -- it's
-arm 1 of the headline table, it's a stock-PPO run, and `SEED=<n>` already exists in
-`train_specialist_slurm.sh`. For the specialists, "frozen assets, train once" is a
-defensible budget decision, but then gate 1's verdict needs to be reported with
-that caveat attached rather than as a clean pass/fail.
-
-### 4. Boundary smoothness has a survivorship problem
-
-Transition-boundary smoothness is measurable only on episodes that survive to reach
-a boundary. An arm with a higher fall rate contributes fewer crossings, and the ones
-it does contribute come disproportionately from its better episodes -- so the arm
-that falls most can look *smoothest*. The per-policy whole-rollout normalization
-doesn't fix this and may worsen it: a policy that falls early has a short rollout
-whose "whole-rollout" baseline is itself dominated by boundary-adjacent steps.
-
-Suggest reporting crossing count per arm alongside the metric, and either
-conditioning on matched survival or restricting the comparison to episodes that
-completed the course. Same family as bugs #1 and #11 -- a metric that answers a
-different question than the one asked.
-
-### 5. Promote 3b from optional to standard
-
-3b (hard + anticipatory) is listed as "optional, cheap". It's the cell that makes
-the 2x2 an actual factorial and gives the hard/soft x reactive/anticipatory
-interaction. Since it's just argmax of arm 3's already-trained gate, it costs one
-extra eval pass and no training. Cheap enough that leaving it out is a worse trade
-than running it.
-
-### Not changes, but worth recording
-
-- The four scope decisions and the PAS relationship section are right as written;
-  no objection.
-- The preview-horizon sweep correctly avoids the confound I went looking for --
-  running 2b at each lead distance too means "gain vs horizon" is a within-distance
-  difference, so lead distance changing the task doesn't contaminate it. Worth a
-  parenthetical in the doc making that explicit, since it's load-bearing and easy
-  to drop when implementing.
-- Sequencing note: with the nodes drained, gate 2a (the classifier study) and the
-  HF backfill are the only two things on the critical path that can actually run
-  today. Both are GPU-free.
-
-## 2026-09-12 -- user decisions on both blockers, plus the four changes they imply
-
-User has now decided both of the things that were pending across the three sessions.
-Recording them here so the decision is durable and not just in chat scrollback.
-
-**Decision 1 -- cluster git auth: repo-scoped SSH deploy key.** Not `gh` on the
-cluster (plaintext token in `~/.config/gh/hosts.yml` on a shared filesystem), not
-a PAT in the remote URL, not "user pushes manually each time". Concretely, on the
-cluster:
-```
-ssh-keygen -t ed25519 -f ~/.ssh/policyswitching_deploy -N ""
-```
-then hand the user the **public** half to add at BRUH-MAIN/policyswitching ->
-Settings -> Deploy keys, with **write access** ticked (it is off by default -- a
-read-only deploy key fetches fine and fails on push, which would look exactly like
-the bug we just spent a round diagnosing). Then
-`git remote set-url origin git@github.com:BRUH-MAIN/policyswitching.git`, plus a
-`Host github.com / Hostname ssh.github.com / Port 443` block in `~/.ssh/config` if
-outbound 22 is blocked from the node.
-
-**Decision 2 -- specialists back up to a NEW PRIVATE HF repo, not `go2-pas-saro`.**
-Verified anonymously (no token): `RohanRamesh/go2-pas-saro` returns HTTP 200 with
-`private: false`, `gated: false`, and its `stage1/model_*.pt` files are listed --
-it is genuinely world-readable, so syncing specialists there would publish them.
-The user does not want unpublished experimental checkpoints public. Create a
-separate **private** model repo for the specialists (`create_repo(..., private=True)`)
-and point `HF_CHECKPOINT_REPO` at it. **Leave `go2-pas-saro` exactly as it is** --
-the user was offered flipping it private and declined, so do not change its
-visibility.
-
-The laptop's SSH-key route was *not* chosen, so `laptop_pull_and_eval.sh`'s rsync
-branch stays broken by design. HF is now the only path specialists reach this
-machine by. That makes the four items below load-bearing rather than cleanup.
-
-### 1. One-off backfill upload for the three finished specialists (unblocks everything, no GPU)
-`go2_spec_flat` / `go2_spec_rough` / `go2_spec_stairs` were trained without
-`HF_TOKEN`, so they exist only on cluster local disk. `HfSyncVelocityOnPolicyRunner`
-only fires on `runner.save()` inside a live training call, so as you already noted
-this needs a small standalone script over `push_checkpoint_to_hf` in
-`rl/hf_upload.py` -- not a retrain, and not a re-submission.
-
-Worth doing first: it needs no GPU, so it runs on the login node **while every node
-is still drained**. It is the one thing on either side's list that the drain doesn't
-block. Upload each `model_9999.pt` to `<private-repo>/<experiment_name>/model_9999.pt`,
-matching the layout `train_specialist_slurm.sh` already uses
-(`HF_CHECKPOINT_STAGE="$EXPERIMENT_NAME"`), so a backfilled checkpoint and a
-future synced one land at the same path.
-
-### 2. Future runs: set `HF_TOKEN` at submission, with `HF_CHECKPOINT_REPO` -> the private repo
-Otherwise 11914/11918/11919's outputs repeat this whole problem when they finally run.
-
-### 3. `a100/eval_matrix.py`: specialists need the same HF fallback PAS just got
-This is the same bug you found and fixed for PAS, still live for every entry in
-`LOCAL_POLICIES`. They resolve only through `latest_local_checkpoint(mjlab_dir,
-experiment)`; on the laptop that finds nothing and takes the `[SKIP]` branch.
-
-The failure mode is worth being precise about, because it is not a crash: the skip
-prints one line to stdout, then `summary.md` is rendered from `order`, which is
-built from the result rows that actually exist. So a laptop-run matrix produces a
-clean, plausible-looking summary table containing only the PAS rows, with no marker
-in the file itself that five policies were never evaluated. Anyone reading
-`summary.md` later -- including us -- would have to notice an absence rather than
-an error. Give each `LOCAL_POLICIES` entry an `hf_stage` (= its experiment name) and
-the same local-then-HF fallback as PAS.
-
-### 4. `cluster_update_status.sh` / `cluster.json`: specialist entries move to `source: "hf"`
-`laptop_pull_and_eval.sh` branches on `run.source`; with `source: "local"` it takes
-the rsync path, which now cannot work. Once #1 lands, the three specialist entries
-need `"source": "hf"` plus `"hf_repo"` and `"hf_stage"` (both read at lines 58-59),
-and the script should write those fields for future runs rather than only
-`path_on_cluster`. Fold in the previously-noted gap while you are in there: the
-script never writes `task`, and `laptop_pull_and_eval.sh` hard-errors on
-`task == MISSING` (line 67), so any run_id it creates fresh breaks the laptop side.
-
-I own the objective.md 2x2 pass and the stale `docs/CLAUDE.cluster.md`; those are
-still coming and are not blocked on any of the above.
-
-## Done
-
-## 2026-09-12 -- gate 1 reframing ACCEPTED and applied to objective.md (cluster session)
-
-Independently re-derived the argument before accepting it (not sufficient: a dominant specialist passes row-wise while switching recovers nothing; not necessary: a column winner justifies switching regardless of row-wise degradation) -- holds up. objective.md's gate 1 now states the column-wise argmin criterion explicitly, folds in the pre-registered read (locomotion-before-fall-rate, row-wise reported but not gating, 3/4 diagonal caveat, single-seed margin caveat, and the beats-a-specialist-vs-beats-the-generalist distinction). Gate 2's confirmed/sharpened state is folded in too. This was my own ambiguous wording from the original review commit, so fixing it directly rather than routing back. No disagreement with the reframing.
+**Gate 1's verdict is unaffected.** Under the hazard rate the column winners are
+unchanged: rough wins `rough` (0.92 vs 1.82 stairs, 3.01 flat) and stairs wins
+`stairs` (1.23 vs 2.01, 2.46). Worth stating explicitly, since a reader who learns
+every fall number was mis-aggregated will reasonably distrust the specialization
+result too.
 
 ### Runtime footnote for job 11919's walltime: gaps cells cost ~15-25x the others
 
