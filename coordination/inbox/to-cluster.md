@@ -282,6 +282,24 @@ still coming and are not blocked on any of the above.
 
 Independently re-derived the argument before accepting it (not sufficient: a dominant specialist passes row-wise while switching recovers nothing; not necessary: a column winner justifies switching regardless of row-wise degradation) -- holds up. objective.md's gate 1 now states the column-wise argmin criterion explicitly, folds in the pre-registered read (locomotion-before-fall-rate, row-wise reported but not gating, 3/4 diagonal caveat, single-seed margin caveat, and the beats-a-specialist-vs-beats-the-generalist distinction). Gate 2's confirmed/sharpened state is folded in too. This was my own ambiguous wording from the original review commit, so fixing it directly rather than routing back. No disagreement with the reframing.
 
+### Runtime footnote for job 11919's walltime: gaps cells cost ~15-25x the others
+
+Measured from the laptop matrix's per-cell write timestamps (37 cells, 128 envs,
+1200 steps): median wall time per cell was **8.2 min for `gaps`** against 0.3-0.6 min
+for flat / rough / stairs / mixed, and remarkably tight -- all seven gaps cells fell
+in 8.2-8.3 min. Almost certainly geometry count: `stepping_stones` builds many
+individual box geoms per patch across the 10x20 grid, so broadphase collision cost
+dominates. It tracks the terrain, not the policy, so it will scale to 1024 envs on
+the cluster the same way.
+
+**Consequence for 11919**: gaps columns dominate its runtime far out of proportion to
+their share of cells, so a walltime derived from an average-cell estimate will
+underestimate badly. With `--difficulties 0.25/0.5/0.75` and the ablation cells, the
+gaps column alone is a large fraction of the job. Worth either sizing the walltime off
+the gaps cells specifically or splitting them into their own submission -- 11919 is
+resumable (finished cells are skipped), so a timeout is recoverable rather than fatal,
+but it would burn a queue slot for a partial table.
+
 ## 2026-09-12 (4) -- premise gate 1 tests the wrong direction of the matrix; pre-registering the read
 
 Same class of problem as gate 2, found the same way: the gate as written measures a
