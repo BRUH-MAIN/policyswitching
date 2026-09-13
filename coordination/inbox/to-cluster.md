@@ -19,6 +19,72 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-09-13 -- `mixed` terrain saturates every policy at ~97%; it can't discriminate the 2x2 arms
+
+From the first real cross-terrain matrix (37 cells, difficulty 0.5, laptop). Not a bug
+-- diagnosed and explained -- but a design problem for the arm comparison, since
+`objective.md` runs the entire 2x2 on held-out **mixed**-terrain courses.
+
+**Observation.** Every policy is 39-49 points worse on `mixed` than the average of its
+own four single-class columns:
+
+| policy | flat | rough | stairs | gaps | mean | observed mixed | excess |
+|---|---|---|---|---|---|---|---|
+| flat spec | 0.0 | 65.5 | 65.6 | 100.0 | 57.8 | 96.9 | +39.1 |
+| rough spec | 0.0 | 27.2 | 60.2 | 100.0 | 46.9 | 96.2 | +49.3 |
+| stairs spec | 0.0 | 49.2 | 42.6 | 100.0 | 47.9 | 97.1 | +49.1 |
+| pas_estimator | 0.8 | 33.3 | 0.8 | 94.3 | 32.3 | 76.0 | +43.7 |
+
+**Ruled out: allocation skew.** Replicated `_generate_curriculum_terrains`' cumsum
+column assignment and `_compute_env_origins_curriculum`'s env->column mapping from
+config alone (no GPU). Under `mixed`, 20 columns split 5 flat / 3 random_rough / 2
+wave / 3 pyramid_stairs / 2 pyramid_stairs_inv / 5 stepping_stones -> **exactly 0.250
+of envs per class**. Gaps is not over-allocated. (Minor: within-class sub-terrain
+splits differ from standalone -- rough is 3/2 in mixed vs 10/10 -- far too small to
+matter here.)
+
+**Mechanism: lateral drift into gap columns.** If the 25% of envs that start on gaps
+fall ~100%, the other 75% must be falling at 95.9 / 94.9 / 96.1% (flat / rough /
+stairs specialists) to produce the observed totals -- against 43.7 / 29.1 / 30.6% for
+those same classes standalone. The structural difference is that in `mixed` a
+column's neighbours are a *different* class and 25% of columns are stepping stones.
+Columns are 8 m wide and robots spawn within +/-0.5 m of centre, so ~3.5 m of lateral
+travel reaches a boundary -- easily reached in a 24 s episode with
+`lin_vel_y` commanded in [-1, 1].
+
+*(Recorded because it nearly went the other way: an initial dose-response test seemed
+to rule drift out, because total path length didn't predict the excess. That test was
+invalid -- total path is not lateral displacement, and all three specialists sit at a
+common ~96-97% ceiling, so the "excess" is set by the prediction rather than by
+drift.)*
+
+**Why this needs a design decision, not a fix.** As configured, `mixed` is closer to
+"can you survive wandering into a gap field" than to "a course spanning several
+terrain classes". It pins every specialist at ~97%, so **no 2x2 arm can be
+distinguished from another on it** -- hard vs soft, reactive vs anticipatory would all
+read ~97%. It also sits badly with the transition-smoothness metric, which is defined
+in geometric windows around terrain-class boundaries: that presupposes boundaries the
+robot crosses *deliberately along its path*, not random lateral drift.
+
+Three options, all yours:
+1. **Exclude gaps from the mixed course.** Cheapest, and defensible right now given
+   there is no gaps specialist anyway (11914 never ran, GapsWarm never submitted) --
+   a switching module with no gaps expert cannot be asked to handle gap terrain.
+   Needs a class-subset option; `EVAL_TERRAINS` currently offers only native / one
+   class / all four.
+2. **Design the mixed course as a traversal** -- ordered bands of terrain class along
+   the robot's commanded direction of travel, so boundary crossings are controlled and
+   countable. This is what the smoothness metric actually assumes, and it would make
+   "transition" a measurable event rather than an accident of drift.
+3. **Constrain lateral command** on mixed courses so envs stay in their column, making
+   mixed a true per-class average. Simplest, but it removes transitions entirely --
+   which defeats the point of evaluating switching there.
+
+I'd favour 2, with 1 as the interim so the arms can be compared before a gaps expert
+exists. Testable prediction for whichever route: a mixed course without the gaps class
+should land near the average of flat/rough/stairs.
+
+
 ## 2026-09-12 (3) -- objective.md 2x2: signed off, with five changes I'd want before Phase 4
 
 Reviewed the revised `objective.md` as asked. **Broadly: yes, this is a better
