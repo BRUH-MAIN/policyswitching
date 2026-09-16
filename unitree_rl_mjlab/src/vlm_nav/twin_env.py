@@ -28,6 +28,7 @@ from mjlab.tasks.registry import load_env_cfg
 from mjlab.terrains import TerrainGeneratorCfg
 
 from src.vlm_nav.camera import CameraSpec
+from src.vlm_nav.course import GOAL_GEOM_GROUP
 
 CAMERA_SENSOR_NAME = "ego_cam"
 COMMAND_NAME = "twist"
@@ -67,6 +68,7 @@ def make_twin_env_cfg(
     cfg.scene.terrain.terrain_type = "generator"
     cfg.scene.terrain.terrain_generator = terrain_generator
     cfg.scene.terrain.max_init_terrain_level = None
+    cfg.scene.terrain.lights = ()  # the course brings its own single light
     # play mode re-randomizes the env's terrain patch on reset; a course is fixed.
     cfg.events.pop("randomize_terrain", None)
 
@@ -95,6 +97,9 @@ def make_twin_env_cfg(
       data_types=("rgb", "depth"),
       use_textures=True,
       use_shadows=use_shadows,
+      # Group 4 carries the course's goal flag, which the height-scan rays
+      # (groups 0-2) must not see.
+      enabled_geom_groups=(0, 1, 2, GOAL_GEOM_GROUP),
     )
   )
   cfg.scene.sensors = tuple(sensors)
