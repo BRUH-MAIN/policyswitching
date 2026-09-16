@@ -27,7 +27,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import torch
@@ -55,6 +55,15 @@ def main() -> None:
                        "sampled, so the clip never shows a standing robot (bug #3).")
   ap.add_argument("--video-length", type=int, default=300, help="Steps; dt=0.02s, so 300 -> 6s.")
   ap.add_argument("--seed", type=int, default=0)
+  ap.add_argument("--show-scan-rays", action="store_true",
+                   help="Keep the height-scan sensor's ray debug-visualization. Off by "
+                        "default -- confirmed (2026-09-16) to visually break down into "
+                        "what looks like a physics glitch (contorted legs, then a sudden "
+                        "camera-framing jump) once the robot has walked several metres "
+                        "from its spawn point. Root-caused by disabling it and comparing: "
+                        "the robot's actual state (position/orientation/joint angles) is "
+                        "provably identical whether or not this is on -- turning it off "
+                        "does not change the walk, only removes the broken overlay.")
   ap.add_argument("--out-dir", required=True)
   ap.add_argument("--name", required=True, help="Video filename prefix (no extension).")
   ap.add_argument("--device", default=None)
@@ -86,6 +95,13 @@ def main() -> None:
   cmd.ranges.lin_vel_x = (args.forward_speed, args.forward_speed)
   cmd.ranges.lin_vel_y = (0.0, 0.0)
   cmd.ranges.ang_vel_z = (0.0, 0.0)
+
+  if not args.show_scan_rays:
+    sensors = list(env_cfg.scene.sensors)
+    for i, s in enumerate(sensors):
+      if getattr(s, "name", None) == "terrain_scan":
+        sensors[i] = replace(s, debug_vis=False)
+    env_cfg.scene.sensors = tuple(sensors)
 
   agent_cfg = load_rl_cfg(args.task)
 
