@@ -95,7 +95,8 @@ def scan_slice_for_group(env, group: str) -> slice:
 
 
 def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
-            warmup: int, seed: int, device: str, spawn_spread: float = 3.0):
+            warmup: int, seed: int, device: str, spawn_spread: float = 3.0,
+            difficulty: float | None = None):
   """Roll out zero actions on one terrain class.
 
   Returns (samples, env_ids, noise_halfwidth, grid_shape).
@@ -104,15 +105,48 @@ def collect(task: str, terrain: str, num_envs: int, steps: int, stride: int,
   post-scale noise half-width is returned so the caller can add it analytically.
   """
   # Imported lazily so --help works without a GPU/simulator present.
-  from src.tasks.velocity.config.go2.env_cfgs import apply_eval_conditions
+  from dataclasses import replace as _replace
+
+  from src.tasks.velocity.config.go2.env_cfgs import (
+    EVAL_TERRAINS,
+    _available_sub_terrains,
+    apply_eval_conditions,
+  )
 
   cfg = load_env_cfg(task, play=False)
   cfg.scene.num_envs = num_envs
   cfg.seed = seed
-  # difficulty=None: spread envs uniformly over difficulty rows. Deliberately not
-  # pinning difficulty -- the pinned path was findings.md bug #12, and its fix is
-  # not necessarily in this checkout yet.
-  apply_eval_conditions(cfg, terrain=terrain, difficulty=None, seed=seed)
+  # `difficulty` pins every terrain row to one difficulty. The original run left
+  # this None (uniform over all 10 rows), which was the right call when bug #12's
+  # fix wasn't known to be in this checkout -- it is now (see the assert inside
+  # apply_eval_conditions). Leaving it None is *not* neutral for this measurement:
+  # `pyramid_stairs`/`pyramid_stairs_inv` have step_height_range=(0.0, 0.1) and
+  # `wave_terrain` amplitude_range=(0.0, 0.2), so the bottom difficulty rows
+  # generate patches that are literally flat ground carrying a 'stairs'/'rough'
+  # label. That is irreducible label noise in exactly the two classes that scored
+  # ~0.51, and it is absent from `flat` (always flat) and `gaps`
+  # (stone_height/floor_depth are difficulty-independent). Pin it to compare like
+  # with like -- and to 0.5 specifically, to match the difficulty every gate-1
+  # matrix cell was measured at.
+  if terrain in EVAL_TERRAINS:
+    apply_eval_conditions(cfg, terrain=terrain, difficulty=difficulty, seed=seed)
+  else:
+    # A single sub-terrain, so the confusion matrix can be read at the granularity
+    # the terrain generator actually works at. `rough` is random_rough UNION
+    # wave_terrain and `stairs` is pyramid_stairs UNION pyramid_stairs_inv, so a
+    # class-level confusion matrix cannot say whether the pair collides as a whole
+    # or only through one member of each.
+    available = _available_sub_terrains()
+    if terrain not in available:
+      raise SystemExit(
+        f"[ERROR] {terrain!r} is neither a terrain class {EVAL_TERRAINS} nor a "
+        f"sub-terrain {tuple(available)}."
+      )
+    apply_eval_conditions(cfg, terrain="native", difficulty=difficulty, seed=seed)
+    gen = cfg.scene.terrain.terrain_generator
+    cfg.scene.terrain.terrain_generator = _replace(
+      gen, sub_terrains={terrain: _replace(available[terrain], proportion=1.0)}
+    )
   cfg.curriculum.pop("command_vel", None)
 
   # Spread spawns across the terrain patch. The task's own reset_base randomizes
@@ -288,6 +322,11 @@ def main() -> None:
                   help="Half-width (m) of the spawn box within each terrain patch. The task's "
                        "own reset_base uses 0.5, which keeps every robot on the flat top "
                        "platform of a pyramid_stairs patch. 0 leaves the task's value alone.")
+  ap.add_argument("--difficulty", type=float, default=None,
+                  help="Pin every terrain row to this difficulty in [0, 1]. Default None "
+                       "spreads envs over all 10 rows -- which, for stairs and wave "
+                       "terrain, includes rows whose relief is ~0 m, i.e. flat ground "
+                       "labelled 'stairs'/'rough'. Use 0.5 to match the gate-1 matrix.")
   ap.add_argument("--test-frac", type=float, default=0.25, help="Fraction of ENVS held out.")
   ap.add_argument("--seed", type=int, default=42)
   ap.add_argument("--epochs", type=int, default=200, help="LBFGS iterations (linear model).")
@@ -304,7 +343,8 @@ def main() -> None:
   for label, terrain in enumerate(args.classes):
     print(f"\n=== collecting '{terrain}' ({label + 1}/{len(args.classes)}) ===", flush=True)
     x, e, nh, gs = collect(args.task, terrain, args.num_envs, args.steps,
-                           args.stride, args.warmup, args.seed, args.device, args.spawn_spread)
+                           args.stride, args.warmup, args.seed, args.device,
+                           args.spawn_spread, args.difficulty)
     grid_shape = gs if grid_shape is None else grid_shape
     if noise_half is None:
       noise_half = nh
@@ -354,6 +394,7 @@ def main() -> None:
   print(f"envs (effective) : {len(uniq) - n_test} train / {n_test} test  <- split by env")
   print(f"noise half-width : +/-{noise_half:.5f} in scaled units")
   print(f"spawn spread     : +/-{args.spawn_spread:g} m within each 8x8 m patch")
+  print(f"difficulty       : {'uniform over rows' if args.difficulty is None else args.difficulty}")
   if grid_shape:
     print(f"ray grid         : {grid_shape[0]} x {grid_shape[1]}")
   for name in [k for k in ("clean", "noisy", "clean_cnn", "noisy_cnn") if k in results]:
@@ -387,6 +428,7 @@ def main() -> None:
       "split": "by env",
       "grid_shape": grid_shape,
       "spawn_spread_m": args.spawn_spread,
+      "difficulty": args.difficulty,
       "train_envs": len(uniq) - n_test,
       "test_envs": n_test,
       "results": results,
