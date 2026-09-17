@@ -47,7 +47,7 @@ from src.vlm_nav import prompts as P
 from src.vlm_nav.camera import CameraSpec
 from src.vlm_nav.controllers import GotoGains, goto_command
 from src.vlm_nav.course import FOOTPRINT_FRONT, FOOTPRINT_REAR, CourseSpec
-from src.vlm_nav.perception import IntermediationEstimate, estimate_from_box
+from src.vlm_nav.perception import EdgeTracker, IntermediationEstimate, estimate_from_box, ground_blind_distance
 from src.vlm_nav.vlm_backend import VLM
 
 NAME_TO_POLICY = {"stairs": "stairs", "rough ground": "rough"}
@@ -77,6 +77,9 @@ class ExecutorConfig:
   max_replans: int = 4
   max_perception_failures: int = 3
   finish_confirm_max: int = 3
+  selector_every: int = 2
+  perception_every: int = 2
+  """In VLM ticks (0.5 s each by default): the two most frequent questions are asked every other tick."""
   """At the goal, stop asking after this many "no" answers (the trial's success is scored on ground truth anyway)."""
 
 
@@ -101,7 +104,9 @@ class SaroAgent:
     self.intermediation: str | None = None
     self.idx = 0
     self.subtask_start = 0
-    self.estimate: IntermediationEstimate | None = None
+    self.blind = ground_blind_distance(camera)
+    self.edges = EdgeTracker(self.blind)
+    self.ticks = 0
     self.perception_failures = 0
     self.crossing_policy: str | None = None
     self.selector_history: list[str] = []
@@ -161,7 +166,7 @@ class SaroAgent:
       px = P.box_to_pixels(box, self.cfg.box_convention, w, h)
       est = estimate_from_box(px, depth, self.camera, pos, quat)
     if est.valid:
-      self.estimate = est
+      self.edges.update(est)
       self.perception_failures = 0
     else:
       self.perception_failures += 1
@@ -178,16 +183,18 @@ class SaroAgent:
   def _present(self, step: int, rgb) -> bool | None:
     if self.intermediation is None:
       return None
-    r = self._ask(rgb, P.discriminator_present(self.intermediation), P.YES_NO_SCHEMA, 16, "present")
-    ans = (r.parsed or {}).get("answer")
-    self._log(step, "present", answer=ans)
-    return None if ans is None else ans == "yes"
+    # Free text, SARO's format: under the yes/no JSON schema Gemma-4-E4B spends
+    # max_tokens and returns empty content (the policy schema works).
+    r = self._ask(rgb, P.discriminator_present(self.intermediation), None, 8, "present")
+    ans = P.parse_yes_no(r.text)
+    self._log(step, "present", answer=ans, text=r.text)
+    return ans
 
   def _finished(self, step: int, rgb) -> bool | None:
-    r = self._ask(rgb, P.discriminator_finished(self.task), P.YES_NO_SCHEMA, 16, "finished")
-    ans = (r.parsed or {}).get("answer")
-    self._log(step, "finished", answer=ans)
-    return None if ans is None else ans == "yes"
+    r = self._ask(rgb, P.discriminator_finished(self.task), None, 8, "finished")
+    ans = P.parse_yes_no(r.text)
+    self._log(step, "finished", answer=ans, text=r.text)
+    return ans
 
   def _advance(self, step: int, reason: str) -> None:
     self._log(step, "subtask_done", subtask=asdict(self.current) if self.current else None, reason=reason)
@@ -211,17 +218,21 @@ class SaroAgent:
       return
     base_xy = pos[:2]
     timed_out = (step - self.subtask_start) * self.dt > self.cfg.subtask_timeout_s
+    tick = self.ticks
+    self.ticks += 1
 
-    if self.cfg.policy_source == "vlm":
+    if self.cfg.policy_source == "vlm" and tick % self.cfg.selector_every == 0:
       self._selector(step, rgb)
 
     if cur.ending == "facing intermediation":
-      self._perceive(step, rgb, depth, pos, quat)
-      est = self.estimate
-      if est is not None and est.valid:
-        near = est.along_from(base_xy, est.near_along)
-        centred = abs(est.center_u - self.camera.width / 2) < self.cfg.facing_px_tol
-        if near <= self.cfg.standoff + 0.15 and centred and self._present(step, rgb):
+      if tick % self.cfg.perception_every == 0 or not self.edges.seen:
+        self._perceive(step, rgb, depth, pos, quat)
+      if self.edges.seen:
+        near = self.edges.near_remaining(base_xy)
+        # near is None when the edge was never seen beyond the camera's blind zone: it is already close.
+        close = near is None or near <= self.cfg.standoff + 0.15
+        centred = self.edges.center_u is None or abs(self.edges.center_u - self.camera.width / 2) < self.cfg.facing_px_tol
+        if close and centred and self._present(step, rgb) is not False:
           self._advance(step, "facing reached")
       elif self.perception_failures >= self.cfg.max_perception_failures:
         self._advance(step, "perception failed")
@@ -229,11 +240,11 @@ class SaroAgent:
         self._advance(step, "timeout")
 
     elif cur.ending == "across intermediation":
-      est = self.estimate
-      if est is None or not est.valid or est.along_from(base_xy, est.near_along) > 0.5:
-        self._perceive(step, rgb, depth, pos, quat)  # refine while the near edge is still well ahead
-        est = self.estimate
-      past = est is not None and est.valid and est.along_from(base_xy, est.far_along) < -(FOOTPRINT_REAR + self.cfg.release_margin)
+      far = self.edges.far_remaining(base_xy)
+      if (far is None or far > 0.5) and tick % self.cfg.perception_every == 0:
+        self._perceive(step, rgb, depth, pos, quat)  # far edge still ahead: keep refining it
+        far = self.edges.far_remaining(base_xy)
+      past = far is not None and far < -(FOOTPRINT_REAR + self.cfg.release_margin)
       if past and self._present(step, rgb) is False:
         self._advance(step, "crossed")
       elif timed_out:
@@ -246,7 +257,7 @@ class SaroAgent:
         new = self._make_plan(step, rgb)
         if new is not None and self.intermediation is not None:
           self.plan = self.plan[: self.idx] + new
-          self.estimate = None
+          self.edges = EdgeTracker(self.blind)
           self.subtask_start = step
           return
         self.intermediation = None
@@ -281,11 +292,11 @@ class SaroAgent:
     if cur.ending == "across intermediation":
       planned = cur.policy if cur.policy != "flat" else NAME_TO_POLICY.get(self.intermediation or "", "flat")
       choice = consensus if consensus in ("rough", "stairs") else planned
-      est = self.estimate
       if not self.engaged:
         # Engage when the front feet reach the near edge; with no usable estimate, engage now
         # (a specialist walks flat ground safely, the flat policy on steps does not).
-        self.engaged = est is None or not est.valid or est.along_from(base_xy, est.near_along) <= FOOTPRINT_FRONT + self.cfg.engage_margin
+        near = self.edges.near_remaining(base_xy)
+        self.engaged = near is None or near <= FOOTPRINT_FRONT + self.cfg.engage_margin
       return choice if self.engaged else self.policy
     if cur.ending == "facing intermediation":
       return cur.policy if cur.policy == "flat" else self.policy
@@ -302,14 +313,15 @@ class SaroAgent:
     if self.finished or cur is None:
       cmd = torch.zeros(3, device=pos_w.device)
     else:
-      est = self.estimate
-      if cur.ending == "facing intermediation" and est is not None and est.valid:
-        along = est.near_along - self.cfg.standoff
-        left = np.array([-est.heading_w[1], est.heading_w[0]])
-        target = est.origin_w + est.heading_w * along + left * est.lateral
-      elif cur.ending == "across intermediation" and est is not None and est.valid:
-        beyond = est.far_along + FOOTPRINT_REAR + self.cfg.release_margin + 0.6
-        target = est.origin_w + est.heading_w * beyond
+      edges = self.edges
+      if cur.ending == "facing intermediation" and edges.seen and edges.heading is not None:
+        near = edges.near_remaining(base_xy)
+        along = 0.0 if near is None else max(0.0, near - self.cfg.standoff)
+        left = np.array([-edges.heading[1], edges.heading[0]])
+        target = base_xy + edges.heading * along + left * edges.lateral_offset(base_xy)
+      elif cur.ending == "across intermediation" and edges.seen and edges.heading is not None:
+        far = edges.far_remaining(base_xy)
+        target = base_xy + edges.heading * (far + FOOTPRINT_REAR + self.cfg.release_margin + 0.6)
       cmd, _ = goto_command(pos_w[None], quat_w[None], torch.as_tensor(target, device=pos_w.device, dtype=pos_w.dtype)[None], gains)
       cmd = cmd[0]
     new_policy = self._policy_now(x_course, base_xy)

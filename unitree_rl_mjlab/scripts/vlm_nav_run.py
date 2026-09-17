@@ -5,6 +5,8 @@ Arms (--arms, any subset):
   vlm+oracle     VLM navigation + ground-truth policy   (isolates navigation errors)
   vlm+fixed:X    VLM navigation + specialist X always   (SARO's single low-level policy)
   gt+oracle      ground-truth navigation + policy       (upper bound; = Phase-1 oracle)
+  ovlm[+...]     the SARO executor fed by a ground-truth "VLM" (src/vlm_nav/oracle_vlm.py):
+                 pipeline logic with perfect perception, to separate executor faults from model errors
 
 Timing is lockstep: while the agents query the VLM, simulation time is frozen,
 so results measure decision quality independently of this laptop's inference
@@ -44,16 +46,17 @@ from PIL import Image  # noqa: E402
 from src.vlm_nav.camera import CameraSpec  # noqa: E402
 from src.vlm_nav.course import saro_courses  # noqa: E402
 from src.vlm_nav.executor import ExecutorConfig, SaroAgent  # noqa: E402
+from src.vlm_nav.oracle_vlm import OracleVLM  # noqa: E402
 from src.vlm_nav.policy_bank import PolicyBank, default_checkpoints  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, CAMERA_SENSOR_NAME, make_twin_env_cfg, set_velocity_command  # noqa: E402
 from src.vlm_nav.vlm_backend import OpenAICompatVLM, health  # noqa: E402
 
 
 def parse_arm(arm: str) -> tuple[str, str]:
-  if arm == "vlm":
-    return "vlm", "vlm"
+  if arm in ("vlm", "ovlm"):
+    return arm, "vlm"
   nav, _, pol = arm.partition("+")
-  if nav not in ("vlm", "gt") or not pol:
+  if nav not in ("vlm", "gt", "ovlm") or not pol:
     raise ValueError(f"bad arm {arm!r}")
   return nav, pol
 
@@ -66,10 +69,16 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
   arm_dir = out / arm.replace(":", "_").replace("+", "_")
   arm_dir.mkdir(parents=True, exist_ok=True)
   vlm = None
-  if nav == "vlm" or policy_source == "vlm":
+  state_cache: dict = {}
+  box_convention = args.box_convention
+  if nav == "ovlm":
+    vlm = OracleVLM(course, camera, lambda i: state_cache[i], goal_radius=args.goal_radius)
+    box_convention = "xyxy_px"  # the oracle answers in pixels
+  elif nav == "vlm" or policy_source == "vlm":
     vlm = OpenAICompatVLM(base_url=f"{args.base_url}/v1", transcript=arm_dir / "vlm_transcript.jsonl",
                           image_dir=arm_dir / "vlm_images" if args.save_vlm_images else None)
-  cfg = ExecutorConfig(policy_source=policy_source, nav_source=nav, box_convention=args.box_convention, speed=args.speed)
+  cfg = ExecutorConfig(policy_source=policy_source, nav_source="gt" if nav == "gt" else "vlm",
+                       box_convention=box_convention, speed=args.speed)
   agents = [SaroAgent(i, course, camera, vlm, cfg, dt) for i in range(n)]
 
   torch.manual_seed(args.seed)
@@ -99,6 +108,8 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
       depth_all = cam.data.depth[..., 0].cpu().numpy()
       pos_np, quat_np = pos.cpu().numpy(), quat.cpu().numpy()
       ids = [i for i in range(n) if active[i]]
+      for i in ids:
+        state_cache[i] = (depth_all[i], pos_np[i], quat_np[i])
       list(pool.map(lambda i: agents[i].think(step, rgb_all[i], depth_all[i], pos_np[i], quat_np[i]), ids))
     cmds = torch.zeros(n, 3, device=device)
     pidx = torch.zeros(n, dtype=torch.long, device=device)
@@ -178,7 +189,7 @@ def main() -> None:
   ap.add_argument("--out", required=True)
   args = ap.parse_args()
 
-  if any(parse_arm(a)[0] == "vlm" or parse_arm(a)[1] == "vlm" for a in args.arms) and not health(args.base_url):
+  if any(parse_arm(a)[0] == "vlm" or (parse_arm(a) == ("vlm", "vlm")) for a in args.arms) and not health(args.base_url):
     raise SystemExit(f"[ERROR] VLM server not healthy at {args.base_url} (scripts/vlm_server.sh)")
   configure_torch_backends()
   device = "cuda:0"

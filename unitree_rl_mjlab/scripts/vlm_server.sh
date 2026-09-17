@@ -12,6 +12,10 @@
 #   not a constant.
 # - PARALLEL: slots for concurrent requests (the executor queries several envs
 #   per control tick). Context is split across slots, so CTX is per-slot x PARALLEL.
+# - UBATCH: must be >= the image token count. Gemma-4's vision tokens attend
+#   bidirectionally, so a whole image has to fit in one micro-batch; with
+#   IMAGE_MAX_TOKENS=560 and llama.cpp's default 512 the server aborts on
+#   GGML_ASSERT(causal_attn || n_ubatch >= n_tokens_all) at the first image.
 # - Thinking is disabled per request (chat_template_kwargs.enable_thinking=false
 #   in vlm_backend.py): with it on, Gemma 4 spends the whole max_tokens budget in
 #   reasoning_content and returns an empty answer.
@@ -24,10 +28,11 @@ PORT=${PORT:-8091}
 PARALLEL=${PARALLEL:-2}
 CTX=${CTX:-8192}
 IMAGE_MAX_TOKENS=${IMAGE_MAX_TOKENS:-}
+UBATCH=${UBATCH:-1024}
 
 [ -f "$VLM_MODEL" ] || { echo "model not found: $VLM_MODEL (is the drive mounted?)" >&2; exit 1; }
 EXTRA=()
 [ -n "$IMAGE_MAX_TOKENS" ] && EXTRA+=(--image-max-tokens "$IMAGE_MAX_TOKENS" --image-min-tokens "$IMAGE_MAX_TOKENS")
 cd "$LLAMA_DIR"
 exec env LD_LIBRARY_PATH="$LLAMA_DIR" ./llama-server -m "$VLM_MODEL" --mmproj "$VLM_MMPROJ" \
-  -ngl 99 -c "$CTX" -np "$PARALLEL" --host 127.0.0.1 --port "$PORT" "${EXTRA[@]}"
+  -ngl 99 -c "$CTX" -np "$PARALLEL" -b "$UBATCH" -ub "$UBATCH" --host 127.0.0.1 --port "$PORT" "${EXTRA[@]}"

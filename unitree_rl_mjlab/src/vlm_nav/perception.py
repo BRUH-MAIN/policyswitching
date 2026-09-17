@@ -92,3 +92,73 @@ def estimate_from_box(
     center_u=(x0 + x1) / 2.0,
     n_points=int(ok.sum()),
   )
+
+
+def ground_blind_distance(camera: CameraSpec, base_height: float = 0.33) -> float:
+  """Distance ahead of the base where the camera's lowest image row meets level ground.
+
+  Nothing nearer is visible, so a near-edge estimate cannot come closer than this:
+  approached from 2 m, a staircase's near edge reads ~0.8 m and then stops moving.
+  """
+  import math
+
+  h = base_height + camera.pos[2]
+  lowest = math.radians(camera.pitch_down_deg + camera.fovy_deg / 2)
+  return float(camera.pos[0] + h / math.tan(lowest))
+
+
+class EdgeTracker:
+  """World-frame near/far edge of one intermediation, fused over observations.
+
+  The intermediation doesn't move, so every box observation is converted to world
+  points along a reference heading (the first observation's) and fused:
+  - near edge: median of observations taken while the edge was beyond the camera's
+    blind distance (+ margin); once the robot is closer, the stored value is used
+    rather than the saturated reading;
+  - far edge: median of the most recent `far_window` observations (far pixels are
+    at grazing angles and jitter by ~1 m tick to tick).
+  """
+
+  def __init__(self, blind_distance: float, margin: float = 0.15, far_window: int = 5):
+    self.blind = blind_distance
+    self.margin = margin
+    self.far_window = far_window
+    self.heading: np.ndarray | None = None
+    self.near_w: list[np.ndarray] = []
+    self.far_w: list[np.ndarray] = []
+    self.lateral_w: list[np.ndarray] = []
+    self.center_u: float | None = None
+
+  @property
+  def seen(self) -> bool:
+    return bool(self.far_w)
+
+  def update(self, est: IntermediationEstimate) -> None:
+    if not est.valid:
+      return
+    if self.heading is None:
+      self.heading = est.heading_w
+    self.center_u = est.center_u
+    if est.near_along > self.blind + self.margin:
+      self.near_w.append(est.origin_w + est.heading_w * est.near_along)
+    self.far_w.append(est.origin_w + est.heading_w * est.far_along)
+    left = np.array([-est.heading_w[1], est.heading_w[0]])
+    self.lateral_w.append(est.origin_w + left * est.lateral)
+
+  def _along(self, points: list[np.ndarray], base_xy: np.ndarray) -> float | None:
+    if not points or self.heading is None:
+      return None
+    return float(np.median([np.dot(p - base_xy, self.heading) for p in points]))
+
+  def near_remaining(self, base_xy: np.ndarray) -> float | None:
+    """Distance to the near edge; None if never seen beyond the blind zone (it is closer than that)."""
+    return self._along(self.near_w, base_xy)
+
+  def far_remaining(self, base_xy: np.ndarray) -> float | None:
+    return self._along(self.far_w[-self.far_window :], base_xy)
+
+  def lateral_offset(self, base_xy: np.ndarray) -> float:
+    if not self.lateral_w or self.heading is None:
+      return 0.0
+    left = np.array([-self.heading[1], self.heading[0]])
+    return float(np.median([np.dot(p - base_xy, left) for p in self.lateral_w[-self.far_window :]]))

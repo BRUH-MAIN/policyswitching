@@ -75,9 +75,9 @@ def run_job(vlm: OpenAICompatVLM, kind: str, f: dict, use_json: bool, instructio
     out.update(truth=f["required_policy"], truth_ahead_1m=f["terrain_ahead_1m"], pred=pred)
   elif kind == "present":
     name = INTERMEDIATION_NAME[f["next_intermediation"]]
-    r = vlm.ask(image, P.discriminator_present(name), P.YES_NO_SCHEMA if use_json else None, max_tokens=16, tag=kind)
-    ans = (r.parsed or {}).get("answer") if use_json else None
-    pred = (ans == "yes") if ans in ("yes", "no") else (None if use_json else P.parse_yes_no(r.text))
+    # Always free text: the yes/no JSON schema makes Gemma-4-E4B return empty content.
+    r = vlm.ask(image, P.discriminator_present(name), None, max_tokens=8, tag=kind)
+    pred = P.parse_yes_no(r.text)
     out.update(truth=f["intermediation_bbox"] is not None, pred=pred, intermediation=name,
                dist=f["dist_to_intermediation"])
   elif kind == "box":
