@@ -75,6 +75,33 @@ def perception(intermediation: str) -> str:
   return f"Where is the {intermediation}? Answer in [x0,y0,x1,y1] format, don't say anything else."
 
 
+def perception_detect(intermediation: str) -> str:
+  """Detection-style box request. Not SARO's wording: Gemma-4-E4B answers SARO's
+  "[x0,y0,x1,y1]" prompt with [0,0,0,0] or the full frame almost every time
+  (Phase-2 probe), and does noticeably better with this Gemini-style format."""
+  return (f"Detect the {intermediation} in the image. Return a JSON list like "
+          f'[{{"box_2d": [ymin, xmin, ymax, xmax], "label": "{intermediation}"}}] with coordinates normalized to 0-1000.')
+
+
+def parse_detect_box(text: str, width: int, height: int) -> list[float] | None:
+  from src.vlm_nav.vlm_backend import parse_json  # noqa: PLC0415
+
+  p = parse_json(text)
+  if isinstance(p, dict):
+    p = [p]
+  if not (isinstance(p, list) and p and isinstance(p[0], dict) and len(p[0].get("box_2d", [])) == 4):
+    return None
+  return box_to_pixels([float(v) for v in p[0]["box_2d"]], "yxyx_1000", width, height)
+
+
+def box_is_degenerate(box_px: list[float] | None, width: int, height: int) -> bool:
+  """Empty, zero-area, or (near) the whole frame -- the answers that carry no location."""
+  if box_px is None:
+    return True
+  bw, bh = box_px[2] - box_px[0], box_px[3] - box_px[1]
+  return bw < 4 or bh < 4 or (bw > 0.97 * width and bh > 0.97 * height)
+
+
 def discriminator_present(intermediation: str) -> str:
   return f"Is there any {intermediation}? Just answer yes or no."
 

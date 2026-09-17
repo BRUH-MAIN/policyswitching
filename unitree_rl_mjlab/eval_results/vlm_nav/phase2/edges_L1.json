@@ -1,0 +1,9669 @@
+{
+ "result": {
+  "blind_distance": 0.8609780490471259,
+  "max_range": 4.0,
+  "n_frames": 720,
+  "depth_only": {
+   "flat": {
+    "n": 126,
+    "false_detections": 1
+   },
+   "multi": {
+    "n_in_range": 216,
+    "detection_rate": 0.9027777777777778,
+    "near_n": 72,
+    "near_mae": 0.04418999729223502,
+    "near_bias": 0.010841536221406203,
+    "near_within_0p2": 1.0,
+    "far_n": 168,
+    "far_mae": 0.6032838751347704,
+    "far_bias": 0.32004886461026727,
+    "far_within_0p3": 0.5357142857142857
+   },
+   "rough": {
+    "n_in_range": 90,
+    "detection_rate": 0.9,
+    "near_n": 24,
+    "near_mae": 0.08230952787094177,
+    "near_bias": 0.08230952787094177,
+    "near_within_0p2": 1.0,
+    "far_n": 54,
+    "far_mae": 0.2931943475509901,
+    "far_bias": 0.12543731102042008,
+    "far_within_0p3": 0.6111111111111112
+   },
+   "stairs_down": {
+    "n_in_range": 63,
+    "detection_rate": 0.7142857142857143,
+    "near_n": 24,
+    "near_mae": 0.0497199823272611,
+    "near_bias": -0.0497199823272611,
+    "near_within_0p2": 1.0,
+    "far_n": 45,
+    "far_mae": 0.10638560351758025,
+    "far_bias": -0.054149015572317535,
+    "far_within_0p3": 1.0
+   },
+   "stairs_up": {
+    "n_in_range": 63,
+    "detection_rate": 0.9047619047619048,
+    "near_n": 24,
+    "near_mae": 0.0005404816785021804,
+    "near_bias": -6.493687946207416e-05,
+    "near_within_0p2": 1.0,
+    "far_n": 57,
+    "far_mae": 0.6512378479431908,
+    "far_bias": 0.10210549818143047,
+    "far_within_0p3": 0.21052631578947367
+   }
+  },
+  "gt_box": {
+   "flat": {
+    "n": 126,
+    "false_detections": 0
+   },
+   "multi": {
+    "n_in_range": 216,
+    "detection_rate": 0.8333333333333334,
+    "near_n": 72,
+    "near_mae": 0.08106499695477284,
+    "near_bias": 0.013528680148710948,
+    "near_within_0p2": 0.9583333333333334,
+    "far_n": 153,
+    "far_mae": 0.28670676167361364,
+    "far_bias": -0.20429465445470882,
+    "far_within_0p3": 0.5751633986928104
+   },
+   "rough": {
+    "n_in_range": 90,
+    "detection_rate": 0.9,
+    "near_n": 24,
+    "near_mae": 0.0456853466215163,
+    "near_bias": 0.03575038427710684,
+    "near_within_0p2": 1.0,
+    "far_n": 54,
+    "far_mae": 0.42499229060839916,
+    "far_bias": -0.3822943555819691,
+    "far_within_0p3": 0.4444444444444444
+   },
+   "stairs_down": {
+    "n_in_range": 63,
+    "detection_rate": 0.7142857142857143,
+    "near_n": 24,
+    "near_mae": 0.15292187184749828,
+    "near_bias": -0.039752116226277896,
+    "near_within_0p2": 0.875,
+    "far_n": 45,
+    "far_mae": 0.17408535379476517,
+    "far_bias": 0.052018635566952375,
+    "far_within_0p3": 0.7333333333333333
+   },
+   "stairs_up": {
+    "n_in_range": 63,
+    "detection_rate": 0.8571428571428571,
+    "near_n": 24,
+    "near_mae": 0.044587772395303926,
+    "near_bias": 0.044587772395303926,
+    "near_within_0p2": 1.0,
+    "far_n": 54,
+    "far_mae": 0.24227240597120184,
+    "far_bias": -0.23988936167883304,
+    "far_within_0p3": 0.5740740740740741
+   }
+  }
+ },
+ "rows": [
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 0.8615992911229162,
+    "far": 4.953215130348947
+   },
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "flat",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.124708845200471,
+    "far": 2.4883082886255883
+   },
+   "gt_box": {
+    "near": 2.02576200711513,
+    "far": 4.388073813109831
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.074289797788273,
+    "far": 3.4662711704298967
+   },
+   "gt_box": {
+    "near": 2.0975040854201055,
+    "far": 4.252040110610283
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.1362025711417534,
+    "far": 2.2319022427530095
+   },
+   "gt_box": {
+    "near": 2.0524986231964144,
+    "far": 4.611980111458166
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.15061185060806,
+    "far": 3.05243888257313
+   },
+   "gt_box": {
+    "near": 2.0417527908732476,
+    "far": 4.566186271033789
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.093585417467895,
+    "far": 3.309270538193653
+   },
+   "gt_box": {
+    "near": 2.115084259723501,
+    "far": 4.1166476777823044
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.13428695015154,
+    "far": 3.381268791499463
+   },
+   "gt_box": {
+    "near": 2.0459838859034907,
+    "far": 4.666080430153811
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.1425154886624185,
+    "far": 3.3030995553739024
+   },
+   "gt_box": {
+    "near": 2.065806111505988,
+    "far": 4.620697218867361
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.094228723461197,
+    "far": 3.314068824794984
+   },
+   "gt_box": {
+    "near": 2.1403427022777515,
+    "far": 4.2515260766348
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.1512021977558873,
+    "far": 4.741434612345004
+   },
+   "gt_box": {
+    "near": 2.035633384622662,
+    "far": 4.2131850294960485
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6085430365876185,
+    "far": 2.018721819228812
+   },
+   "gt_box": {
+    "near": 1.568325848553866,
+    "far": 3.8355267524952357
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5734940497666878,
+    "far": 2.6016212133947807
+   },
+   "gt_box": {
+    "near": 1.5971031336845698,
+    "far": 3.650566153512091
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6147496415320268,
+    "far": 2.72052680710166
+   },
+   "gt_box": {
+    "near": 1.5613792421798756,
+    "far": 3.9248221813180573
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.647237668119805,
+    "far": 2.6158545651277074
+   },
+   "gt_box": {
+    "near": 1.562551234268387,
+    "far": 3.860114581949602
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5833479891443147,
+    "far": 2.5591733454539214
+   },
+   "gt_box": {
+    "near": 1.6011168636215318,
+    "far": 3.6168096747004905
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6222707872925544,
+    "far": 4.379374574510144
+   },
+   "gt_box": {
+    "near": 1.5632595540920762,
+    "far": 3.8891563178286317
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6145522847547897,
+    "far": 2.8031713788143
+   },
+   "gt_box": {
+    "near": 1.5618480271581299,
+    "far": 3.866745133910293
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5969220986350283,
+    "far": 2.820576346855583
+   },
+   "gt_box": {
+    "near": 1.616264449089889,
+    "far": 3.6955418857153397
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.688675376396236,
+    "far": 2.7453395929700664
+   },
+   "gt_box": {
+    "near": 1.568325848553866,
+    "far": 3.835663128075299
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.0952499980238029,
+    "far": 1.6200839744406748
+   },
+   "gt_box": {
+    "near": 1.0701377582783476,
+    "far": 3.016360781964267
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.0765416985103862,
+    "far": 4.388499385891473
+   },
+   "gt_box": {
+    "near": 1.0825329392041279,
+    "far": 2.9315142261697975
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.096674603724568,
+    "far": 2.145058710767481
+   },
+   "gt_box": {
+    "near": 1.0622199822150349,
+    "far": 3.1915387997077036
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.1511210810693984,
+    "far": 1.3357174246877515
+   },
+   "gt_box": {
+    "near": 1.0650074594037888,
+    "far": 3.0430331911666313
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.079293437542189,
+    "far": 2.041375580723944
+   },
+   "gt_box": {
+    "near": 1.094369305759134,
+    "far": 2.9424338199747195
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.0977853928773111,
+    "far": 4.693551350664023
+   },
+   "gt_box": {
+    "near": 1.0650991410095298,
+    "far": 3.0365465033228163
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.106641690423849,
+    "far": 2.3875481938659
+   },
+   "gt_box": {
+    "near": 1.0710314537411656,
+    "far": 3.1368802455861875
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.116771768444174,
+    "far": 4.388499385891473
+   },
+   "gt_box": {
+    "near": 1.0957733656599986,
+    "far": 2.927984659347362
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.1428267758955308,
+    "far": 4.534505546618673
+   },
+   "gt_box": {
+    "near": 1.0702670237406304,
+    "far": 3.001559551323928
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.958095831743904,
+    "far": 4.060991149362769
+   },
+   "gt_box": {
+    "near": 0.8659910292731288,
+    "far": 2.5906705031259483
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.8085707419729067,
+    "far": 2.6284442984509413
+   },
+   "gt_box": {
+    "near": 0.8552407858468354,
+    "far": 2.4686775285864195
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.8128290764439391,
+    "far": 4.060951111965367
+   },
+   "gt_box": {
+    "near": 0.8563708561514141,
+    "far": 2.720093243531323
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.1262493211789286,
+    "far": 4.060861851896555
+   },
+   "gt_box": {
+    "near": 0.8629848212174391,
+    "far": 2.6860211905376414
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.9043464672168362,
+    "far": 1.5288209213002961
+   },
+   "gt_box": {
+    "near": 0.8458447935371947,
+    "far": 2.4685276265935343
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.9228532155369049,
+    "far": 4.060951111965367
+   },
+   "gt_box": {
+    "near": 0.845227160291093,
+    "far": 2.6637557552456768
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.8518575933788063,
+    "far": 2.0138792562794268
+   },
+   "gt_box": {
+    "near": 0.8393616686401022,
+    "far": 2.7008489155279998
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.8002200536652166,
+    "far": 3.8347772024228703
+   },
+   "gt_box": {
+    "near": 0.8690027297609122,
+    "far": 2.468942449442192
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.0471482239921495,
+    "far": 4.060991149362769
+   },
+   "gt_box": {
+    "near": 0.8702750153088603,
+    "far": 2.572253284718044
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8107974097577099,
+    "far": 3.453939395813569
+   },
+   "gt_box": {
+    "near": 0.8359963079008259,
+    "far": 2.3553219180987144
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8163724441670945,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8996789397957423,
+    "far": 2.264230161962078
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8070691703932437,
+    "far": 3.497157642475656
+   },
+   "gt_box": {
+    "near": 0.8692259875701148,
+    "far": 2.4378334133113686
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8120294632008102,
+    "far": 3.4970497014809174
+   },
+   "gt_box": {
+    "near": 0.832073348392445,
+    "far": 2.4331370195660513
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8073110441531108,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8891675661247689,
+    "far": 2.263613342920424
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8271426301192667,
+    "far": 3.497237885374778
+   },
+   "gt_box": {
+    "near": 0.8493858254731914,
+    "far": 2.462017267330983
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8144026145809369,
+    "far": 3.453948504684415
+   },
+   "gt_box": {
+    "near": 0.8689419474095316,
+    "far": 2.4934203860226267
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8087159517113687,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8879996148703109,
+    "far": 2.2914828248914256
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8379635405413466,
+    "far": 3.497157642475656
+   },
+   "gt_box": {
+    "near": 0.8481959431664027,
+    "far": 2.3752557127061626
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.8700810021680141,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8292258755787763,
+    "far": 2.1432628735639003
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9309302989723092,
+    "far": 2.6814472431884617
+   },
+   "gt_box": {
+    "near": 0.8272147653853079,
+    "far": 1.9372717494209697
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0185060421606993,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8585168310058084,
+    "far": 2.245028081073612
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.8190617651701773,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8541183403162871,
+    "far": 2.212773963449236
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.8218584548639329,
+    "far": 2.7067266719149887
+   },
+   "gt_box": {
+    "near": 0.8353337392230227,
+    "far": 1.9411832943512597
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.83981472670363,
+    "far": 2.8939771821405134
+   },
+   "gt_box": {
+    "near": 0.8489019672508042,
+    "far": 2.210686920992244
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.05343234938147,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8690370357547154,
+    "far": 2.209060963837411
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.8873455349980848,
+    "far": 2.7067266719149887
+   },
+   "gt_box": {
+    "near": 0.8493444733201847,
+    "far": 1.96634969056044
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.926779967603184,
+    "far": 2.9231287118046243
+   },
+   "gt_box": {
+    "near": 0.8576031873097203,
+    "far": 2.107561428079295
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8724208315867431,
+    "far": 2.260101756994921
+   },
+   "gt_box": {
+    "near": 0.8523889581272333,
+    "far": 1.8993840746632897
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.0335246080266152,
+    "far": 2.135454144572101
+   },
+   "gt_box": {
+    "near": 0.8641306392004446,
+    "far": 1.6693536840869565
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8983351802491887,
+    "far": 2.2937281278661077
+   },
+   "gt_box": {
+    "near": 0.8587189686474439,
+    "far": 1.9654940979971542
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.9792539942093399,
+    "far": 2.2436330694881286
+   },
+   "gt_box": {
+    "near": 0.8544827459057249,
+    "far": 1.8417909166807815
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.8096748876350195,
+    "far": 2.150483366502152
+   },
+   "gt_box": {
+    "near": 0.8670348625308428,
+    "far": 1.6686333699832483
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.9207626492630446,
+    "far": 2.293764372088042
+   },
+   "gt_box": {
+    "near": 0.8678874046549583,
+    "far": 1.8701664974748238
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8118299190840408,
+    "far": 2.311041566679327
+   },
+   "gt_box": {
+    "near": 0.8522220678319143,
+    "far": 1.8424542591051356
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.8780526073187018,
+    "far": 2.13553590933106
+   },
+   "gt_box": {
+    "near": 0.8668949649982705,
+    "far": 1.6390400968452319
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.7826764011156894,
+    "far": 2.311041566679327
+   },
+   "gt_box": {
+    "near": 0.8490870360823053,
+    "far": 1.83100461197182
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8730217671135135,
+    "far": 1.6352348429402042
+   },
+   "gt_box": {
+    "near": 0.8420974086795145,
+    "far": 1.5702163331083798
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.894219604725051,
+    "far": 1.5972367951079578
+   },
+   "gt_box": {
+    "near": 0.8822229659591763,
+    "far": 1.351177803759739
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.862871992586271,
+    "far": 1.6836856290003184
+   },
+   "gt_box": {
+    "near": 0.833540291229699,
+    "far": 1.6053475155187023
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.0059325649015032,
+    "far": 1.6198242107478875
+   },
+   "gt_box": {
+    "near": 0.8579555517399396,
+    "far": 1.6119687729016843
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.081101497552762,
+    "far": 1.5970890555496902
+   },
+   "gt_box": {
+    "near": 0.9076789785133652,
+    "far": 1.3237771339199949
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8262904626855156,
+    "far": 1.7265906078235067
+   },
+   "gt_box": {
+    "near": 0.8528608859799416,
+    "far": 1.4748731376778883
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8006135269261777,
+    "far": 1.726711669415355
+   },
+   "gt_box": {
+    "near": 0.8364397862268497,
+    "far": 1.575566160995249
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8782821287199507,
+    "far": 1.5828261294216497
+   },
+   "gt_box": {
+    "near": 0.8840146401075122,
+    "far": 1.3027567256690475
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.0771778036371005,
+    "far": 1.7265906078235067
+   },
+   "gt_box": {
+    "near": 0.862453737337812,
+    "far": 1.547939288500578
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.9132094880025291,
+    "far": 1.0676205085352424
+   },
+   "gt_box": {
+    "near": 0.8356244915372948,
+    "far": 1.179455166327561
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.7990375919664303,
+    "far": 0.9998261537314246
+   },
+   "gt_box": {
+    "near": 0.8543294788128488,
+    "far": 1.0395231039658284
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8373797961964836,
+    "far": 0.993127732269757
+   },
+   "gt_box": {
+    "near": 0.8372150193866004,
+    "far": 1.1726195207308199
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8147607626515998,
+    "far": 1.057167713488776
+   },
+   "gt_box": {
+    "near": 0.8358262030252938,
+    "far": 1.176020985920596
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.8851665311318264,
+    "far": 1.002005850076106
+   },
+   "gt_box": {
+    "near": 0.8405470735107974,
+    "far": 1.0395534488758755
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8197032571511644,
+    "far": 1.0810571690035446
+   },
+   "gt_box": {
+    "near": 0.8356946999411279,
+    "far": 1.1760121537316728
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8941850478073831,
+    "far": 1.0810733496812721
+   },
+   "gt_box": {
+    "near": 0.8452027645927235,
+    "far": 1.1726195207308199
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.8677095251159161,
+    "far": 0.9741477403025152
+   },
+   "gt_box": {
+    "near": 0.8379728337611647,
+    "far": 1.0395231039658284
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8465751125253751,
+    "far": 1.0087815432543688
+   },
+   "gt_box": {
+    "near": 0.8212654773638824,
+    "far": 1.1794387467532277
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.578583281795502,
+    "far": 3.8167246859462742
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.4999576890787645,
+    "far": 3.6999763491817275
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.5824410691555557,
+    "far": 3.8206281113911
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.578583281795502,
+    "far": 3.8167246859462742
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.4999576890787645,
+    "far": 3.6999763491817275
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.5824410691555557,
+    "far": 3.8206281113911
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.578583281795502,
+    "far": 3.8167246859462742
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.4999576890787645,
+    "far": 3.6999763491817275
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.5824410691555557,
+    "far": 3.8206281113911
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.0660492767146086,
+    "far": 3.4220912159993575
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153272425028117,
+    "far": 3.200255452528649
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.066016904650801,
+    "far": 3.4169255579238307
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.066026118086247,
+    "far": 3.3617302499705146
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153297726754905,
+    "far": 3.200282381484106
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.066026118086247,
+    "far": 3.3617302499705146
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.066016904650801,
+    "far": 3.4169255579238307
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153272425028117,
+    "far": 3.200255452528649
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.0660492767146086,
+    "far": 3.4220912159993575
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.5684690442725855,
+    "far": 2.7144394734651667
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6197075251798072,
+    "far": 2.6996389777932173
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.554823620675684,
+    "far": 2.860585640487802
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.561730991321765,
+    "far": 2.8607109039147556
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6196899643865188,
+    "far": 2.6997469852589715
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.561730991321765,
+    "far": 2.8607109039147556
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.554823620675684,
+    "far": 2.860585640487802
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6197075251798072,
+    "far": 2.6996389777932173
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.5684690442725855,
+    "far": 2.7144394734651667
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0613957812186627,
+    "far": 2.1628691136986555
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351668,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0790081372949936,
+    "far": 2.199812001058984
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0544888400121155,
+    "far": 2.1840761317841295
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0597267198017493,
+    "far": 2.1871243142150023
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351668,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0789919712583302,
+    "far": 2.1996888770131173
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0597267198017493,
+    "far": 2.1871243142150023
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0544888400121155,
+    "far": 2.1840761317841295
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351668,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0790081372949936,
+    "far": 2.199812001058984
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0613957812186627,
+    "far": 2.1628691136986555
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8123643433246389,
+    "far": 1.7432709037362717
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625628819907427,
+    "far": 1.699828384976267
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8168689916126975,
+    "far": 1.7432671505054724
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8092799704033466,
+    "far": 1.7431814042314948
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625252496662236,
+    "far": 1.6998527317204108
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8092799704033466,
+    "far": 1.7431814042314948
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8168689916126975,
+    "far": 1.7432671505054724
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625628819907427,
+    "far": 1.699828384976267
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8123643433246389,
+    "far": 1.7432709037362717
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7716306716463566,
+    "far": 1.366502117359723
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627722246346098,
+    "far": 1.2175376164754879
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7615343872336597,
+    "far": 1.3670380520466057
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7665472900525501,
+    "far": 1.3706138017597231
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627396018377974,
+    "far": 1.217375364119714
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7665472900525501,
+    "far": 1.3706138017597231
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7615343872336597,
+    "far": 1.3670380520466057
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627722246346098,
+    "far": 1.2175376164754879
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7716306716463566,
+    "far": 1.366502117359723
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.7176262348097284,
+    "far": 1.0491847693988086
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322563958795784,
+    "far": 0.9426754544586735
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971124,
+    "far": 0.7226535049631845
+   },
+   "gt_box": {
+    "near": 0.7108104867127443,
+    "far": 1.0377104948362534
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.714170899746623,
+    "far": 1.0415309056650721
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322889973616331,
+    "far": 0.9427148959021001
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971124,
+    "far": 0.7226535049631845
+   },
+   "gt_box": {
+    "near": 0.714170899746623,
+    "far": 1.0415309056650721
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.7108104867127443,
+    "far": 1.0377104948362534
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322563958795784,
+    "far": 0.9426754544586735
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 8.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971124,
+    "far": 0.7226535049631845
+   },
+   "gt_box": {
+    "near": 0.7176262348097284,
+    "far": 1.0491847693988086
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471650863238069,
+    "far": 4.584333105013067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.494993034346267,
+    "far": 4.2520755379947435
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471639174586898,
+    "far": 4.584289634570757
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471650863238069,
+    "far": 4.584333105013067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.494993034346267,
+    "far": 4.2520755379947435
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471639174586898,
+    "far": 4.584289634570757
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471650863238069,
+    "far": 4.584333105013067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": {
+    "near": 2.494993034346267,
+    "far": 4.2520755379947435
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 2.471639174586898,
+    "far": 4.584289634570757
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.7499288187929345
+   },
+   "gt_box": {
+    "near": 1.8842224012727038,
+    "far": 3.689274604656939
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.256593139679013,
+    "far": 3.463676264433957
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.7499055691653056
+   },
+   "gt_box": {
+    "near": 1.8951111816919237,
+    "far": 4.05348924245528
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.7499288187929345
+   },
+   "gt_box": {
+    "near": 1.884132458742053,
+    "far": 3.9814981663317752
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.25657881488652,
+    "far": 3.4637278429290994
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.7499055691653056
+   },
+   "gt_box": {
+    "near": 1.884132458742053,
+    "far": 3.9814981663317752
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.7499288187929345
+   },
+   "gt_box": {
+    "near": 1.8951111816919237,
+    "far": 4.05348924245528
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.256593139679013,
+    "far": 3.463676264433957
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 9.5,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.7499055691653056
+   },
+   "gt_box": {
+    "near": 1.8842224012727038,
+    "far": 3.689274604656939
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4533001157421115,
+    "far": 3.198023723998072
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6960470973090267,
+    "far": 2.6916695727071636
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4419402438128084,
+    "far": 3.386541984926704
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4418384328849625,
+    "far": 3.41216819999884
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6961777785920458,
+    "far": 2.691478051433083
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4418384328849625,
+    "far": 3.41216819999884
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4419402438128084,
+    "far": 3.386541984926704
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6960470973090267,
+    "far": 2.6916695727071636
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.0,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4533001157421115,
+    "far": 3.198023723998072
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.553879095402336
+   },
+   "gt_box": {
+    "near": 0.9279047650552721,
+    "far": 2.56731719092907
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720914981340785,
+    "far": 2.130749501185626
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9225805136453089,
+    "far": 2.6683536173799807
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.553879095402336
+   },
+   "gt_box": {
+    "near": 0.9260737824994053,
+    "far": 2.6683735957301273
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720063629059006,
+    "far": 2.1307083810938527
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9260737824994053,
+    "far": 2.6683735957301273
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.553879095402336
+   },
+   "gt_box": {
+    "near": 0.9225805136453089,
+    "far": 2.6683536173799807
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720914981340785,
+    "far": 2.130749501185626
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 10.5,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9279047650552721,
+    "far": 2.56731719092907
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0899557777049336,
+    "far": 1.9695117290934419
+   },
+   "gt_box": {
+    "near": 1.0414805534645755,
+    "far": 2.195670745078907
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499867
+   },
+   "gt_box": {
+    "near": 1.035272464589894,
+    "far": 1.868127229495245
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576703
+   },
+   "gt_box": {
+    "near": 1.0394096190553945,
+    "far": 2.1858568747085947
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0899557777049336,
+    "far": 1.9695117290934419
+   },
+   "gt_box": {
+    "near": 1.037314993609149,
+    "far": 2.195603758481832
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499867
+   },
+   "gt_box": {
+    "near": 1.0352549440654717,
+    "far": 1.8680480181015082
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576703
+   },
+   "gt_box": {
+    "near": 1.037314993609149,
+    "far": 2.195603758481832
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0899557777049336,
+    "far": 1.9695117290934419
+   },
+   "gt_box": {
+    "near": 1.0394096190553945,
+    "far": 2.1858568747085947
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499867
+   },
+   "gt_box": {
+    "near": 1.035272464589894,
+    "far": 1.868127229495245
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.0,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576703
+   },
+   "gt_box": {
+    "near": 1.0414805534645755,
+    "far": 2.195670745078907
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1866924290342649,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.096174130496066,
+    "far": 1.679141219562911
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.089809056644396,
+    "far": 1.438944728761947
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.18942640542451,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.1007968740589873,
+    "far": 1.6733942571965257
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1866924290342649,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.094971138002358,
+    "far": 1.6792557292663346
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.0897410055720504,
+    "far": 1.4389926912125812
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.18942640542451,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.094971138002358,
+    "far": 1.6792557292663346
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1866924290342649,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.1007968740589873,
+    "far": 1.6733942571965257
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.089809056644396,
+    "far": 1.438944728761947
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 11.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.18942640542451,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.096174130496066,
+    "far": 1.679141219562911
+   }
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": "stairs",
+   "x": 12.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 13.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 0.861599291122916,
+    "far": 4.953387518831306
+   },
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "multi",
+   "terrain": null,
+   "x": 14.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.124708845200471,
+    "far": 2.488308288625588
+   },
+   "gt_box": {
+    "near": 2.0257620071151297,
+    "far": 4.388073813109831
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.0742897977882726,
+    "far": 3.4662711704298967
+   },
+   "gt_box": {
+    "near": 2.0975040854201055,
+    "far": 4.252040110610283
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.136202571141754,
+    "far": 2.2319022427530095
+   },
+   "gt_box": {
+    "near": 2.0524986231964144,
+    "far": 4.611980111458166
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.15061185060806,
+    "far": 3.0524388825731297
+   },
+   "gt_box": {
+    "near": 2.0417527908732476,
+    "far": 4.566186271033789
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.093585417467895,
+    "far": 3.309270538193653
+   },
+   "gt_box": {
+    "near": 2.115084259723501,
+    "far": 4.1166476777823044
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.13428695015154,
+    "far": 3.381268791499463
+   },
+   "gt_box": {
+    "near": 2.0459838859034902,
+    "far": 4.666080430153811
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.142515488662418,
+    "far": 3.3030995553739024
+   },
+   "gt_box": {
+    "near": 2.065806111505988,
+    "far": 4.620697218867361
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 5.0,
+   "depth_only": {
+    "near": 2.094228723461197,
+    "far": 3.314068824794984
+   },
+   "gt_box": {
+    "near": 2.1403427022777515,
+    "far": 4.2515260766348
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 5.160425119921928,
+   "depth_only": {
+    "near": 2.1512021977558873,
+    "far": 4.741434612345004
+   },
+   "gt_box": {
+    "near": 2.035633384622662,
+    "far": 4.2131850294960485
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.608543036587619,
+    "far": 2.0187218192288117
+   },
+   "gt_box": {
+    "near": 1.568325848553866,
+    "far": 3.8355267524952357
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5734940497666878,
+    "far": 2.6016212133947807
+   },
+   "gt_box": {
+    "near": 1.59710313368457,
+    "far": 3.650566153512091
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6147496415320268,
+    "far": 2.72052680710166
+   },
+   "gt_box": {
+    "near": 1.5613792421798756,
+    "far": 3.9248221813180573
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6472376681198049,
+    "far": 2.6158545651277074
+   },
+   "gt_box": {
+    "near": 1.562551234268387,
+    "far": 3.860114581949602
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5833479891443152,
+    "far": 2.5591733454539214
+   },
+   "gt_box": {
+    "near": 1.6011168636215318,
+    "far": 3.6168096747004905
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6222707872925544,
+    "far": 4.379374574510144
+   },
+   "gt_box": {
+    "near": 1.5632595540920762,
+    "far": 3.8891563178286317
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.6145522847547893,
+    "far": 2.8031713788143
+   },
+   "gt_box": {
+    "near": 1.5618480271581299,
+    "far": 3.866745133910293
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 4.5,
+   "depth_only": {
+    "near": 1.5969220986350288,
+    "far": 2.820576346855583
+   },
+   "gt_box": {
+    "near": 1.616264449089889,
+    "far": 3.6955418857153397
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 4.644382607929735,
+   "depth_only": {
+    "near": 1.688675376396236,
+    "far": 2.7453395929700664
+   },
+   "gt_box": {
+    "near": 1.568325848553866,
+    "far": 3.835663128075299
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.095249998023803,
+    "far": 1.620083974440675
+   },
+   "gt_box": {
+    "near": 1.070137758278348,
+    "far": 3.016360781964267
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.0765416985103857,
+    "far": 4.388499385891473
+   },
+   "gt_box": {
+    "near": 1.0825329392041279,
+    "far": 2.9315142261697975
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.0966746037245678,
+    "far": 2.145058710767481
+   },
+   "gt_box": {
+    "near": 1.0622199822150349,
+    "far": 3.1915387997077036
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.1511210810693981,
+    "far": 1.3357174246877515
+   },
+   "gt_box": {
+    "near": 1.0650074594037888,
+    "far": 3.0430331911666313
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.079293437542189,
+    "far": 2.041375580723944
+   },
+   "gt_box": {
+    "near": 1.094369305759134,
+    "far": 2.9424338199747195
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.097785392877311,
+    "far": 4.693551350664023
+   },
+   "gt_box": {
+    "near": 1.0650991410095298,
+    "far": 3.0365465033228163
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.1066416904238492,
+    "far": 2.3875481938659
+   },
+   "gt_box": {
+    "near": 1.0710314537411656,
+    "far": 3.1368802455861875
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 4.0,
+   "depth_only": {
+    "near": 1.1167717684441745,
+    "far": 4.388499385891473
+   },
+   "gt_box": {
+    "near": 1.0957733656599984,
+    "far": 2.927984659347362
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 4.128340095937543,
+   "depth_only": {
+    "near": 1.1428267758955306,
+    "far": 4.534505546618673
+   },
+   "gt_box": {
+    "near": 1.0702670237406302,
+    "far": 3.001559551323928
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.9580958317439036,
+    "far": 4.060991149362769
+   },
+   "gt_box": {
+    "near": 0.8659910292731283,
+    "far": 2.5906705031259483
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.8085707419729069,
+    "far": 2.6284442984509413
+   },
+   "gt_box": {
+    "near": 0.8552407858468355,
+    "far": 2.4686775285864195
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.8128290764439395,
+    "far": 4.060951111965367
+   },
+   "gt_box": {
+    "near": 0.8563708561514136,
+    "far": 2.720093243531323
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.1262493211789286,
+    "far": 4.060861851896555
+   },
+   "gt_box": {
+    "near": 0.862984821217439,
+    "far": 2.6860211905376414
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.9043464672168362,
+    "far": 1.5288209213002961
+   },
+   "gt_box": {
+    "near": 0.8458447935371951,
+    "far": 2.4685276265935343
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.9228532155369049,
+    "far": 4.060951111965367
+   },
+   "gt_box": {
+    "near": 0.8452271602910935,
+    "far": 2.6637557552456768
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 0.8518575933788058,
+    "far": 2.0138792562794268
+   },
+   "gt_box": {
+    "near": 0.8393616686401022,
+    "far": 2.7008489155279998
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 0.8002200536652171,
+    "far": 3.8347772024228703
+   },
+   "gt_box": {
+    "near": 0.8690027297609123,
+    "far": 2.468942449442192
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.0471482239921495,
+    "far": 4.060991149362769
+   },
+   "gt_box": {
+    "near": 0.8702750153088601,
+    "far": 2.572253284718044
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8107974097577095,
+    "far": 3.453939395813569
+   },
+   "gt_box": {
+    "near": 0.8359963079008257,
+    "far": 2.3553219180987144
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8163724441670942,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8996789397957421,
+    "far": 2.264230161962078
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8070691703932436,
+    "far": 3.497157642475656
+   },
+   "gt_box": {
+    "near": 0.8692259875701152,
+    "far": 2.4378334133113686
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8120294632008103,
+    "far": 3.4970497014809174
+   },
+   "gt_box": {
+    "near": 0.832073348392445,
+    "far": 2.4331370195660513
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8073110441531108,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8891675661247685,
+    "far": 2.263613342920424
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8271426301192666,
+    "far": 3.497237885374778
+   },
+   "gt_box": {
+    "near": 0.8493858254731913,
+    "far": 2.462017267330983
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8144026145809369,
+    "far": 3.453948504684415
+   },
+   "gt_box": {
+    "near": 0.8689419474095312,
+    "far": 2.4934203860226267
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 0.8087159517113691,
+    "far": 3.255146798656751
+   },
+   "gt_box": {
+    "near": 0.8879996148703111,
+    "far": 2.2914828248914256
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 0.8379635405413468,
+    "far": 3.497157642475656
+   },
+   "gt_box": {
+    "near": 0.8481959431664026,
+    "far": 2.3752557127061626
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.8700810021680141,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8292258755787761,
+    "far": 2.1432628735639003
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9309302989723092,
+    "far": 2.6814472431884617
+   },
+   "gt_box": {
+    "near": 0.827214765385308,
+    "far": 1.9372717494209697
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0185060421606995,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8585168310058084,
+    "far": 2.245028081073612
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.8190617651701775,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8541183403162871,
+    "far": 2.212773963449236
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.8218584548639329,
+    "far": 2.7067266719149887
+   },
+   "gt_box": {
+    "near": 0.8353337392230227,
+    "far": 1.9411832943512597
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.8398147267036301,
+    "far": 2.8939771821405134
+   },
+   "gt_box": {
+    "near": 0.8489019672508042,
+    "far": 2.210686920992244
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0534323493814701,
+    "far": 2.923128711804624
+   },
+   "gt_box": {
+    "near": 0.8690370357547152,
+    "far": 2.209060963837411
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.8873455349980847,
+    "far": 2.7067266719149887
+   },
+   "gt_box": {
+    "near": 0.8493444733201847,
+    "far": 1.96634969056044
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9267799676031842,
+    "far": 2.9231287118046243
+   },
+   "gt_box": {
+    "near": 0.8576031873097202,
+    "far": 2.107561428079295
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8724208315867429,
+    "far": 2.260101756994921
+   },
+   "gt_box": {
+    "near": 0.8523889581272333,
+    "far": 1.8993840746632897
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.0335246080266152,
+    "far": 2.135454144572101
+   },
+   "gt_box": {
+    "near": 0.8641306392004446,
+    "far": 1.6693536840869565
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8983351802491887,
+    "far": 2.2937281278661077
+   },
+   "gt_box": {
+    "near": 0.8587189686474439,
+    "far": 1.965494097997154
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.9792539942093399,
+    "far": 2.2436330694881286
+   },
+   "gt_box": {
+    "near": 0.8544827459057249,
+    "far": 1.8417909166807815
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.8096748876350195,
+    "far": 2.150483366502152
+   },
+   "gt_box": {
+    "near": 0.8670348625308427,
+    "far": 1.6686333699832483
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.9207626492630446,
+    "far": 2.293764372088042
+   },
+   "gt_box": {
+    "near": 0.8678874046549583,
+    "far": 1.8701664974748238
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8118299190840409,
+    "far": 2.311041566679327
+   },
+   "gt_box": {
+    "near": 0.8522220678319145,
+    "far": 1.8424542591051356
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.8780526073187019,
+    "far": 2.13553590933106
+   },
+   "gt_box": {
+    "near": 0.8668949649982707,
+    "far": 1.6390400968452319
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.7826764011156893,
+    "far": 2.311041566679327
+   },
+   "gt_box": {
+    "near": 0.8490870360823053,
+    "far": 1.8310046119718204
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8730217671135136,
+    "far": 1.6352348429402042
+   },
+   "gt_box": {
+    "near": 0.8420974086795145,
+    "far": 1.5702163331083798
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.894219604725051,
+    "far": 1.5972367951079578
+   },
+   "gt_box": {
+    "near": 0.8822229659591763,
+    "far": 1.351177803759739
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8628719925862709,
+    "far": 1.6836856290003184
+   },
+   "gt_box": {
+    "near": 0.8335402912296991,
+    "far": 1.6053475155187025
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.0059325649015032,
+    "far": 1.6198242107478875
+   },
+   "gt_box": {
+    "near": 0.8579555517399395,
+    "far": 1.6119687729016843
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.081101497552762,
+    "far": 1.5970890555496902
+   },
+   "gt_box": {
+    "near": 0.9076789785133652,
+    "far": 1.3237771339199949
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8262904626855158,
+    "far": 1.7265906078235067
+   },
+   "gt_box": {
+    "near": 0.8528608859799416,
+    "far": 1.4748731376778883
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.8006135269261777,
+    "far": 1.726711669415355
+   },
+   "gt_box": {
+    "near": 0.8364397862268496,
+    "far": 1.575566160995249
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8782821287199508,
+    "far": 1.5828261294216497
+   },
+   "gt_box": {
+    "near": 0.8840146401075124,
+    "far": 1.3027567256690475
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.0771778036371005,
+    "far": 1.7265906078235067
+   },
+   "gt_box": {
+    "near": 0.862453737337812,
+    "far": 1.547939288500578
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.9132094880025289,
+    "far": 1.0676205085352424
+   },
+   "gt_box": {
+    "near": 0.8356244915372946,
+    "far": 1.179455166327561
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.7990375919664303,
+    "far": 0.9998261537314246
+   },
+   "gt_box": {
+    "near": 0.8543294788128488,
+    "far": 1.0395231039658284
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8373797961964836,
+    "far": 0.993127732269757
+   },
+   "gt_box": {
+    "near": 0.8372150193866001,
+    "far": 1.1726195207308199
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8147607626515998,
+    "far": 1.057167713488776
+   },
+   "gt_box": {
+    "near": 0.8358262030252936,
+    "far": 1.176020985920596
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.8851665311318264,
+    "far": 1.002005850076106
+   },
+   "gt_box": {
+    "near": 0.8405470735107975,
+    "far": 1.0395534488758755
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8197032571511642,
+    "far": 1.0810571690035446
+   },
+   "gt_box": {
+    "near": 0.8356946999411279,
+    "far": 1.1760121537316728
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8941850478073833,
+    "far": 1.0810733496812721
+   },
+   "gt_box": {
+    "near": 0.8452027645927235,
+    "far": 1.1726195207308199
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": {
+    "near": 0.8677095251159161,
+    "far": 0.9741477403025152
+   },
+   "gt_box": {
+    "near": 0.8379728337611647,
+    "far": 1.0395231039658284
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.8465751125253751,
+    "far": 1.0087815432543688
+   },
+   "gt_box": {
+    "near": 0.8212654773638826,
+    "far": 1.1794387467532277
+   }
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": "rough",
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 0.861599291122916,
+    "far": 4.953387518831306
+   },
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "rough",
+   "terrain": null,
+   "x": 7.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.749928818792935
+   },
+   "gt_box": {
+    "near": 1.884222401272704,
+    "far": 3.689274604656939
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.256593139679013,
+    "far": 3.463676264433957
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.749905569165305
+   },
+   "gt_box": {
+    "near": 1.8951111816919237,
+    "far": 4.05348924245528
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.749928818792935
+   },
+   "gt_box": {
+    "near": 1.8841324587420534,
+    "far": 3.9814981663317752
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.25657881488652,
+    "far": 3.4637278429290994
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.749905569165305
+   },
+   "gt_box": {
+    "near": 1.8841324587420534,
+    "far": 3.9814981663317752
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.749928818792935
+   },
+   "gt_box": {
+    "near": 1.8951111816919237,
+    "far": 4.05348924245528
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.4640364763896088
+   },
+   "gt_box": {
+    "near": 2.256593139679013,
+    "far": 3.463676264433957
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.749905569165305
+   },
+   "gt_box": {
+    "near": 1.884222401272704,
+    "far": 3.689274604656939
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535186,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4533001157421113,
+    "far": 3.198023723998072
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6960470973090267,
+    "far": 2.6916695727071636
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497306,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4419402438128088,
+    "far": 3.3865419849267036
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535186,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4418384328849625,
+    "far": 3.4121681999988396
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6961777785920458,
+    "far": 2.6914780514330836
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497306,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4418384328849625,
+    "far": 3.4121681999988396
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831506290535186,
+    "far": 3.154434841471362
+   },
+   "gt_box": {
+    "near": 1.4419402438128088,
+    "far": 3.3865419849267036
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.917007847599553
+   },
+   "gt_box": {
+    "near": 1.6960470973090267,
+    "far": 2.6916695727071636
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.4831447992497306,
+    "far": 3.1546104919568823
+   },
+   "gt_box": {
+    "near": 1.4533001157421113,
+    "far": 3.198023723998072
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.5538790954023356
+   },
+   "gt_box": {
+    "near": 0.9279047650552721,
+    "far": 2.56731719092907
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720914981340785,
+    "far": 2.130749501185626
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9225805136453088,
+    "far": 2.6683536173799807
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.5538790954023356
+   },
+   "gt_box": {
+    "near": 0.9260737824994053,
+    "far": 2.6683735957301273
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720063629059005,
+    "far": 2.130708381093853
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9260737824994053,
+    "far": 2.6683735957301273
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9932473628195463,
+    "far": 2.5538790954023356
+   },
+   "gt_box": {
+    "near": 0.9225805136453088,
+    "far": 2.6683536173799807
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 1.0898632528594558,
+    "far": 2.3658046009120586
+   },
+   "gt_box": {
+    "near": 0.9720914981340785,
+    "far": 2.130749501185626
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 0.9954571395366182,
+    "far": 2.567847289099288
+   },
+   "gt_box": {
+    "near": 0.9279047650552721,
+    "far": 2.56731719092907
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.089955777704934,
+    "far": 1.9695117290934423
+   },
+   "gt_box": {
+    "near": 1.0414805534645755,
+    "far": 2.195670745078907
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499872
+   },
+   "gt_box": {
+    "near": 1.035272464589894,
+    "far": 1.8681272294952447
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576708
+   },
+   "gt_box": {
+    "near": 1.0394096190553945,
+    "far": 2.1858568747085947
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.089955777704934,
+    "far": 1.9695117290934423
+   },
+   "gt_box": {
+    "near": 1.0373149936091492,
+    "far": 2.1956037584818318
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499872
+   },
+   "gt_box": {
+    "near": 1.0352549440654717,
+    "far": 1.8680480181015082
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576708
+   },
+   "gt_box": {
+    "near": 1.0373149936091492,
+    "far": 2.1956037584818318
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.089955777704934,
+    "far": 1.9695117290934423
+   },
+   "gt_box": {
+    "near": 1.0394096190553945,
+    "far": 2.1858568747085947
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 1.1813079499867767,
+    "far": 1.8213543719499872
+   },
+   "gt_box": {
+    "near": 1.035272464589894,
+    "far": 1.8681272294952447
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 1.0922975438530316,
+    "far": 1.9695233584576708
+   },
+   "gt_box": {
+    "near": 1.0414805534645755,
+    "far": 2.195670745078907
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.186692429034265,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.096174130496066,
+    "far": 1.679141219562911
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.089809056644396,
+    "far": 1.438944728761947
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1894264054245098,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.100796874058987,
+    "far": 1.6733942571965257
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.186692429034265,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.0949711380023581,
+    "far": 1.6792557292663344
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.0897410055720504,
+    "far": 1.4389926912125808
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1894264054245098,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.0949711380023581,
+    "far": 1.6792557292663344
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.186692429034265,
+    "far": 1.3851889370415875
+   },
+   "gt_box": {
+    "near": 1.100796874058987,
+    "far": 1.6733942571965257
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 1.281736198384909,
+    "far": 1.281736198384909
+   },
+   "gt_box": {
+    "near": 1.089809056644396,
+    "far": 1.438944728761947
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 1.1894264054245098,
+    "far": 1.3851207403079542
+   },
+   "gt_box": {
+    "near": 1.096174130496066,
+    "far": 1.679141219562911
+   }
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 0.8616973310738825,
+    "far": 4.954417923330883
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_down",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.0660492767146086,
+    "far": 3.4220912159993575
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153272425028117,
+    "far": 3.200255452528649
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.066016904650801,
+    "far": 3.4169255579238307
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.066026118086247,
+    "far": 3.3617302499705146
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153297726754905,
+    "far": 3.200282381484106
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.066026118086247,
+    "far": 3.3617302499705146
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": -0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.0629360222696915,
+    "far": 3.3005262666010236
+   },
+   "gt_box": {
+    "near": 2.066016904650801,
+    "far": 3.4169255579238307
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.0,
+   "gt_near": 2.0,
+   "gt_far": 3.5,
+   "depth_only": {
+    "near": 1.9999839739201302,
+    "far": 3.200193771681882
+   },
+   "gt_box": {
+    "near": 2.153272425028117,
+    "far": 3.200255452528649
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.0,
+   "yaw": 0.25,
+   "gt_near": 2.0641700479687715,
+   "gt_far": 3.61229758394535,
+   "depth_only": {
+    "near": 2.065417548845276,
+    "far": 3.3044284320450137
+   },
+   "gt_box": {
+    "near": 2.0660492767146086,
+    "far": 3.4220912159993575
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.5684690442725855,
+    "far": 2.7144394734651667
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6197075251798072,
+    "far": 2.6996389777932173
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.554823620675684,
+    "far": 2.860585640487802
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.561730991321765,
+    "far": 2.8607109039147556
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6196899643865188,
+    "far": 2.6997469852589715
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.561730991321765,
+    "far": 2.8607109039147556
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": -0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.5475270687986458,
+    "far": 2.784310100428962
+   },
+   "gt_box": {
+    "near": 1.554823620675684,
+    "far": 2.860585640487802
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.0,
+   "gt_near": 1.5,
+   "gt_far": 3.0,
+   "depth_only": {
+    "near": 1.4999698118315496,
+    "far": 2.6999706612552745
+   },
+   "gt_box": {
+    "near": 1.6197075251798072,
+    "far": 2.6996389777932173
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 1.5,
+   "yaw": 0.25,
+   "gt_near": 1.5481275359765785,
+   "gt_far": 3.096255071953157,
+   "depth_only": {
+    "near": 1.548462356368649,
+    "far": 2.7882104398187266
+   },
+   "gt_box": {
+    "near": 1.5684690442725855,
+    "far": 2.7144394734651667
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0613957812186627,
+    "far": 2.1628691136986555
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351667,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0790081372949936,
+    "far": 2.199812001058984
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0544888400121153,
+    "far": 2.1840761317841295
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0597267198017493,
+    "far": 2.1871243142150023
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351667,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0789919712583302,
+    "far": 2.1996888770131173
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0597267198017493,
+    "far": 2.1871243142150023
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": -0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.0315440568778615,
+    "far": 2.2695561536491806
+   },
+   "gt_box": {
+    "near": 1.0544888400121153,
+    "far": 2.1840761317841295
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.0,
+   "gt_near": 1.0,
+   "gt_far": 2.5,
+   "depth_only": {
+    "near": 0.9999742662351667,
+    "far": 2.2000755075985645
+   },
+   "gt_box": {
+    "near": 1.0790081372949936,
+    "far": 2.199812001058984
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.0,
+   "yaw": 0.25,
+   "gt_near": 1.0320850239843857,
+   "gt_far": 2.580212559960964,
+   "depth_only": {
+    "near": 1.032404881911971,
+    "far": 2.271504416352242
+   },
+   "gt_box": {
+    "near": 1.0613957812186627,
+    "far": 2.1628691136986555
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8123643433246389,
+    "far": 1.7432709037362717
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625628819907427,
+    "far": 1.699828384976267
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8168689916126975,
+    "far": 1.7432671505054724
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8092799704033466,
+    "far": 1.7431814042314948
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625252496662236,
+    "far": 1.6998527317204108
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8092799704033466,
+    "far": 1.7431814042314948
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": -0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8251825980041237,
+    "far": 1.7540546411633522
+   },
+   "gt_box": {
+    "near": 0.8168689916126975,
+    "far": 1.7432671505054724
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.0,
+   "gt_near": 0.5,
+   "gt_far": 2.0,
+   "depth_only": {
+    "near": 0.7999943853617263,
+    "far": 1.7000140403204482
+   },
+   "gt_box": {
+    "near": 0.8625628819907427,
+    "far": 1.699828384976267
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 2.5,
+   "yaw": 0.25,
+   "gt_near": 0.5160425119921929,
+   "gt_far": 2.0641700479687715,
+   "depth_only": {
+    "near": 0.8259961504256418,
+    "far": 1.7552378060858724
+   },
+   "gt_box": {
+    "near": 0.8123643433246389,
+    "far": 1.7432709037362717
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7716306716463566,
+    "far": 1.366502117359723
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627722246346098,
+    "far": 1.2175376164754879
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7615343872336597,
+    "far": 1.3670380520466057
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7665472900525501,
+    "far": 1.3706138017597231
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627396018377974,
+    "far": 1.217375364119714
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7665472900525501,
+    "far": 1.3706138017597231
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9285720521631984,
+    "far": 1.237863424347826
+   },
+   "gt_box": {
+    "near": 0.7615343872336597,
+    "far": 1.3670380520466057
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.5,
+   "depth_only": {
+    "near": 0.8999655038659842,
+    "far": 1.2000004759926735
+   },
+   "gt_box": {
+    "near": 0.7627722246346098,
+    "far": 1.2175376164754879
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.5481275359765785,
+   "depth_only": {
+    "near": 0.9294643397574452,
+    "far": 1.2388186950205644
+   },
+   "gt_box": {
+    "near": 0.7716306716463566,
+    "far": 1.366502117359723
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.7176262348097285,
+    "far": 1.0491847693988086
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322563958795784,
+    "far": 0.9426754544586735
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971123,
+    "far": 0.7226535049631846
+   },
+   "gt_box": {
+    "near": 0.7108104867127443,
+    "far": 1.0377104948362534
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.714170899746623,
+    "far": 1.0415309056650721
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322889973616331,
+    "far": 0.9427148959021
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971123,
+    "far": 0.7226535049631846
+   },
+   "gt_box": {
+    "near": 0.714170899746623,
+    "far": 1.0415309056650721
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7222040315526755,
+    "far": 0.7221199875168983
+   },
+   "gt_box": {
+    "near": 0.7108104867127443,
+    "far": 1.0377104948362534
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 1.0,
+   "depth_only": null,
+   "gt_box": {
+    "near": 0.7322563958795784,
+    "far": 0.9426754544586735
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 3.5,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 1.0320850239843857,
+   "depth_only": {
+    "near": 0.7228016627971123,
+    "far": 0.7226535049631846
+   },
+   "gt_box": {
+    "near": 0.7176262348097285,
+    "far": 1.0491847693988086
+   }
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.957686755079125,
+    "far": 4.094448666827871
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.9576127565296657,
+    "far": 4.094398145340418
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.957686755079125,
+    "far": 4.094448666827871
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.9576127565296657,
+    "far": 4.094398145340418
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": -0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.957612756529666,
+    "far": 4.094448666827871
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.0,
+   "gt_near": 0.0,
+   "gt_far": 0.5,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": "stairs",
+   "x": 4.0,
+   "yaw": 0.25,
+   "gt_near": 0.0,
+   "gt_far": 0.5160425119921929,
+   "depth_only": {
+    "near": 3.9576127565296657,
+    "far": 4.094398145340418
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544369119383047,
+    "far": 3.5876997454967
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544777507841262,
+    "far": 3.587719896949365
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544369119383047,
+    "far": 3.5876997454967
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544777507841262,
+    "far": 3.587719896949365
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544369119383047,
+    "far": 3.5876997454967
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": null,
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 4.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 3.4544777507841262,
+    "far": 3.587719896949365
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.95324289895641,
+    "far": 3.0802378499800525
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.983568024621648,
+    "far": 4.851585293935085
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.9532273574064156,
+    "far": 3.0802395264452067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.95324289895641,
+    "far": 3.0802378499800525
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.9834686775678794,
+    "far": 4.851387720995629
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.9532273574064156,
+    "far": 3.0802395264452067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.95324289895641,
+    "far": 3.0802378499800525
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.983568024621648,
+    "far": 4.851585293935085
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.9532273574064156,
+    "far": 3.0802395264452067
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4610799138748543,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4811448790988777,
+    "far": 3.9821341126456122
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4813497205719175,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4610799138748543,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 0.8616973310738825,
+    "far": 4.9609198759531
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4813497205719175,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4610799138748543,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.4811448790988777,
+    "far": 3.9821341126456122
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 5.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 2.481349720571917,
+    "far": 4.3290996322955255
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.412280003904096
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.133096197669108
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.4122800039040952
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.412280003904096
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.133096197669108
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.4122800039040952
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9761019106944007,
+    "far": 3.412280003904096
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9882515379330927,
+    "far": 3.133096197669108
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.0,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.9760964185572674,
+    "far": 3.4122800039040952
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 2.487769694691102
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.287673759777549
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 2.4878016017288473
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 2.487769694691102
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.287673759777549
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 2.4878016017288473
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": -0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831506290535188,
+    "far": 2.487769694691102
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.0,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.495555559397208,
+    "far": 2.287673759777549
+   },
+   "gt_box": null
+  },
+  {
+   "course": "stairs_up",
+   "terrain": null,
+   "x": 6.5,
+   "yaw": 0.25,
+   "gt_near": null,
+   "gt_far": null,
+   "depth_only": {
+    "near": 1.4831447992497304,
+    "far": 2.4878016017288473
+   },
+   "gt_box": null
+  }
+ ]
+}

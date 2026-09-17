@@ -162,3 +162,105 @@ class EdgeTracker:
       return 0.0
     left = np.array([-self.heading[1], self.heading[0]])
     return float(np.median([np.dot(p - base_xy, left) for p in self.lateral_w[-self.far_window :]]))
+
+
+def depth_edge_estimate(
+  depth: np.ndarray,
+  camera: CameraSpec,
+  base_pos_w: np.ndarray,
+  base_quat_w: np.ndarray,
+  band: tuple[float, float] = (0.3, 0.7),
+  col_stride: int = 4,
+  max_along: float = 5.0,
+  step_thresh: float = 0.025,
+  spread_thresh: float = 0.025,
+  window_m: float = 0.4,
+  flat_run_m: float = 0.5,
+  cam_height: float = 0.36,
+) -> IntermediationEstimate:
+  """Where the ground ahead stops being level floor, from depth alone (class-agnostic).
+
+  Fallback for when the VLM's box is unusable (Gemma-4-E4B mostly answers
+  [0,0,0,0] or the whole frame; Phase-2 probe). The VLM still decides *what* the
+  terrain is and which specialist to run; this only decides *where*.
+
+  Works per image row of a central column band -- rows are already ordered by
+  distance, and each row spans the band laterally. A row is "structured" if
+  - its lateral height spread is large (rough ground, or a step edge crossing it),
+  - its median height departs from the trailing window of level rows (a riser,
+    or the drop past a platform edge), or
+  - its distance jumps by more than the expected row spacing at that range (an
+    occlusion: the hidden strip beyond a down-step's edge).
+  Near edge = the first structured row; far edge = the last structured row before
+  `flat_run_m` of level rows.
+
+  (A first version binned points by distance in 5 cm bins. Beyond ~2 m adjacent
+  pixel rows are further apart than a bin, empty bins read as occlusion gaps, and
+  every flat frame "detected" an intermediation.)
+  """
+  h, w = depth.shape
+  cols = np.arange(int(band[0] * w), int(band[1] * w), col_stride)
+  rot = np.zeros(9)
+  mujoco.mju_quat2Mat(rot, np.asarray(base_quat_w, dtype=np.float64))
+  rot = rot.reshape(3, 3)
+  heading = rot[:2, 0] / max(1e-9, np.linalg.norm(rot[:2, 0]))
+  origin = np.asarray(base_pos_w)[:2]
+  lateral_axis = np.array([-heading[1], heading[0]])
+
+  rows = []  # (along, z_median, z_spread, lateral_median), nearest first
+  for v in range(h - 1, -1, -1):
+    d = depth[v, cols]
+    ok = np.isfinite(d) & (d > 0.05) & (d < max_along + 3.0)
+    if ok.sum() < max(5, 0.5 * len(cols)):
+      continue
+    p = camera.deproject_body(cols[ok], np.full(ok.sum(), v), d[ok]) @ rot.T + np.asarray(base_pos_w)
+    along = (p[:, :2] - origin) @ heading
+    a = float(np.median(along))
+    if a > max_along:
+      break
+    rows.append((a, float(np.median(p[:, 2])), float(np.percentile(p[:, 2], 90) - np.percentile(p[:, 2], 10)),
+                 float(np.median((p[:, :2] - origin) @ lateral_axis))))
+  if len(rows) < 10:
+    return IntermediationEstimate(valid=False, n_points=len(rows))
+
+  f = camera.focal_px
+  structured = []
+  level_window: list[tuple[float, float]] = []
+  prev_a = None
+  for a, z, spread, _ in rows:
+    expected_gap = a * a / (f * cam_height)
+    occluded = prev_a is not None and a - prev_a > max(0.15, 4.0 * expected_gap)
+    ref = [zz for aa, zz in level_window if a - aa <= window_m]
+    stepped = bool(ref) and abs(z - float(np.median(ref))) > step_thresh
+    s_flag = spread > spread_thresh or stepped or occluded
+    structured.append(s_flag)
+    if not s_flag:
+      level_window.append((a, z))
+    else:
+      level_window = [(a, z)]  # a new level starts after structure (e.g. the next tread)
+    prev_a = a
+
+  hits = [k for k, fl in enumerate(structured) if fl]
+  if not hits:
+    return IntermediationEstimate(valid=False, n_points=len(rows))
+  k0 = hits[0]
+  near = rows[k0 - 1][0] if k0 > 0 and rows[k0][0] - rows[k0 - 1][0] > 0.15 else rows[k0][0]
+  far = rows[k0][0]
+  run_start = None
+  for k in range(k0, len(rows)):
+    if structured[k]:
+      far, run_start = rows[k][0], None
+    else:
+      run_start = rows[k][0] if run_start is None else run_start
+      if rows[k][0] - run_start >= flat_run_m:
+        break
+  return IntermediationEstimate(
+    valid=True,
+    near_along=float(near),
+    far_along=float(far),
+    lateral=float(np.median([r[3] for r in rows])),
+    origin_w=origin.copy(),
+    heading_w=heading,
+    center_u=w / 2.0,
+    n_points=len(rows),
+  )

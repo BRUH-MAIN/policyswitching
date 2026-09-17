@@ -56,8 +56,14 @@ class OracleVLM:
         ]}
       return VLMReply(text=json.dumps(ans), parsed=ans)
     if kind == "perception":
-      text = "[]" if visible_box is None else json.dumps(visible_box)
-      return VLMReply(text=text)
+      if visible_box is None:
+        return VLMReply(text="[]")
+      if "box_2d" in prompt:  # detection-style prompt: [ymin, xmin, ymax, xmax] on a 0-1000 grid
+        w, h = self.camera.width, self.camera.height
+        x0, y0, x1, y1 = visible_box
+        b = [round(1000 * y0 / h), round(1000 * x0 / w), round(1000 * y1 / h), round(1000 * x1 / w)]
+        return VLMReply(text=json.dumps([{"box_2d": b, "label": "intermediation"}]))
+      return VLMReply(text=json.dumps(visible_box))
     if kind == "present":
       return VLMReply(text="yes" if visible_box is not None else "no")
     if kind == "selector":

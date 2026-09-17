@@ -63,15 +63,19 @@ def main() -> None:
         for yaw in args.yaws:
           y = course.width / 2 + dy
           place_robot(env, course, float(x), y, float(yaw))
-          rgb, _, label = label_frame(env, course, camera, float(x), y, float(yaw))
+          rgb, depth, label = label_frame(env, course, camera, float(x), y, float(yaw))
           name = f"frame_{n:04d}"
           Image.fromarray(rgb).save(out / f"{name}.png")
+          np.save(out / f"{name}_depth.npy", depth.astype(np.float16))
+          robot = env.scene["robot"]
+          pose = dict(base_pos=robot.data.root_link_pos_w[0].tolist(), base_quat=robot.data.root_link_quat_w[0].tolist(),
+                      level=args.level, depth=f"{name}_depth.npy")
           if args.overlay:
             im = Image.fromarray(rgb)
             if label.intermediation_bbox:
               ImageDraw.Draw(im).rectangle(label.intermediation_bbox, outline=(255, 0, 255), width=3)
             im.save(out / f"{name}_bbox.png")
-          f.write(json.dumps({"image": f"{name}.png", **label_dict(label)}) + "\n")
+          f.write(json.dumps({"image": f"{name}.png", **label_dict(label), **pose}) + "\n")
           n += 1
   print(f"[INFO] wrote {n} frames to {out}")
 

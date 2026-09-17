@@ -47,7 +47,13 @@ from src.vlm_nav import prompts as P
 from src.vlm_nav.camera import CameraSpec
 from src.vlm_nav.controllers import GotoGains, goto_command
 from src.vlm_nav.course import FOOTPRINT_FRONT, FOOTPRINT_REAR, CourseSpec
-from src.vlm_nav.perception import EdgeTracker, IntermediationEstimate, estimate_from_box, ground_blind_distance
+from src.vlm_nav.perception import (
+  EdgeTracker,
+  IntermediationEstimate,
+  depth_edge_estimate,
+  estimate_from_box,
+  ground_blind_distance,
+)
 from src.vlm_nav.vlm_backend import VLM
 
 NAME_TO_POLICY = {"stairs": "stairs", "rough ground": "rough"}
@@ -77,6 +83,10 @@ class ExecutorConfig:
   max_replans: int = 4
   max_perception_failures: int = 3
   finish_confirm_max: int = 3
+  perception_prompt: str = "detect"
+  """"saro": SARO's [x0,y0,x1,y1] prompt (parsed with box_convention); "detect": box_2d JSON."""
+  depth_fallback: bool = True
+  """When the box is degenerate/unusable, locate the intermediation from depth geometry instead."""
   selector_every: int = 2
   perception_every: int = 2
   """In VLM ticks (0.5 s each by default): the two most frequent questions are asked every other tick."""
@@ -158,20 +168,29 @@ class SaroAgent:
   def _perceive(self, step: int, rgb, depth, pos, quat) -> None:
     if self.intermediation is None:
       return
-    r = self._ask(rgb, P.perception(self.intermediation), None, 48, "perception")
-    box = P.parse_box(r.text)
+    h, w = depth.shape
+    if self.cfg.perception_prompt == "saro":
+      r = self._ask(rgb, P.perception(self.intermediation), None, 48, "perception")
+      raw = P.parse_box(r.text)
+      px = None if raw is None else P.box_to_pixels(raw, self.cfg.box_convention, w, h)
+    else:
+      r = self._ask(rgb, P.perception_detect(self.intermediation), None, 96, "perception")
+      px = P.parse_detect_box(r.text, w, h)
     est = IntermediationEstimate(valid=False)
-    if box is not None:
-      h, w = depth.shape
-      px = P.box_to_pixels(box, self.cfg.box_convention, w, h)
+    source = "none"
+    if not P.box_is_degenerate(px, w, h):
       est = estimate_from_box(px, depth, self.camera, pos, quat)
+      source = "vlm_box"
+    if not est.valid and self.cfg.depth_fallback:
+      est = depth_edge_estimate(depth, self.camera, pos, quat)
+      source = "depth_fallback" if est.valid else "none"
     if est.valid:
       self.edges.update(est)
       self.perception_failures = 0
     else:
       self.perception_failures += 1
-    self._log(step, "perception", text=r.text, valid=est.valid, near=est.near_along, far=est.far_along,
-              lateral=est.lateral, n=est.n_points)
+    self._log(step, "perception", text=r.text, source=source, valid=est.valid, near=est.near_along,
+              far=est.far_along, lateral=est.lateral, n=est.n_points)
 
   def _selector(self, step: int, rgb) -> None:
     r = self._ask(rgb, P.policy_selector(), P.POLICY_SCHEMA, 32, "selector")
