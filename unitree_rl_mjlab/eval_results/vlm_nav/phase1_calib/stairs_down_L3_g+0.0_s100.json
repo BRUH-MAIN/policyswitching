@@ -1,0 +1,654 @@
+{
+ "conditions": {
+  "course": "stairs_down",
+  "goal_y_offset": 0.0,
+  "level": "L3",
+  "visual": "tiled",
+  "seed": 100,
+  "arms": [
+   "oracle"
+  ],
+  "ckpt_root": "/home/rohan/rl/policyswitching/unitree_rl_mjlab/eval_ckpts",
+  "num_envs": 32,
+  "speed": 0.5,
+  "footprint_front": 0.3,
+  "footprint_rear": 0.35,
+  "goal_radius": 0.3,
+  "time_limit": 50.0,
+  "spawn_xy_jitter": 0.15,
+  "spawn_yaw": 0.3,
+  "json_out": "eval_results/vlm_nav/phase1_calib/stairs_down_L3_g+0.0_s100.json"
+ },
+ "course": {
+  "name": "stairs_down",
+  "segments": [
+   {
+    "kind": "flat",
+    "length": 3.0,
+    "step_height": 0.07,
+    "noise_range": [
+     0.02,
+     0.08
+    ]
+   },
+   {
+    "kind": "stairs_down",
+    "length": 1.5,
+    "step_height": 0.09,
+    "noise_range": [
+     0.02,
+     0.08
+    ]
+   },
+   {
+    "kind": "flat",
+    "length": 3.5,
+    "step_height": 0.07,
+    "noise_range": [
+     0.02,
+     0.08
+    ]
+   }
+  ],
+  "intermediation": "stairs",
+  "instruction": "go down the stairs and reach the red goal flag on the floor below",
+  "width": 6.0,
+  "start_x": 1.0,
+  "goal_y_offset": 0.0,
+  "visual": "tiled",
+  "border_width": 12.0,
+  "base_height": 0.44999999999999996
+ },
+ "arms": {
+  "oracle": {
+   "summary": {
+    "n": 32,
+    "success_pct": 0.0,
+    "fall_pct": 100.0,
+    "timeout_pct": 0.0,
+    "crossed_pct": 3.125,
+    "falls_per_100m": 50.061966439578484,
+    "mean_speed": 0.3571015866473317,
+    "policy_match_pct": 100.0
+   },
+   "trials": [
+    {
+     "arm": "oracle",
+     "env_id": 0,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 9.420000076293945,
+     "path_m": 2.0364327430725098,
+     "mean_speed": 0.21572387218475342,
+     "fall_x_course": 2.8255515098571777,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8255515098571777,
+     "max_x_course": 2.8255515098571777,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 1,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.079999923706055,
+     "path_m": 1.9108128547668457,
+     "mean_speed": 0.37466904520988464,
+     "fall_x_course": 2.8603720664978027,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8603720664978027,
+     "max_x_course": 2.8603720664978027,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 2,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.71999979019165,
+     "path_m": 1.9790620803833008,
+     "mean_speed": 0.34478458762168884,
+     "fall_x_course": 2.8738479614257812,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8738479614257812,
+     "max_x_course": 2.8738479614257812,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 3,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.119999885559082,
+     "path_m": 1.8545793294906616,
+     "mean_speed": 0.3608132600784302,
+     "fall_x_course": 2.896357536315918,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.896357536315918,
+     "max_x_course": 2.896357536315918,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 4,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.099999904632568,
+     "path_m": 1.8995670080184937,
+     "mean_speed": 0.37100911140441895,
+     "fall_x_course": 2.865204095840454,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.865204095840454,
+     "max_x_course": 2.865204095840454,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 5,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.079999923706055,
+     "path_m": 1.9435513019561768,
+     "mean_speed": 0.38108840584754944,
+     "fall_x_course": 2.8632917404174805,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8632917404174805,
+     "max_x_course": 2.8632917404174805,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 6,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.71999979019165,
+     "path_m": 1.9511910676956177,
+     "mean_speed": 0.3399288058280945,
+     "fall_x_course": 2.843477249145508,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.843477249145508,
+     "max_x_course": 2.843477249145508,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 7,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.71999979019165,
+     "path_m": 1.9738185405731201,
+     "mean_speed": 0.34387075901031494,
+     "fall_x_course": 2.8705973625183105,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8705973625183105,
+     "max_x_course": 2.8705973625183105,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 8,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 6.920000076293945,
+     "path_m": 2.0113325119018555,
+     "mean_speed": 0.28981736302375793,
+     "fall_x_course": 2.8471322059631348,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8471322059631348,
+     "max_x_course": 2.8471322059631348,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 9,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.199999809265137,
+     "path_m": 1.7191340923309326,
+     "mean_speed": 0.32933613657951355,
+     "fall_x_course": 2.8415422439575195,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8415422439575195,
+     "max_x_course": 2.8415422439575195,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 10,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 4.5,
+     "path_m": 1.8719333410263062,
+     "mean_speed": 0.4141446053981781,
+     "fall_x_course": 2.8786258697509766,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8786258697509766,
+     "max_x_course": 2.8786258697509766,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 11,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.739999771118164,
+     "path_m": 1.876829743385315,
+     "mean_speed": 0.3258384168148041,
+     "fall_x_course": 2.8430709838867188,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8430709838867188,
+     "max_x_course": 2.8430709838867188,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 12,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.800000190734863,
+     "path_m": 1.965514898300171,
+     "mean_speed": 0.33771729469299316,
+     "fall_x_course": 2.842773914337158,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.842773914337158,
+     "max_x_course": 2.842773914337158,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 13,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.699999809265137,
+     "path_m": 1.9894675016403198,
+     "mean_speed": 0.34780868887901306,
+     "fall_x_course": 2.8734734058380127,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8734734058380127,
+     "max_x_course": 2.8734734058380127,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 14,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.800000190734863,
+     "path_m": 1.9754310846328735,
+     "mean_speed": 0.3394211232662201,
+     "fall_x_course": 2.843006134033203,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.843006134033203,
+     "max_x_course": 2.843006134033203,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 15,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.119999885559082,
+     "path_m": 1.9481278657913208,
+     "mean_speed": 0.37901318073272705,
+     "fall_x_course": 2.8810112476348877,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8810112476348877,
+     "max_x_course": 2.8810112476348877,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 16,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.260000228881836,
+     "path_m": 1.7541805505752563,
+     "mean_speed": 0.33223116397857666,
+     "fall_x_course": 2.8393454551696777,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8393454551696777,
+     "max_x_course": 2.8393454551696777,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 17,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.119999885559082,
+     "path_m": 1.7830075025558472,
+     "mean_speed": 0.34688863158226013,
+     "fall_x_course": 2.8608968257904053,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8608968257904053,
+     "max_x_course": 2.8608968257904053,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 18,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.300000190734863,
+     "path_m": 1.844504475593567,
+     "mean_speed": 0.3467113971710205,
+     "fall_x_course": 2.846914291381836,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.846914291381836,
+     "max_x_course": 2.846914291381836,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 19,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.679999828338623,
+     "path_m": 1.9214190244674683,
+     "mean_speed": 0.3370909094810486,
+     "fall_x_course": 2.847764015197754,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.847764015197754,
+     "max_x_course": 2.847764015197754,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 20,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.0,
+     "path_m": 1.8131080865859985,
+     "mean_speed": 0.36117690801620483,
+     "fall_x_course": 2.8955118656158447,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8955118656158447,
+     "max_x_course": 2.898498058319092,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 21,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.699999809265137,
+     "path_m": 1.9258421659469604,
+     "mean_speed": 0.33668574690818787,
+     "fall_x_course": 2.860290050506592,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.860290050506592,
+     "max_x_course": 2.860290050506592,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 22,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.159999847412109,
+     "path_m": 1.863307237625122,
+     "mean_speed": 0.35971182584762573,
+     "fall_x_course": 2.844686508178711,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.844686508178711,
+     "max_x_course": 2.844686508178711,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 23,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.119999885559082,
+     "path_m": 1.9623143672943115,
+     "mean_speed": 0.38177329301834106,
+     "fall_x_course": 2.8611207008361816,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8611207008361816,
+     "max_x_course": 2.8611207008361816,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 24,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.159999847412109,
+     "path_m": 1.8487272262573242,
+     "mean_speed": 0.3568973243236542,
+     "fall_x_course": 2.881166458129883,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.881166458129883,
+     "max_x_course": 2.881166458129883,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 25,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.139999866485596,
+     "path_m": 1.7991033792495728,
+     "mean_speed": 0.34866341948509216,
+     "fall_x_course": 2.8666133880615234,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8666133880615234,
+     "max_x_course": 2.8666133880615234,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 26,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 6.71999979019165,
+     "path_m": 3.096407175064087,
+     "mean_speed": 0.4594075381755829,
+     "fall_x_course": 4.14349889755249,
+     "policy_match_frac": 1.0,
+     "end_x_course": 4.14349889755249,
+     "max_x_course": 4.14349889755249,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 27,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": true,
+     "time_s": 7.860000133514404,
+     "path_m": 3.7739222049713135,
+     "mean_speed": 0.478924036026001,
+     "fall_x_course": 4.510868072509766,
+     "policy_match_frac": 1.0,
+     "end_x_course": 4.510868072509766,
+     "max_x_course": 4.510868072509766,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 28,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.820000171661377,
+     "path_m": 1.8701167106628418,
+     "mean_speed": 0.3202255368232727,
+     "fall_x_course": 2.829913377761841,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.829913377761841,
+     "max_x_course": 2.829913377761841,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 29,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.179999828338623,
+     "path_m": 2.0126545429229736,
+     "mean_speed": 0.3870488405227661,
+     "fall_x_course": 2.8762664794921875,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8762664794921875,
+     "max_x_course": 2.8762664794921875,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 30,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 4.5,
+     "path_m": 1.8247878551483154,
+     "mean_speed": 0.40371382236480713,
+     "fall_x_course": 2.8522536754608154,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8522536754608154,
+     "max_x_course": 2.8522536754608154,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    },
+    {
+     "arm": "oracle",
+     "env_id": 31,
+     "success": false,
+     "fell": true,
+     "timed_out": false,
+     "crossed": false,
+     "time_s": 5.099999904632568,
+     "path_m": 1.9205926656723022,
+     "mean_speed": 0.3751157224178314,
+     "fall_x_course": 2.8764395713806152,
+     "policy_match_frac": 1.0,
+     "end_x_course": 2.8764395713806152,
+     "max_x_course": 2.8764395713806152,
+     "fall_term": [
+      "illegal_contact"
+     ]
+    }
+   ]
+  }
+ }
+}

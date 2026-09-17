@@ -171,6 +171,8 @@ def main() -> None:
   ap.add_argument("--box-convention", default="xyxy_px")
   ap.add_argument("--spawn-xy-jitter", type=float, default=0.15)
   ap.add_argument("--spawn-yaw", type=float, default=0.3)
+  ap.add_argument("--terminations", default="training", choices=("training", "saro"),
+                  help="Fall definition: specialists' training terminations, or SARO's orientation-only.")
   ap.add_argument("--save-vlm-images", action="store_true")
   ap.add_argument("--video", action="store_true")
   ap.add_argument("--out", required=True)
@@ -187,6 +189,7 @@ def main() -> None:
   cfg = make_twin_env_cfg(
     camera, terrain_generator=course.generator_cfg(seed=args.seed), num_envs=args.num_envs, seed=args.seed,
     spawn_xy_jitter=args.spawn_xy_jitter, spawn_yaw_range=(-args.spawn_yaw, args.spawn_yaw),
+    terminations=args.terminations,
   )
   env = RslRlVecEnvWrapper(ManagerBasedRlEnv(cfg=cfg, device=device), clip_actions=load_rl_cfg(BASE_TASK).clip_actions)
   bank = PolicyBank(env, default_checkpoints(args.ckpt_root), device)
