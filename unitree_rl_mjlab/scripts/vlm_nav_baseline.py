@@ -85,6 +85,12 @@ def run_arm(env, bank: PolicyBank, course, arm: str, args, device: str) -> list[
   speed_sum = torch.zeros(n, device=device)
   prev_xy = robot.data.root_link_pos_w[:, :2].clone()
   max_steps = int(args.time_limit / dt)
+  # Diagnostics only (don't feed any gated metric): where a trial ended up, and
+  # which termination ended a fall.
+  end_x = torch.full((n,), float("nan"), device=device)
+  max_x = torch.full((n,), -1e9, device=device)
+  tm = u.termination_manager
+  fall_term = [None] * n
 
   for step in range(max_steps):
     pos = robot.data.root_link_pos_w
@@ -109,6 +115,11 @@ def run_arm(env, bank: PolicyBank, course, arm: str, args, device: str) -> list[
     new_fall = active & done & ~timeouts
     fell |= new_fall
     fall_x[new_fall] = x_course[new_fall]
+    max_x = torch.where(active, torch.maximum(max_x, x_course), max_x)
+    end_x = torch.where(active, x_course, end_x)
+    if new_fall.any():
+      for i in new_fall.nonzero().flatten().tolist():
+        fall_term[i] = [name for name in tm.active_terms if bool(tm.get_term(name)[i])]
     t_end[new_fall] = step * dt
     xy = robot.data.root_link_pos_w[:, :2]
     moved = active & ~done
@@ -130,6 +141,7 @@ def run_arm(env, bank: PolicyBank, course, arm: str, args, device: str) -> list[
       mean_speed=float(speed_sum[i] / max(1.0, float(steps_active[i]))),
       fall_x_course=None if torch.isnan(fall_x[i]) else float(fall_x[i]),
       policy_match_frac=float(matched[i] / max(1.0, float(steps_active[i]))),
+      end_x_course=float(end_x[i]), max_x_course=float(max_x[i]), fall_term=fall_term[i],
     ))
   return out
 
@@ -155,6 +167,8 @@ def main() -> None:
   ap.add_argument("--course", required=True)
   ap.add_argument("--goal-y-offset", type=float, default=0.0)
   ap.add_argument("--level", default="L2", help="Course difficulty level (course.DIFFICULTY_LEVELS).")
+  ap.add_argument("--visual", default="tiled", choices=("plain", "tiled", "class_colors"),
+                  help="Course visuals. Physics-neutral by design; 'plain' has no grout-line geoms at all.")
   ap.add_argument("--seed", type=int, default=0, help="Terrain + spawn seed.")
   ap.add_argument("--arms", nargs="+", default=["oracle", *POLICY_NAMES])
   ap.add_argument("--ckpt-root", required=True)
@@ -166,17 +180,21 @@ def main() -> None:
   ap.add_argument("--time-limit", type=float, default=None, help="Seconds; default 2.5 x length / speed + 10.")
   ap.add_argument("--spawn-xy-jitter", type=float, default=0.15)
   ap.add_argument("--spawn-yaw", type=float, default=0.3)
+  ap.add_argument("--terminations", default="training", choices=("training", "saro"),
+                  help="What ends a trial as a fall: the specialists' training terminations (default, "
+                       "pre-registered) or SARO's orientation-only definition (exploratory).")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
 
   configure_torch_backends()
   device = "cuda:0"
-  course = saro_courses(goal_y_offset=args.goal_y_offset, level=args.level)[args.course]
+  course = saro_courses(visual=args.visual, goal_y_offset=args.goal_y_offset, level=args.level)[args.course]
   if args.time_limit is None:
     args.time_limit = 2.5 * course.length / args.speed + 10.0
   cfg = make_twin_env_cfg(
     None, terrain_generator=course.generator_cfg(seed=args.seed), num_envs=args.num_envs, seed=args.seed,
     spawn_xy_jitter=args.spawn_xy_jitter, spawn_yaw_range=(-args.spawn_yaw, args.spawn_yaw),
+    terminations=args.terminations,
   )
   env = RslRlVecEnvWrapper(ManagerBasedRlEnv(cfg=cfg, device=device), clip_actions=load_rl_cfg(BASE_TASK).clip_actions)
   bank = PolicyBank(env, default_checkpoints(args.ckpt_root), device)

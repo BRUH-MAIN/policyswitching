@@ -68,6 +68,8 @@ class FrameLabel:
   y: float
   yaw: float
   terrain_under: str
+  required_policy: str
+  """Ground-truth specialist for this base position (CourseSpec.required_terrain)."""
   terrain_ahead_1m: str
   next_intermediation: str | None
   dist_to_intermediation: float | None
@@ -137,6 +139,7 @@ def label_frame(env, course: CourseSpec, camera: CameraSpec, x: float, y: float,
     visual=course.visual,
     x=x, y=y, yaw=yaw,
     terrain_under=course.terrain_at(x + 0.25),
+    required_policy=course.required_terrain(x),
     terrain_ahead_1m=course.terrain_at(x + 1.0),
     next_intermediation=None if region is None else region.terrain,
     dist_to_intermediation=None if region is None else max(0.0, region.x0 - x),

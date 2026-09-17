@@ -44,11 +44,26 @@ def make_twin_env_cfg(
   spawn_xy_jitter: float = 0.0,
   spawn_yaw_range: tuple[float, float] = (0.0, 0.0),
   use_shadows: bool = True,
+  terminations: str = "training",
 ) -> ManagerBasedRlEnvCfg:
+  """`terminations`: "training" keeps the specialists' own (bad orientation OR any
+  non-foot contact > 10 N); "saro" keeps only bad orientation, SARO's definition
+  of a fall (Appendix B.3: roll > 0.8 rad / pitch > 1.0 rad), so a knee brushing a
+  step edge doesn't end the trial. Observations are identical either way."""
   cfg = load_env_cfg(BASE_TASK, play=True)
   cfg.scene.num_envs = num_envs
   cfg.seed = seed
   cfg.curriculum = {}
+  if terminations == "saro":
+    cfg.terminations.pop("illegal_contact", None)
+  elif terminations != "training":
+    raise ValueError(f"terminations must be 'training' or 'saro', got {terminations!r}")
+  # The robot's pre-reset keyframe sits at the world origin, which on a course is
+  # the middle of the strip -- on L3 stairs its legs start inside the steps and the
+  # initial contact count (44) exceeds the task's nconmax=35, crashing put_data.
+  # A larger buffer changes nothing physical unless contacts overflow, which no
+  # completed calibration run logged at 35.
+  cfg.sim.nconmax = 96
 
   # Externally driven command. heading_command=False also stops _update_command
   # from rewriting wz every step; resampling pushed past any episode length.

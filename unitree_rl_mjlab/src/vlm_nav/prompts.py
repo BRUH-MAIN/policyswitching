@@ -1,0 +1,148 @@
+"""Prompts: SARO's three (arXiv:2407.16412, Appendix A.1) plus this project's policy selector.
+
+SARO asks the VLM three kinds of question:
+  1. Planning -- name the intermediation, decompose the task into (Action, Ending) subtasks.
+  2. Perception -- a bounding box for the intermediation.
+  3. Discriminator -- yes/no checks that close the loop ("is there any <I>?",
+     "is the task finished?").
+The wording below is SARO's, with two substitutions: the intermediation list is
+the terrain this project has specialists for (stairs, rough ground) instead of
+stair/ramp/gap/door, and answers are requested as JSON under a schema the
+server enforces, so a malformed reply can't silently become a wrong action.
+
+The modification under test: each subtask also names the locomotion *policy*
+(one of the three frozen specialists), and a fourth question -- the policy
+selector -- asks which specialist suits the ground immediately ahead, so the
+choice is re-checked in closed loop rather than fixed at planning time.
+"""
+
+from __future__ import annotations
+
+import re
+
+from src.vlm_nav.policy_bank import POLICY_NAMES
+
+INTERMEDIATIONS = ("stairs", "rough ground")
+ACTIONS = ("move", "climb")
+ENDINGS = ("facing intermediation", "across intermediation", "to the goal")
+
+POLICY_DESCRIPTIONS = {
+  "flat": "for smooth, level floor",
+  "rough": "for uneven, bumpy ground",
+  "stairs": "for steps going up or down",
+}
+_POLICY_LIST = "; ".join(f"'{p}' {d}" for p, d in POLICY_DESCRIPTIONS.items())
+
+
+def planning(task: str) -> str:
+  return (
+    "Ignore anything on the wall. You are a robot dog. The intermediation may be stairs or rough ground. "
+    f"The task is {task}. First answer the question: 1. What is the only intermediation you need to cross "
+    "or climb to finish the task? If there is none between you and the goal, answer 'none'. "
+    "Based on previous questions, decompose this task into a sequence of subtasks. "
+    "The subtask is (Action, Ending, Policy). Action is one of ['move', 'climb']. "
+    "The ending is one of ['facing intermediation', 'across intermediation', 'to the goal']. "
+    "Replace the intermediation with the answer to question 1. "
+    f"Policy is the walking controller to use during that subtask, one of: {_POLICY_LIST}. "
+    'Answer as JSON: {"intermediation": ..., "subtasks": [{"action": ..., "ending": ..., "policy": ...}]}.'
+  )
+
+
+PLANNING_SCHEMA = {
+  "type": "object",
+  "properties": {
+    "intermediation": {"type": "string", "enum": [*INTERMEDIATIONS, "none"]},
+    "subtasks": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "properties": {
+          "action": {"type": "string", "enum": list(ACTIONS)},
+          "ending": {"type": "string", "enum": list(ENDINGS)},
+          "policy": {"type": "string", "enum": list(POLICY_NAMES)},
+        },
+        "required": ["action", "ending", "policy"],
+      },
+    },
+  },
+  "required": ["intermediation", "subtasks"],
+}
+
+
+def perception(intermediation: str) -> str:
+  return f"Where is the {intermediation}? Answer in [x0,y0,x1,y1] format, don't say anything else."
+
+
+def discriminator_present(intermediation: str) -> str:
+  return f"Is there any {intermediation}? Just answer yes or no."
+
+
+def discriminator_finished(task: str) -> str:
+  return f"Is the task {task} finished at current state? Just answer yes or no."
+
+
+def policy_selector() -> str:
+  return (
+    "You are a robot dog choosing which walking controller to use. Look at the ground directly in front of "
+    f"you, within about one metre. The controllers are: {_POLICY_LIST}. "
+    "Which controller should you use now? Answer with one word: flat, rough, or stairs."
+  )
+
+
+YES_NO_SCHEMA = {"type": "object", "properties": {"answer": {"type": "string", "enum": ["yes", "no"]}}, "required": ["answer"]}
+POLICY_SCHEMA = {"type": "object", "properties": {"policy": {"type": "string", "enum": list(POLICY_NAMES)}}, "required": ["policy"]}
+
+
+def parse_yes_no(text: str) -> bool | None:
+  t = text.strip().lower()
+  if re.match(r"^\W*yes\b", t):
+    return True
+  if re.match(r"^\W*no\b", t):
+    return False
+  return None
+
+
+def parse_policy(text: str) -> str | None:
+  hits = [p for p in POLICY_NAMES if re.search(rf"\b{p}\b", text.lower())]
+  return hits[0] if len(hits) == 1 else None
+
+
+def parse_box(text: str) -> list[float] | None:
+  """First four numbers in the reply, in the order the model wrote them."""
+  nums = re.findall(r"-?\d+(?:\.\d+)?", text)
+  return [float(n) for n in nums[:4]] if len(nums) >= 4 else None
+
+
+BOX_CONVENTIONS = ("xyxy_px", "xyxy_1000", "yxyx_1000", "xyxy_unit")
+
+
+def box_to_pixels(box: list[float], convention: str, width: int, height: int) -> list[float]:
+  """Convert a model's 4-number box to [x0, y0, x1, y1] pixels.
+
+  VLMs disagree on box conventions (absolute pixels, 0-1000 normalized, 0-1
+  normalized, and Gemma-family models commonly emit [y0, x0, y1, x1] on a 0-1000
+  grid). Which one this model uses is measured in the Phase-2 perception gate,
+  not assumed.
+  """
+  a, b, c, d = box
+  if convention == "xyxy_px":
+    x0, y0, x1, y1 = a, b, c, d
+  elif convention == "xyxy_1000":
+    x0, y0, x1, y1 = a * width / 1000, b * height / 1000, c * width / 1000, d * height / 1000
+  elif convention == "yxyx_1000":
+    x0, y0, x1, y1 = b * width / 1000, a * height / 1000, d * width / 1000, c * height / 1000
+  elif convention == "xyxy_unit":
+    x0, y0, x1, y1 = a * width, b * height, c * width, d * height
+  else:
+    raise ValueError(f"unknown box convention {convention!r}")
+  return [min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)]
+
+
+def iou(a: list[float], b: list[float]) -> float:
+  ix = max(0.0, min(a[2], b[2]) - max(a[0], b[0]))
+  iy = max(0.0, min(a[3], b[3]) - max(a[1], b[1]))
+  inter = ix * iy
+  union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
+  return inter / union if union > 0 else 0.0
