@@ -152,7 +152,18 @@ projector) via llama.cpp (`scripts/vlm_server.sh`). Code: `unitree_rl_mjlab/src/
   cause: the stairs specialist run throughout does as badly or worse. Full numbers and the decision options:
   `coordination/results/vlm-nav-phase1-calibration.md`; pre-registration:
   `coordination/results/vlm-nav-phase1-preregistration.md`. **Awaiting a user decision before the
-  confirmation run.**
+  confirmation run.** Exploratory (seed 101): the best specialist is not the one named after the
+  terrain and flips with step height (rough beats stairs on 0.05 m up-stairs, stairs beats rough at
+  0.07 m). Under SARO's orientation-only fall definition, every specialist descends 0.05 m stairs 32/32.
+- **Phase 2 perception (done)**: Gemma-4-E4B does not perceive these stairs. With neutral task
+  instructions it plans "none" on 4/4 stairs start frames, the selector says "stairs" 0/32, and it
+  describes a staircase as "a flat, gridded floor". Rough ground is recognized sometimes. SARO's box
+  prompt returns `[0,0,0,0]` or the full frame; depth geometry locates edges to 0–8 cm and is the
+  executor's default where-source. Gotcha: an instruction naming the intermediation let the planner
+  score 8/8 without looking. `coordination/results/vlm-nav-phase2-perception.md`.
+- **Closed loop (smoke)**: executor + ground-truth VLM 4/4 on rough; real Gemma 2/2 on rough, 0/2 on
+  0.05 m up-stairs (planned "none", flat specialist stuck).
+  `coordination/results/vlm-nav-closed-loop-smoke.md`.
 
 ## Bugs found and fixed
 
