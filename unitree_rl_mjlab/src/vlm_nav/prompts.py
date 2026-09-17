@@ -31,10 +31,21 @@ POLICY_DESCRIPTIONS = {
   "rough": "for uneven, bumpy ground",
   "stairs": "for steps going up or down",
 }
-_POLICY_LIST = "; ".join(f"'{p}' {d}" for p, d in POLICY_DESCRIPTIONS.items())
+"""Label-based cards: each specialist described by the terrain it was trained on.
+
+Phase-1 exploratory runs (single seed) found the specialist named for a terrain
+is not always the best one on it -- the rough specialist crossed 0.05 m up-stairs
+more reliably than the stairs specialist. "The best policy for the situation" can
+then only be chosen from measured competence, so every prompt takes an optional
+`cards` dict to swap in measured descriptions once confirmed; the default stays
+label-based so the two can be compared as arms."""
 
 
-def planning(task: str) -> str:
+def _policy_list(cards: dict[str, str] | None) -> str:
+  return "; ".join(f"'{p}' {d}" for p, d in (cards or POLICY_DESCRIPTIONS).items())
+
+
+def planning(task: str, cards: dict[str, str] | None = None) -> str:
   return (
     "Ignore anything on the wall. You are a robot dog. The intermediation may be stairs or rough ground. "
     f"The task is {task}. First answer the question: 1. What is the only intermediation you need to cross "
@@ -43,7 +54,7 @@ def planning(task: str) -> str:
     "The subtask is (Action, Ending, Policy). Action is one of ['move', 'climb']. "
     "The ending is one of ['facing intermediation', 'across intermediation', 'to the goal']. "
     "Replace the intermediation with the answer to question 1. "
-    f"Policy is the walking controller to use during that subtask, one of: {_POLICY_LIST}. "
+    f"Policy is the walking controller to use during that subtask, one of: {_policy_list(cards)}. "
     'Answer as JSON: {"intermediation": ..., "subtasks": [{"action": ..., "ending": ..., "policy": ...}]}.'
   )
 
@@ -110,10 +121,10 @@ def discriminator_finished(task: str) -> str:
   return f"Is the task {task} finished at current state? Just answer yes or no."
 
 
-def policy_selector() -> str:
+def policy_selector(cards: dict[str, str] | None = None) -> str:
   return (
     "You are a robot dog choosing which walking controller to use. Look at the ground directly in front of "
-    f"you, within about one metre. The controllers are: {_POLICY_LIST}. "
+    f"you, within about one metre. The controllers are: {_policy_list(cards)}. "
     "Which controller should you use now? Answer with one word: flat, rough, or stairs."
   )
 

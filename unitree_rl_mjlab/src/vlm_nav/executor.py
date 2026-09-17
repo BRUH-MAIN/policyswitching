@@ -87,6 +87,8 @@ class ExecutorConfig:
   """"saro": SARO's [x0,y0,x1,y1] prompt (parsed with box_convention); "detect": box_2d JSON."""
   depth_fallback: bool = True
   """When the box is degenerate/unusable, locate the intermediation from depth geometry instead."""
+  policy_cards: dict | None = None
+  """Specialist descriptions given to the VLM (None = label-based, prompts.POLICY_DESCRIPTIONS)."""
   selector_every: int = 2
   perception_every: int = 2
   """In VLM ticks (0.5 s each by default): the two most frequent questions are asked every other tick."""
@@ -150,7 +152,7 @@ class SaroAgent:
     return self.plan[self.idx]
 
   def _make_plan(self, step: int, rgb: np.ndarray) -> list[Subtask] | None:
-    r = self._ask(rgb, P.planning(self.task), P.PLANNING_SCHEMA, 256, "planning")
+    r = self._ask(rgb, P.planning(self.task, self.cfg.policy_cards), P.PLANNING_SCHEMA, 256, "planning")
     p = r.parsed
     if not isinstance(p, dict) or not p.get("subtasks"):
       self._log(step, "plan_failed", text=r.text, error=r.error)
@@ -193,7 +195,7 @@ class SaroAgent:
               far=est.far_along, lateral=est.lateral, n=est.n_points)
 
   def _selector(self, step: int, rgb) -> None:
-    r = self._ask(rgb, P.policy_selector(), P.POLICY_SCHEMA, 32, "selector")
+    r = self._ask(rgb, P.policy_selector(self.cfg.policy_cards), P.POLICY_SCHEMA, 32, "selector")
     choice = (r.parsed or {}).get("policy")
     if choice in ("flat", "rough", "stairs"):
       self.selector_history.append(choice)
