@@ -84,7 +84,7 @@ and nothing in gate 1 contradicts this.
 
 ## Exploratory: fall definition × specialist, all arms (not pre-registered; seed 101, 32 trials each)
 
-Rough-course arms and `stairs_down` L2 are still queued. Success rate (falls / timeouts):
+Rough-course arms are still queued. Success rate (falls / timeouts):
 
 | level | fall definition | oracle | flat | rough | stairs |
 |---|---|---|---|---|---|
@@ -98,6 +98,7 @@ Rough-course arms and `stairs_down` L2 are still queued. Success rate (falls / t
 |---|---|---|---|---|---|
 | L1 (0.05 m) | training | **81%** (19/0) | 50% (50/0) | 25% (75/0) | 66% (34/0) |
 | L1 (0.05 m) | SARO (orientation only) | 100% | 100% | 100% | 100% |
+| L2 (0.07 m) | SARO (orientation only) | 100% | 91% (9/0) | 100% | 100% |
 
 What this suggests, pending confirmation on more seeds:
 
