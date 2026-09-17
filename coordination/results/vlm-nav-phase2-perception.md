@@ -11,8 +11,11 @@ footprint ground-truth policy, and a depth-checked visible box of the next inter
 
 ## Headline
 
-- **Planning: not yet measured cleanly.** The pilot's 8/8 came from instructions that named the
-  intermediation. It is being re-measured with neutral instructions.
+- **Gemma-4-E4B does not see the stairs.** With neutral instructions it plans "none" on every stairs
+  start frame (0/4), the policy selector answers "stairs" 0/32 times, and "Is there any stairs?"
+  is 44% accurate. Asked to describe a frame with a staircase ahead, it answers "a flat, gridded
+  floor". Rough ground is recognized sometimes (planning 1/1, selector recall 42%). The pilot's 8/8
+  planning came from instructions that named the intermediation.
 - **Localization with SARO's box prompt does not work with this model.** Most answers are
   `[0,0,0,0]` or the whole frame, and a constant full-frame box scores *higher* IoU than the model.
   A detection-style prompt at 560 image tokens helps but stays unreliable.
@@ -31,6 +34,17 @@ pilot's task instructions named the intermediation ("reach the red goal flag on 
 at the top of the stairs"), so the plan could come from the text without looking. SARO's L
 describes the goal's location, not the obstacle. Instructions are now neutral for every course
 ("reach the red goal flag ahead of you"), and planning is re-measured below at 560 tokens.
+
+**Re-measured, neutral instructions, 560 image tokens** (same 150-frame sample, 8 start frames):
+
+| course | truth | planned intermediation | crossing policy |
+|---|---|---|---|
+| flat ×3 | none | none ×3 | — (correct) |
+| rough ×1 | rough ground | rough ground | rough (correct) |
+| stairs_up ×2 | stairs | **none** ×2 | flat |
+| stairs_down ×2 | stairs | **none** ×2 | flat |
+
+Named correctly 4/8. Every miss is a staircase planned as open floor.
 
 ## 2. Localization
 
@@ -105,7 +119,9 @@ comes out 0.5–0.75 m early. **Depth geometry is the executor's default where-s
 
 Under a yes/no JSON schema, Gemma-4-E4B spends the whole token budget and returns empty content in
 100% of pilot queries (93/93). Free text works. The pipeline now asks in SARO's free-text format.
-Accuracy at 560 tokens: *pending*.
+At 560 tokens, free text, 93 frames with an intermediation ahead: accuracy 44%, recall when the
+intermediation is visible 39%, specificity 69%, says "yes" 38% of the time. Not a usable
+double-check signal: SARO's discriminator gate has to be treated as advisory.
 
 ## 4. Policy selector (this project's addition)
 
@@ -117,7 +133,19 @@ Pilot, default image budget, 150 frames, truth = footprint ground-truth policy:
 | rough (26) | 18 | 8 | 0 |
 | stairs (32) | 30 | 2 | 0 |
 
-Accuracy 61%, stairs recall 0%. At 560 tokens: *pending*.
+Accuracy 61%, stairs recall 0%.
+
+At 560 image tokens (same sample): accuracy 62%. Recall is flat 89%, **rough 42%**, **stairs 0%**
+(31 of 32 stairs frames answered "flat"). More image tokens help rough ground a little and do
+nothing for stairs.
+
+### Is it the model or the stimulus?
+
+Both, in part. At L1 (0.05 m risers under a camera 0.36 m off the ground) the staircase renders as
+darker horizontal bands on a tiled floor. It's recognizable once you know, but subtle. Probe at L3
+(0.09 m risers), 3 frames: free-text descriptions still say "flat floor", but the selector answers
+"stairs" on 2/3. The specialists can't cross L2+ stairs reliably (Phase 1), so taller steps don't
+solve it either. The level at which the robot can cross the stairs is the level the VLM can't see.
 
 ## Consequences for the pipeline (implemented)
 
