@@ -11,9 +11,8 @@ footprint ground-truth policy, and a depth-checked visible box of the next inter
 
 ## Headline
 
-- **Planning works.** From the start pose, Gemma names the right intermediation and assigns the
-  right crossing policy in every sampled frame (8/8, pilot). This is the part of SARO the policy
-  modification leans on hardest.
+- **Planning: not yet measured cleanly.** The pilot's 8/8 came from instructions that named the
+  intermediation. It is being re-measured with neutral instructions.
 - **Localization with SARO's box prompt does not work with this model.** Most answers are
   `[0,0,0,0]` or the whole frame, and a constant full-frame box scores *higher* IoU than the model.
   A detection-style prompt at 560 image tokens helps but stays unreliable.
@@ -27,7 +26,11 @@ footprint ground-truth policy, and a depth-checked visible box of the next inter
 ## 1. Planning (SARO prompt + policy field, JSON schema)
 
 Pilot, default image budget, 8 start-pose frames: valid JSON 8/8, intermediation named correctly
-8/8, crossing sub-task assigned the matching specialist 8/8.
+8/8, crossing sub-task assigned the matching specialist 8/8. **This score is contaminated.** The
+pilot's task instructions named the intermediation ("reach the red goal flag on the raised platform
+at the top of the stairs"), so the plan could come from the text without looking. SARO's L
+describes the goal's location, not the obstacle. Instructions are now neutral for every course
+("reach the red goal flag ahead of you"), and planning is re-measured below at 560 tokens.
 
 ## 2. Localization
 
@@ -82,7 +85,21 @@ last tread is flush with the platform, so the geometry ends at the last riser, 0
 labeled region end. Releasing on it still leaves the hind feet ~0.15 m past that riser. At close
 range, far edges overshoot, which delays the release: the safe direction.
 
-**Gemma box + depth**: *pending (live run in progress)*.
+**Gemma box + depth, live** (detection prompt, 560 image tokens; a random ~120-frame sample of
+which 69 had an intermediation ahead, so the per-course n is small):
+
+| course | frames | box returned | near error (MAE, bias) | far MAE |
+|---|---|---|---|---|
+| stairs_up | 9 | 1 (11%) | 0.42 m, early | 0.33 m |
+| stairs_down | 11 | 1 (9%) | 0.41 m, early | 1.20 m |
+| rough | 14 | 14 (100%) | 0.75 m, early | 0.57 m |
+| multi | 35 | 18 (51%) | 0.52 m, early | 0.56 m |
+
+31 of 69 answers were `[]` and 4 were "I did not find any stairs". Gemma rarely finds the stairs at
+all. When it boxes rough ground, the box covers everything from mid-image down, so the near edge
+comes out 0.5–0.75 m early. **Depth geometry is the executor's default where-source**
+(`ExecutorConfig.where_source="depth"`). SARO's box path stays available as an ablation
+(`--where-source vlm_box`).
 
 ## 3. Discriminator ("Is there any <I>? Just answer yes or no.")
 
