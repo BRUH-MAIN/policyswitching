@@ -111,3 +111,27 @@ def test_estimate_from_box_near_far_edges_on_synthetic_ground_plane():
   assert est.near_along == pytest.approx(2.0, abs=0.08)
   assert est.far_along == pytest.approx(3.0, abs=0.08)
   assert est.along_from(np.array([1.0, 0.0]), est.near_along) == pytest.approx(est.near_along - 1.0)
+
+
+def test_detect_box_parsing_and_degeneracy():
+  text = '```json\n[{"box_2d": [250, 100, 500, 900], "label": "stairs"}]\n```'
+  np.testing.assert_allclose(P.parse_detect_box(text, 848, 480), [84.8, 120, 763.2, 240], atol=1e-6)
+  assert P.parse_detect_box("I did not find any stairs in the image.", 848, 480) is None
+  assert P.parse_detect_box("[]", 848, 480) is None
+  assert P.box_is_degenerate(None, 848, 480)
+  assert P.box_is_degenerate([0, 0, 0, 0], 848, 480)
+  assert P.box_is_degenerate([0, 0, 848, 480], 848, 480)
+  assert not P.box_is_degenerate([0, 200, 848, 480], 848, 480)  # full width, partial height: a real ground box
+
+
+def test_edge_tracker_keeps_near_edge_seen_before_blind_zone():
+  from src.vlm_nav.perception import EdgeTracker, IntermediationEstimate
+
+  heading = np.array([1.0, 0.0])
+  tr = EdgeTracker(blind_distance=0.86)
+  # Seen from x=0: edge 2.0 m ahead, far edge 3.5 m.
+  tr.update(IntermediationEstimate(True, near_along=2.0, far_along=3.5, lateral=0.0, origin_w=np.zeros(2), heading_w=heading, center_u=424))
+  # From x=1.3 the near edge is inside the blind zone and reads saturated at 0.8: must be ignored.
+  tr.update(IntermediationEstimate(True, near_along=0.8, far_along=2.2, lateral=0.0, origin_w=np.array([1.3, 0.0]), heading_w=heading, center_u=424))
+  assert tr.near_remaining(np.array([1.3, 0.0])) == pytest.approx(0.7)
+  assert tr.far_remaining(np.array([1.3, 0.0])) == pytest.approx(2.2)
