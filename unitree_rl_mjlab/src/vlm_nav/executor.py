@@ -83,6 +83,11 @@ class ExecutorConfig:
   max_replans: int = 4
   max_perception_failures: int = 3
   finish_confirm_max: int = 3
+  where_source: str = "depth"
+  """Where the intermediation is: "depth" = depth geometry only (no box question);
+  "vlm_box" = SARO's path, VLM box through depth, with depth fallback when the box is
+  degenerate. Phase 2: Gemma-4-E4B found stairs in ~10% of frames and missed near
+  edges by 0.4-0.75 m, depth geometry by 0-8 cm (coordination/results/vlm-nav-phase2-perception.md)."""
   perception_prompt: str = "detect"
   """"saro": SARO's [x0,y0,x1,y1] prompt (parsed with box_convention); "detect": box_2d JSON."""
   depth_fallback: bool = True
@@ -171,6 +176,16 @@ class SaroAgent:
     if self.intermediation is None:
       return
     h, w = depth.shape
+    if self.cfg.where_source == "depth":
+      est = depth_edge_estimate(depth, self.camera, pos, quat)
+      if est.valid:
+        self.edges.update(est)
+        self.perception_failures = 0
+      else:
+        self.perception_failures += 1
+      self._log(step, "perception", source="depth", valid=est.valid, near=est.near_along, far=est.far_along,
+                lateral=est.lateral, n=est.n_points)
+      return
     if self.cfg.perception_prompt == "saro":
       r = self._ask(rgb, P.perception(self.intermediation), None, 48, "perception")
       raw = P.parse_box(r.text)

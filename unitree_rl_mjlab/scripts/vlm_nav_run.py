@@ -78,7 +78,7 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
     vlm = OpenAICompatVLM(base_url=f"{args.base_url}/v1", transcript=arm_dir / "vlm_transcript.jsonl",
                           image_dir=arm_dir / "vlm_images" if args.save_vlm_images else None)
   cfg = ExecutorConfig(policy_source=policy_source, nav_source="gt" if nav == "gt" else "vlm",
-                       box_convention=box_convention, speed=args.speed)
+                       box_convention=box_convention, speed=args.speed, where_source=args.where_source)
   agents = [SaroAgent(i, course, camera, vlm, cfg, dt) for i in range(n)]
 
   torch.manual_seed(args.seed)
@@ -180,6 +180,8 @@ def main() -> None:
   ap.add_argument("--vlm-workers", type=int, default=2)
   ap.add_argument("--base-url", default="http://127.0.0.1:8091")
   ap.add_argument("--box-convention", default="xyxy_px")
+  ap.add_argument("--where-source", default="depth", choices=("depth", "vlm_box"),
+                  help="Intermediation localization: depth geometry (default) or SARO's VLM box through depth.")
   ap.add_argument("--spawn-xy-jitter", type=float, default=0.15)
   ap.add_argument("--spawn-yaw", type=float, default=0.3)
   ap.add_argument("--terminations", default="training", choices=("training", "saro"),

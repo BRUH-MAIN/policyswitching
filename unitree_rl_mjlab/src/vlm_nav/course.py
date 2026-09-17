@@ -292,6 +292,13 @@ def _add_grout_lines(body, geoms: list, x0: float, x1: float, top: float, w: flo
     gx += _GROUT_SPACING
 
 
+# SARO's language description L says where the goal is ("the goal on the wooden box
+# in front of the wall"), not what lies in between. An instruction that names the
+# intermediation ("...at the top of the stairs") lets the VLM plan from the text
+# without looking -- the first perception pilot scored 8/8 planning that way -- so
+# every course uses the same neutral goal description.
+NEUTRAL_INSTRUCTION = "reach the red goal flag ahead of you"
+
 # Course difficulty levels for Phase-1 calibration, all inside the specialists'
 # training ranges (riser 0-0.10 m, rough noise 0.02-0.10 m).
 DIFFICULTY_LEVELS: dict[str, dict] = {
@@ -319,19 +326,19 @@ def saro_courses(
   return {
     "flat": CourseSpec(
       name="flat", intermediation="none", segments=(Segment("flat", 9.0),),
-      instruction="walk to the red goal flag on the floor ahead", **common),
+      instruction=NEUTRAL_INSTRUCTION, **common),
     "stairs_up": CourseSpec(
       name="stairs_up", intermediation="stairs",
       segments=(Segment("flat", 3.0), Segment("stairs_up", 1.5, **stairs), Segment("flat", 3.5)),
-      instruction="reach the red goal flag on the raised platform at the top of the stairs", **common),
+      instruction=NEUTRAL_INSTRUCTION, **common),
     "stairs_down": CourseSpec(
       name="stairs_down", intermediation="stairs", base_height=rise,
       segments=(Segment("flat", 3.0), Segment("stairs_down", 1.5, **stairs), Segment("flat", 3.5)),
-      instruction="go down the stairs and reach the red goal flag on the floor below", **common),
+      instruction=NEUTRAL_INSTRUCTION, **common),
     "rough": CourseSpec(
       name="rough", intermediation="rough ground",
       segments=(Segment("flat", 3.0), Segment("rough", 3.0, **rough), Segment("flat", 3.0)),
-      instruction="cross the rough uneven ground and reach the red goal flag beyond it", **common),
+      instruction=NEUTRAL_INSTRUCTION, **common),
     "multi": CourseSpec(
       name="multi", intermediation="rough ground and stairs",
       segments=(
@@ -339,6 +346,6 @@ def saro_courses(
         Segment("stairs_up", 1.5, **stairs), Segment("flat", 2.0),
         Segment("stairs_down", 1.5, **stairs), Segment("flat", 3.0),
       ),
-      instruction="cross the rough ground, climb up and down the stairs, and reach the red goal flag at the end",
+      instruction=NEUTRAL_INSTRUCTION,
       **common),
   }
