@@ -37,7 +37,7 @@ BASE_TASK = "Unitree-Go2-Spec-Flat"
 
 
 def make_twin_env_cfg(
-  camera: CameraSpec,
+  camera: CameraSpec | None,
   terrain_generator: TerrainGeneratorCfg | None = None,
   num_envs: int = 1,
   seed: int = 0,
@@ -85,6 +85,9 @@ def make_twin_env_cfg(
     # findings.md bug #17: the ray overlay renders as a broken robot pose far
     # from spawn. It is a viewer overlay only; the camera sensor never sees it.
     sensors.append(replace(s, debug_vis=False) if s.name == "terrain_scan" else s)
+  if camera is None:  # e.g. no-VLM baselines: rendering doesn't affect physics
+    cfg.scene.sensors = tuple(sensors)
+    return cfg
   sensors.append(
     CameraSensorCfg(
       name=CAMERA_SENSOR_NAME,

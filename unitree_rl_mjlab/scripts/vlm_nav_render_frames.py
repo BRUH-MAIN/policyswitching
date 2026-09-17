@@ -36,6 +36,7 @@ def main() -> None:
   ap.add_argument("--course", required=True)
   ap.add_argument("--visual", default="tiled", choices=("plain", "tiled", "class_colors"))
   ap.add_argument("--goal-y-offset", type=float, default=0.0)
+  ap.add_argument("--level", default="L2", help="Course difficulty level (course.DIFFICULTY_LEVELS).")
   ap.add_argument("--xs", type=float, nargs="*", default=None, help="Course x positions; default: sweep.")
   ap.add_argument("--x-step", type=float, default=0.5)
   ap.add_argument("--ys", type=float, nargs="*", default=[0.0], help="Lateral offsets from centreline.")
@@ -46,7 +47,7 @@ def main() -> None:
   args = ap.parse_args()
 
   configure_torch_backends()
-  course = saro_courses(visual=args.visual, goal_y_offset=args.goal_y_offset)[args.course]
+  course = saro_courses(visual=args.visual, goal_y_offset=args.goal_y_offset, level=args.level)[args.course]
   camera = CameraSpec()
   cfg = make_twin_env_cfg(camera, terrain_generator=course.generator_cfg(seed=args.seed))
   env = ManagerBasedRlEnv(cfg=cfg, device="cuda:0")

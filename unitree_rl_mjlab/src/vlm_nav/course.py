@@ -53,6 +53,10 @@ SEGMENT_CLASS: dict[str, TerrainClass] = {
   "stairs_down": "stairs",
 }
 STEP_WIDTH = 0.3  # ROUGH_TERRAINS_CFG pyramid stairs tread
+# Go2 footprint along the body axis relative to the base origin: front feet
+# ~0.19 m ahead of the hips at x=+0.19, hind feet ~0.19 behind x=-0.19, plus stride.
+FOOTPRINT_FRONT = 0.30
+FOOTPRINT_REAR = 0.35
 GOAL_GEOM_GROUP = 4  # camera-only visuals (goal flag, grout lines): invisible to the height-scan rays
 _SUPPORT_BOTTOM = -1.0
 
@@ -111,6 +115,21 @@ class CourseSpec:
       x += seg.length
       z += dz
     return out
+
+  def required_terrain(self, x_base: float, front: float = FOOTPRINT_FRONT, rear: float = FOOTPRINT_REAR) -> TerrainClass:
+    """Ground-truth policy choice for a base at course x: the terrain under the
+    robot's footprint, not under one point. Non-flat terrain anywhere in
+    [x - rear, x + front] wins (the front point's class first), so the stairs
+    policy stays active until the rear feet are off the last step. A point rule
+    switched back to the flat specialist with the hind legs still on the stairs,
+    and it stalled there."""
+    ahead = self.terrain_at(x_base + front)
+    if ahead != "flat":
+      return ahead
+    for r in self.regions():
+      if r.terrain != "flat" and r.x0 < x_base + front and r.x1 > x_base - rear:
+        return r.terrain
+    return "flat"
 
   def terrain_at(self, x_course: float) -> TerrainClass:
     for r in self.regions():
@@ -273,7 +292,18 @@ def _add_grout_lines(body, geoms: list, x0: float, x1: float, top: float, w: flo
     gx += _GROUT_SPACING
 
 
-def saro_courses(visual: VisualScheme = "tiled", goal_y_offset: float = 0.0) -> dict[str, CourseSpec]:
+# Course difficulty levels for Phase-1 calibration, all inside the specialists'
+# training ranges (riser 0-0.10 m, rough noise 0.02-0.10 m).
+DIFFICULTY_LEVELS: dict[str, dict] = {
+  "L1": dict(step_height=0.05, noise_range=(0.02, 0.06)),
+  "L2": dict(step_height=0.07, noise_range=(0.02, 0.08)),
+  "L3": dict(step_height=0.09, noise_range=(0.02, 0.10)),
+}
+
+
+def saro_courses(
+  visual: VisualScheme = "tiled", goal_y_offset: float = 0.0, level: str = "L2"
+) -> dict[str, CourseSpec]:
   """The course set. Single-intermediation courses follow SARO's P1 -> I -> P2
   task definition; `multi` chains several so the right policy changes more than
   once per run (this project's extension -- SARO uses one intermediation).
@@ -281,8 +311,11 @@ def saro_courses(visual: VisualScheme = "tiled", goal_y_offset: float = 0.0) -> 
   The intermediation starts 2 m ahead of the spawn point, inside the camera's
   view (ground visible from ~0.5 m to the horizon) from the first frame.
   """
+  lv = DIFFICULTY_LEVELS[level]
   common = dict(visual=visual, goal_y_offset=goal_y_offset)
-  stairs = dict(step_height=0.07)
+  stairs = dict(step_height=lv["step_height"])
+  rough = dict(noise_range=lv["noise_range"])
+  rise = 5 * lv["step_height"]  # 1.5 m of 0.3 m treads
   return {
     "flat": CourseSpec(
       name="flat", intermediation="none", segments=(Segment("flat", 9.0),),
@@ -292,17 +325,17 @@ def saro_courses(visual: VisualScheme = "tiled", goal_y_offset: float = 0.0) -> 
       segments=(Segment("flat", 3.0), Segment("stairs_up", 1.5, **stairs), Segment("flat", 3.5)),
       instruction="reach the red goal flag on the raised platform at the top of the stairs", **common),
     "stairs_down": CourseSpec(
-      name="stairs_down", intermediation="stairs", base_height=0.35,
+      name="stairs_down", intermediation="stairs", base_height=rise,
       segments=(Segment("flat", 3.0), Segment("stairs_down", 1.5, **stairs), Segment("flat", 3.5)),
       instruction="go down the stairs and reach the red goal flag on the floor below", **common),
     "rough": CourseSpec(
       name="rough", intermediation="rough ground",
-      segments=(Segment("flat", 3.0), Segment("rough", 3.0), Segment("flat", 3.0)),
+      segments=(Segment("flat", 3.0), Segment("rough", 3.0, **rough), Segment("flat", 3.0)),
       instruction="cross the rough uneven ground and reach the red goal flag beyond it", **common),
     "multi": CourseSpec(
       name="multi", intermediation="rough ground and stairs",
       segments=(
-        Segment("flat", 3.0), Segment("rough", 3.0), Segment("flat", 2.0),
+        Segment("flat", 3.0), Segment("rough", 3.0, **rough), Segment("flat", 2.0),
         Segment("stairs_up", 1.5, **stairs), Segment("flat", 2.0),
         Segment("stairs_down", 1.5, **stairs), Segment("flat", 3.0),
       ),

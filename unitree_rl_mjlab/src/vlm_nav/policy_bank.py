@@ -55,3 +55,17 @@ class PolicyBank:
   @torch.inference_mode()
   def act(self, obs) -> torch.Tensor:
     return self.policies[self.active](obs)
+
+  @torch.inference_mode()
+  def act_per_env(self, obs, policy_idx: torch.Tensor) -> torch.Tensor:
+    """Each env runs its own policy: policy_idx[i] indexes `names`.
+
+    Every specialist is a small MLP, so evaluating all of them and gathering
+    is cheaper and simpler than splitting the batch.
+    """
+    stacked = torch.stack([self.policies[n](obs) for n in self.names], dim=0)
+    return stacked[policy_idx, torch.arange(stacked.shape[1], device=stacked.device)]
+
+  @property
+  def names(self) -> list[str]:
+    return list(self.policies)
