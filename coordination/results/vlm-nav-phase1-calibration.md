@@ -84,14 +84,20 @@ and nothing in gate 1 contradicts this.
 
 ## Exploratory: fall definition × specialist, all arms (not pre-registered; seed 101, 32 trials each)
 
-`stairs_up` only so far (`stairs_down` and the rough-course arms are still queued). Success rate
-(falls / timeouts):
+Rough-course arms and `stairs_down` L2 are still queued. Success rate (falls / timeouts):
 
 | level | fall definition | oracle | flat | rough | stairs |
 |---|---|---|---|---|---|
 | L1 (0.05 m) | training (knee contact ends trial) | 84% (6/9) | 0% (6/94) | **97%** (0/3) | 81% (9/9) |
 | L1 (0.05 m) | SARO (orientation only) | 91% (0/9) | 0% (3/97) | **100%** (0/0) | 84% (0/16) |
 | L2 (0.07 m) | SARO (orientation only) | 22% (0/78) | 0% (31/69) | 9% (0/91) | **34%** (0/66) |
+
+`stairs_down`:
+
+| level | fall definition | oracle | flat | rough | stairs |
+|---|---|---|---|---|---|
+| L1 (0.05 m) | training | **81%** (19/0) | 50% (50/0) | 25% (75/0) | 66% (34/0) |
+| L1 (0.05 m) | SARO (orientation only) | 100% | 100% | 100% | 100% |
 
 What this suggests, pending confirmation on more seeds:
 
@@ -102,7 +108,11 @@ What this suggests, pending confirmation on more seeds:
    wrong in one direction or the other. The oracle arm is exactly that rule, so it is not an upper
    bound on the best choice. This is the argument in `rough-stairs-switching-decision.md` (choose by
    expected outcome, not by class) showing up in closed loop.
-3. **SARO's fall definition does not rescue L2.** The failures there are stalls at the top of the
+3. **Which fall definition you pick decides whether the choice matters on down-stairs.** Under the
+   training definition, switching (oracle) beats every fixed specialist. Under SARO's, every
+   specialist gets down 0.05 m stairs 32/32 without tipping over, so there is nothing for a policy
+   choice to win.
+4. **SARO's fall definition does not rescue L2.** The failures there are stalls at the top of the
    stairs (timeouts), not knee contacts.
-4. Seed-to-seed spread is large at 32 trials: the L1 oracle was 75% on seed 100 and 84% on seed 101
+5. Seed-to-seed spread is large at 32 trials: the L1 oracle was 75% on seed 100 and 84% on seed 101
    under the same definition.
