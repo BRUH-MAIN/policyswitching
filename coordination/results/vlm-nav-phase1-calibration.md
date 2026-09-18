@@ -84,7 +84,20 @@ and nothing in gate 1 contradicts this.
 
 ## Exploratory: fall definition × specialist, all arms (not pre-registered; seed 101, 32 trials each)
 
-Rough-course arms are still queued. Success rate (falls / timeouts):
+`rough` (0.08 m bumps), training fall definition, seed 101:
+
+| arm | success | how the failures end |
+|---|---|---|
+| oracle | **100%** | — |
+| rough | 97% | 1 fall |
+| flat | 78% | 7 falls |
+| stairs | 25% | 21 stuck, 3 falls |
+
+This is the clearest "the choice matters" case measured so far, and the one course where the
+specialists are reliable *and* Gemma partly perceives the terrain (Phase 2). A confirmation run over
+fresh seeds 200/201 and goal offsets -1/0/+1 is under way; the stairs courses stay held.
+
+`stairs_up` / `stairs_down` (32 trials each): Success rate (falls / timeouts):
 
 | level | fall definition | oracle | flat | rough | stairs |
 |---|---|---|---|---|---|
