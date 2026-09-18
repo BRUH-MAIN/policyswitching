@@ -37,3 +37,28 @@ label-matching score, not an outcome score (the rough specialist walks flat grou
   flat specialist can't climb (0% in Phase 1), so both trials timed out at the first riser. This is
   the Phase-2 finding (Gemma-4-E4B describes the staircase as "a flat, gridded floor") showing up
   in closed loop.
+
+
+## Four-arm comparison on the rough course (2026-09-18)
+
+Rough L2, seeds 200/201, goal offset 0, 8 trials per cell (16 per arm), lockstep, depth
+where-source, Gemma-4-E4B at 560 image tokens. Pooled with `scripts/vlm_nav_summarize.py`.
+
+| arm | success (95% Wilson) | policy match | VLM calls / trial |
+|---|---|---|---|
+| `vlm` (VLM navigation + **VLM policy choice**) | 100% (80.6–100) | 79% | 27–37 |
+| `gt+oracle` (ground truth both) | 100% (80.6–100) | 100% | 0 |
+| `vlm+oracle` (VLM navigation + GT policy) | 94% (71.7–98.9) | 100% | 5–13 |
+| `vlm+fixed:rough` (VLM navigation + one specialist) | 94% (71.7–98.9) | 51% | 4–10 |
+
+**The arms are indistinguishable**, as the Phase-1 confirmation predicted for a single-obstacle
+course: every arm is at the ceiling, and the confidence intervals overlap completely. 16 trials per
+arm cannot separate 94% from 100% in any case.
+
+**The decisions behind the 100% are mixed.** Across these runs the VLM planned `rough ground` 18
+times, `none` 10 times, and `stairs` 3 times — on a course with no stairs — and the policy selector
+answered rough 190 times vs flat 188. The `vlm` arm still reached the goal every time, because on
+rough L2 both the rough (98%) and flat (73%) specialists usually get across. So this result shows
+the pipeline executes end to end with a real VLM in the loop; it is **not** evidence that the VLM
+chooses well. A course that separates good from mediocre choosing needs the best specialist to
+change along the route — blocked on the stairs specialist (`vlm-nav-phase1-confirmation-rough.md`).
