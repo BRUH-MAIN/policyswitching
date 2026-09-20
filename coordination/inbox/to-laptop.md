@@ -17,6 +17,11 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-09-20 -- go2_spec_gaps step 9999 ready
+Source: local (cluster disk only, not on HF -- see findings.md bug #4).
+Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
+SLURM job 11914.
+
 ## 2026-09-12 -- go2_spec_stairs step 9999 ready
 Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs/model_9999.pt).
 

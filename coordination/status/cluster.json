@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-12T14:49:37Z",
+  "last_updated_utc": "2026-09-20T16:50:40Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -62,12 +62,14 @@
     "go2_spec_gaps": {
       "task": "Unitree-Go2-Spec-Gaps",
       "source": "local",
-      "path_on_cluster": null,
-      "iteration": null,
-      "sha256": null,
-      "status": "in_progress",
+      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt",
+      "iteration": 9999,
+      "sha256": "b79ddd9b120d704015f9ee91abeef40486a05ec84a3da2324e93e1d16874e743",
+      "status": "complete",
       "slurm_job_id": "11914",
-      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out. 2026-09-12: still PENDING, never started (all nodes drained since 2026-09-10). Note the blended mix trains 80% on non-gap terrain, making this barely a gap specialist -- see go2_spec_gapswarm and findings.md 'Terrain specialists'."
+      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out. 2026-09-12: still PENDING, never started (all nodes drained since 2026-09-10). Note the blended mix trains 80% on non-gap terrain, making this barely a gap specialist -- see go2_spec_gapswarm and findings.md 'Terrain specialists'.",
+      "hf_repo": null,
+      "hf_stage": null
     },
     "go2_spec_gapswarm": {
       "task": "Unitree-Go2-Spec-GapsWarm",
