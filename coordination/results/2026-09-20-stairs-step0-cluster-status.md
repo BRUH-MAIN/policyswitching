@@ -18,9 +18,10 @@ workq*       up 3-00:00:00      3   mix- asaicomputemaster,asaicomputenode[02-03
 `mix-` = MIXED with the "planned" flag (a backfill reservation), not `drained`. Per-node
 GPU allocation (`scontrol show node`): **all 6 GPUs allocated** (2× RTX 6000 Ada on
 `asaicomputemaster`, 2× A100 each on `node02`/`node03`). `nvidia-smi` on `asaicomputemaster`
-shows the two RTX 6000s at 0% utilisation / ~0.5 GB used — i.e. reserved by other users'
-idle sessions (several `sys/dashboard/.../ju*` Jupyter jobs). I did **not** run on those
-GPUs outside the scheduler.
+shows the two RTX 6000s at 0% utilisation / ~0.5 GB used — consistent with GPUs held by
+other users' idle interactive sessions (several `sys/dashboard/.../ju*` Jupyter jobs are
+running; I have not verified which job holds which GPU). I did **not** run on those GPUs
+outside the scheduler.
 
 ## squeue -u $USER
 
