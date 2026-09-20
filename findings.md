@@ -164,6 +164,25 @@ projector) via llama.cpp (`scripts/vlm_server.sh`). Code: `unitree_rl_mjlab/src/
 - **Closed loop (smoke)**: executor + ground-truth VLM 4/4 on rough; real Gemma 2/2 on rough, 0/2 on
   0.05 m up-stairs (planned "none", flat specialist stuck).
   `coordination/results/vlm-nav-closed-loop-smoke.md`.
+- **Phase 1 confirmation, restricted to `rough` (done, 2026-09-18)**: stairs stayed blocked, so the
+  pre-registered confirmation ran on the one course the specialists handle reliably. 192 trials/arm,
+  fresh seeds 200/201, 3 goal offsets. **Gate A passes** (oracle 97.4%); **Gate B fails** — always
+  running the rough specialist (98.4%) matches perfect oracle switching (97.4%), CIs overlapping.
+  A single-obstacle course can't demonstrate switching value even with perfect choice: the wrong
+  fixed specialist is costly (flat 73%, stairs 53%), but *one* good fixed choice is enough. The
+  gate that would test the actual claim needs a route where the best specialist changes mid-course
+  (`multi`), which contains stairs and is blocked on the same specialist-reliability problem.
+  `coordination/results/vlm-nav-phase1-confirmation-rough.md`.
+- **Closed-loop 4-arm comparison on `rough`, real Gemma (done, 2026-09-18)**: 16 trials/arm — VLM
+  nav+VLM policy 100%, VLM nav+oracle policy 94%, VLM nav+fixed specialist 94%, ground-truth-both
+  100%. **Statistically indistinguishable**, as predicted by the confirmation above: every arm sits
+  at the course's ceiling. The VLM's own decisions were mixed underneath the good outcome (planned
+  "stairs" 3× on a stairless course; selector split ~50/50 rough vs. flat) — the 100% is not evidence
+  the VLM chooses well, only that this course can't tell a good chooser from a mediocre one.
+  `coordination/results/vlm-nav-closed-loop-smoke.md` (§ "Four-arm comparison").
+- **Net**: the stairs specialist's unreliability (not the VLM, not perception) is now the critical
+  path — it blocks the only course design (`multi`) that could show anticipatory/reactive switching
+  beating a fixed policy. See `PROGRESS_REPORT.md` for the decision this needs.
 
 ## Bugs found and fixed
 
