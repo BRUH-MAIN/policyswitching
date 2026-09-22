@@ -40,7 +40,8 @@ pipeline plus the premise-gate findings, not as the full 2×2 comparison. See Se
   runs end-to-end in closed loop at real time (Section VI.D–E).
 - **What's not yet established**: whether switching beats a sensing-matched generalist
   policy (the paper's actual thesis, per `objective.md`) — the generalist was never trained
-  (cluster nodes drained since 2026-09-10), and the stairs specialist is not reliable enough
+  (its training job was cancelled by an admin before it ran and hasn't been resubmitted, per
+  Section VII), and the stairs specialist is not reliable enough
   (75–78% success with a *perfect* oracle chooser) to build a demonstrative multi-terrain
   course around yet.
 - **Honest one-line summary for an abstract**: this work reports the infrastructure, the
@@ -119,10 +120,14 @@ report-ready:
 - **Gaps failed twice** under a 100%-`stepping_stones` design (reward plateaued at ≈−6 to −8,
   episodes ending in 10–14 steps — immediate falls, diagnosed as a cold-start problem: no
   easy terrain to learn basic locomotion on before also solving gap-crossing). A
-  blended-terrain retrain (job 11914) and a warm-started 100%-gaps redesign
-  (`Unitree-Go2-Spec-GapsWarm`, initialized from the Rough specialist via
-  `a100/warm_start_ckpt.py`) are both built; neither has completed (cluster nodes drained
-  since 2026-09-10). **No usable gaps specialist exists as of this writing.**
+  blended-terrain retrain (job 11914, 20% stepping-stones / 40% flat / 40% rough) **completed
+  2026-09-17** — a checkpoint (`model_9999.pt`) exists on cluster local disk, **not yet
+  evaluated anywhere**, so it cannot yet be reported in the gate-1 table above. A second,
+  warm-started 100%-gaps redesign (`Unitree-Go2-Spec-GapsWarm`, initialized from the Rough
+  specialist via `a100/warm_start_ckpt.py`) is also built but not submitted — an open
+  decision is whether to evaluate 11914's blended checkpoint on `--terrain gaps` first,
+  or run GapsWarm as well and compare, since the blended design trains 80% on terrain the
+  Flat/Rough specialists already cover and is only barely a gap specialist by construction.
 - Absolute-iteration-budget tracking (`a100/local_ckpt_resume.py`) and warm-start hygiene
   (resetting iteration count, optimizer moments, and observation-normalizer stats) are
   infrastructure points worth a methods-section footnote if the paper describes resumable
@@ -376,19 +381,30 @@ Source: `findings.md`, "Person-following" and "Two-rate perception" sections
   margin (1.4×) is not, and should be reported as provisional pending repeat seeds.
   `objective.md`'s statistical plan already commits to ≥3 seeds for the switching/gating
   networks specifically (not the frozen specialists) for this reason.
-- **The gaps specialist does not exist.** Two training attempts plateaued; two redesigns are
-  built but neither has run to completion (blocked on cluster availability). Any table
-  including a "gaps" row/column before one of these finishes should say "unanswerable," not
-  report a null/zero result.
+- **The gaps specialist has a checkpoint but no evaluation.** Two training attempts on the
+  original 100%-`stepping_stones` design plateaued; a blended-terrain redesign (job 11914)
+  completed 2026-09-17, but the checkpoint has not been run through `eval_matrix.py` or
+  `eval_checkpoint.py` yet, and a second warm-started redesign is built but not submitted.
+  Any table including a "gaps" row/column before an evaluation exists should say
+  "unanswerable," not report a null/zero result.
 - **The stairs specialist is the critical blocker for the paper's actual claim.** At 75–78%
   success with a *perfect* (ground-truth) specialist chooser, at the gentlest riser height
   tested, no course design yet exists where switching could be shown to beat a fixed policy —
   a course needs the wrong choice to be meaningfully worse than the right one, and stairs is
   currently unreliable regardless of which policy runs it.
 - **The sensing-matched generalist baseline (arm 1 of the actual comparison) was never
-  trained.** Every "gate 1 passes" claim in this report establishes that switching beats
-  *some* fixed specialist, not that it beats the generalist — `objective.md` is explicit that
-  these are different claims and the second is the one the paper's thesis rests on.
+  trained** — its training job (11918) and the paired eval-matrix job (11919) were cancelled
+  by an administrator before either ran, and neither has been resubmitted as of this writing
+  (deferred for GPU priority behind a stairs-specific investigation, see below). Every "gate
+  1 passes" claim in this report establishes that switching beats *some* fixed specialist,
+  not that it beats the generalist — `objective.md` is explicit that these are different
+  claims and the second is the one the paper's thesis rests on.
+- **A stairs-specific investigation is underway but not yet reported.** A cluster-side check
+  (`coordination/results/2026-09-20-stairs-step0-cluster-status.md`) is queued (job 12033) to
+  test whether the stairs specialist's unreliability (Section VI, VII above) is specific to
+  pyramid-stairs geometry or a broader capability gap, before deciding on a retrain. Any
+  report written before this lands should treat the 75–78% figure as the best current number,
+  not a final one.
 - **A small local VLM is the perception bottleneck for stairs specifically**, not a
   fundamental property of the plan-perceive-select architecture — the rough-terrain success
   of the pipeline (mechanically, if not evidentially per the ceiling-effect caveat) shows the
@@ -400,8 +416,9 @@ Source: `findings.md`, "Person-following" and "Two-rate perception" sections
   hardware demo.
 - **Everything here ran on one 8 GB laptop GPU.** This bounds both the VLM size tested (4B)
   and the practicality of long training runs locally — all specialist/generalist training
-  happens on a separate SLURM cluster, whose availability (drained since 2026-09-10 as of the
-  last confirmed heartbeat) is the practical bottleneck on the whole project's pace right now.
+  happens on a separate SLURM cluster, whose nodes are up but fully allocated by other users
+  as of the last confirmed status (2026-09-20; ~12–19 h projected queue wait for a fresh
+  submission), which remains the practical bottleneck on the whole project's pace.
 
 ## VIII. What's not done — future work section material
 
@@ -413,7 +430,9 @@ Directly from `objective.md` and the branch's own `PROGRESS_REPORT.md` priority 
    not climbing, which stalls rather than falls).
 2. Train `Unitree-Go2-Generalist` (the sensing-matched arm-1 baseline) and re-run the
    cross-terrain matrix against it.
-3. Resolve one of the two gaps-specialist redesigns.
+3. Evaluate the gaps checkpoint that already exists (job 11914, completed 2026-09-17) through
+   `eval_matrix.py`/`eval_checkpoint.py` on `--terrain gaps` before deciding whether the
+   warm-started `GapsWarm` redesign is still needed.
 4. Re-run gate 2's discriminability measurement with difficulty pinned away from zero
    (commands already written, `coordination/results/rough-stairs-switching-decision.md` §6),
    and decide the taxonomy question it answers (keep 4-way pending sensing fixes, or merge
