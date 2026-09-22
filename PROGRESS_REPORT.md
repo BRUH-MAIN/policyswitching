@@ -202,3 +202,4 @@ Full list in `findings.md` ("Bugs found and fixed"). Beyond the repo-wide ones i
 | The pipeline code | `src/vlm_nav/` (camera, course, controllers, detector, executor, leader, overlay, perception, prompts, vlm_backend, oracle_vlm, policy_bank, twin_env) |
 | Unit tests (no sim/VLM needed) | `tests/test_vlm_nav.py` |
 | Pre-pivot state (specialists, gate 1/2) | `main`'s `PROGRESS_REPORT.md` |
+| Drafting an IEEE-style report from this project | `report_content/ieee_report_source.md` — section-by-section source material, every claim traced to a file, with explicit caveats on what's solid vs. provisional |
