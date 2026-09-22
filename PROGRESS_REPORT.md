@@ -5,18 +5,25 @@ in sync · **Written for**: starting a fresh session (human or Claude) with no m
 this state was reached. Where something needs more detail than fits here, a file path is
 given — read that file rather than asking to re-derive it.
 
-> **Update, 2026-09-20**: §4.2/§5 below ("when to start the VLM pipeline", "hasn't been given
+> **Update, 2026-09-22**: §4.2/§5 below ("when to start the VLM pipeline", "hasn't been given
 > a go-ahead yet") are stale — you gave the go-ahead on 2026-09-16 and it's been built.
 > **All of that work is on branch `vlm-pipeline`, in its own worktree at
-> `.claude/worktrees/vlm-pipeline`, 20 commits ahead of this file's commit, not yet merged or
-> pushed.** `cd` into that worktree and read its own `PROGRESS_REPORT.md` for the real current
-> state and next steps — don't keep reading this file expecting it to reflect the VLM work,
-> it doesn't. Headline: the pipeline runs end to end with a real VLM choosing the specialist,
-> but the stairs specialist trained here (job 11849) turned out to be unreliable enough
-> (75–78% success with a *perfect* chooser, at the gentlest stairs tested) that no course
-> exists yet where switching can be shown to beat a fixed policy — that, not the VLM or its
-> perception, is now the critical path. The rest of this file (§1–3, specialists, gate 1/2)
-> is still accurate and untouched by that branch.
+> `.claude/worktrees/vlm-pipeline`, 22 commits ahead of this file's commit, pushed to
+> `origin/vlm-pipeline` as of 2026-09-22, but still not merged.** `cd` into that worktree and
+> read its own `PROGRESS_REPORT.md` for the real current state and next steps — don't keep
+> reading this file expecting it to reflect the VLM work, it doesn't. Headline: the pipeline
+> runs end to end with a real VLM choosing the specialist, plus a working person-following
+> stack (scripted leader + a two-rate VLM-planner/YOLO-detector perception split that fixed a
+> real-time-control failure), but the stairs specialist trained here (job 11849) turned out to
+> be unreliable enough (75–78% success with a *perfect* chooser, at the gentlest stairs
+> tested) that no course exists yet where switching can be shown to beat a fixed policy —
+> that, not the VLM or its perception, is still the critical path. The rest of this file
+> (§1–3, specialists, gate 1/2) is still accurate and untouched by that branch.
+> **If you want to draft an IEEE-style report from this project, read
+> `report_content/ieee_report_source.md` on that branch** — it organizes everything (this
+> file, `objective.md`, `findings.md`, and the `coordination/results/` write-ups) into paper
+> sections with every claim traced to its source and every provisional number flagged as
+> such.
 
 ---
 
