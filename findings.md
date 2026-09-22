@@ -184,6 +184,125 @@ projector) via llama.cpp (`scripts/vlm_server.sh`). Code: `unitree_rl_mjlab/src/
   path — it blocks the only course design (`multi`) that could show anticipatory/reactive switching
   beating a fixed policy. See `PROGRESS_REPORT.md` for the decision this needs.
 
+## Person-following (2026-09-21, laptop, branch `vlm-pipeline`)
+
+`objective.md`'s setting reduced to its locomotion core: a scripted kinematic leader
+(`src/vlm_nav/leader.py`, a fixed-base entity mjlab auto-wraps as a mocap body,
+non-colliding and in the camera-only geom group so it cannot perturb the 187-dim
+`height_scan`) walks a flat course at a speed that changes occasionally, and the robot
+holds a standoff with `controllers.follow_command`. Runner: `scripts/vlm_nav_follow.py`.
+
+- **Ground-truth leader, 2.5 m gap: gap error 0.159 m RMS / 0.256 m max** over 42 s and
+  7 speed changes including a 4 s full stop, no falls. Flat specialist throughout.
+- **Two control defects the varying speed exposed, both invisible to a constant-speed
+  leader.** (1) Pure P-control against a *moving* set-point droops: it settles where
+  `k_range * err` equals the leader's speed, so every speed change parked the robot at a
+  different wrong distance (0.82 m RMS). Fixed with line-of-sight velocity feed-forward,
+  estimated by differencing observed leader positions. (2) `FollowGains.v_max` was 0.9
+  against a 0.95 m/s leader, so the robot *could not* close a gap once it opened -- error
+  grew monotonically through the burst and peaked at exactly the moment the leader slowed
+  (+1.19 m). v_max is now 1.0, the specialists' final-curriculum command limit, which
+  caps how fast any leader may walk.
+- **The camera cannot see a person at the follow distance.** Pitched 15 deg down with a
+  42.5 deg vertical FOV, it sees only ~6.25 deg above horizontal: at 1.5-2.5 m only the
+  leader's legs are in frame. Gemma-4-E4B describes those as "two blue cylindrical
+  objects" and detects `person` 0/3 at 1.5/2.5/4.0 m. At **6 m the whole figure is in
+  frame and detection succeeds**. Any camera-driven follower on this rig must stand off
+  ~6 m, or the camera must be re-aimed.
+- **The VLM's horizontal localization is far better than its boxes.** At 6 m the detected
+  box centre was 423.2 px against a true 424.0 px -- a **0.08 deg bearing error** -- while
+  its vertical extent was flatly wrong (it boxed ground *below* the figure). This is the
+  usable signal: `perception.person_from_bearing_column` takes only the column from the
+  VLM and recovers range from depth returns standing above the floor, discarding the box's
+  y extent entirely. Same division of labour as the terrain edge estimator (bug #16 era):
+  VLM for *what/which way*, geometry for *how far*.
+- **Closed loop on VLM perception, 6 m gap**: runs end to end, but detection is
+  unreliable (17/84 queries over a full run) and gap error is many times the
+  ground-truth arm.
+- **The follower locked onto the goal flag -- and its own metric said it was doing
+  fine.** On a flat course the person is not the only object standing above the floor;
+  the goal flag is too, in the same camera-visible geom group. Once the person outran
+  reliable detection, `person_from_bearing_column` latched onto the flag and the
+  controller held station 6.15 m from it, *frozen*, while the leader receded to 16.5 m.
+  The estimate-derived range read 6.15 against a 6.0 m set-point the whole time -- a
+  0.15 m "error" -- because it was measuring the distance to the wrong object. Only the
+  independently logged ground-truth range exposed it. **This is the repo's dominant
+  failure mode again** (see the review note on metrics that answer an adjacent
+  question): a follower's self-reported range error cannot validate a follower, because
+  it is computed from the very estimate under test. Fixed by removing the flag from the
+  follow course (`CourseSpec.goal_marker=False`), but the lesson generalises -- any
+  real scene has other vertical objects, so a production follower needs the person
+  *identified*, not merely "something above the floor".
+
+## Two-rate perception: YOLO tracker + VLM planner (2026-09-21, laptop, branch `vlm-pipeline`)
+
+The closed-loop follow run put the VLM *inside* the control loop, which is why it lost
+the person: ~2 s per call, and only 11 of 84 calls yielded a usable position, so the
+robot navigated on estimates up to half a second stale and mostly missing. The fix is
+structural, not a better prompt -- split *what* from *where*:
+
+| layer | job | rate | measured |
+|---|---|---|---|
+| VLM | name the target, choose the specialist, judge sub-task completion | ~0.2 Hz, off the control path | ~2 s/call |
+| detector | where is that target in this frame | every control step | **3.5-3.9 ms** (YOLO11s, RTX 5060) |
+| depth geometry | how far | every step | 0-8 cm |
+
+`src/vlm_nav/detector.py` is the seam (`Detector` protocol + `YoloDetector`); swapping
+the detector never touches the planner. This is what makes the pipeline retargetable:
+the VLM names a class in language, the detector localizes it at control rate.
+
+- **Stock COCO YOLO cannot see this project's leader.** It reads the capsule legs as
+  "baseball bat" (0.79 conf) and the head sphere as "sports ball", and at the 6 m follow
+  distance detects *nothing* even at conf 0.05. Camera pitch is not the cause -- re-rendered
+  at 0 deg and 8 deg pitch, same result. This is an **appearance gap specific to
+  flat-shaded mjlab geoms**; on real hardware a real person is COCO's home ground, so
+  this does not carry to the robot.
+- **Fine-tuning fixes it, and labels are free.** The leader's pose is set by us and its
+  geom extents are fixed, so the exact 2D box is the projection of its 3D box
+  (`CameraSpec.project_body`, inverse of the existing deprojection, pinned by a
+  round-trip test to 6e-14 px). 1000 auto-labelled frames (140 negatives) ->
+  YOLO11n, 40 epochs: **P 1.000, R 0.942, mAP50 0.951, mAP50-95 0.892**.
+  Tools: `scripts/vlm_nav_make_detector_dataset.py`, `scripts/vlm_nav_train_detector.py`.
+  Sim-only by construction; do not ship these weights to hardware.
+
+## SARO task replication, paper protocol (2026-09-22, laptop, branch `vlm-pipeline`)
+
+SARO's own task (arXiv:2407.16412 SS III.A): goal-tracking across `{P1 -> I -> P2}` with a
+goal G given as a pose plus a language description L, **20 trials per intermediation**,
+goals off-axis, full closed loop (planning -> perception -> discriminator double-check).
+Run via `scripts/vlm_nav_run.py --arms vlm gt+oracle --num-envs 20 --seed 300
+--goal-y-offset 0.8 --level L1`; artefacts under `logs/vlm_nav/saro_protocol/`.
+
+| intermediation | VLM Overall | VLM Across | falls | ground-truth ceiling | planner's answer |
+|---|---|---|---|---|---|
+| stairs_up | **0%** | 0% | 20% | 75% | `none` 20/20 |
+| stairs_down | **45%** | 45% | 55% | 95% | `none` 20/20 |
+| rough | **100%** | 100% | 0% | 100% | `none` 17, `rough ground` 17, `stairs` 1 |
+
+SARO's Table I for comparison (real robot, LLaVA-34B): stair 60% overall / 70% across /
+88% stable-loc; ramp 25/50/67; gap 45/80/94; door 30/50/63.
+
+- **The failure is perception, and it is upstream of everything else.** On both stairs
+  courses the planner answered `intermediation: none` on **40/40** trials -- it never
+  emits a `climb` sub-task because it never concedes there is anything to climb. The
+  ground-truth arm crosses the same courses at 75%/95%, so the course is crossable and
+  the locomotion works; the whole gap is the VLM. This reproduces the Phase-2 offline
+  result (`stairs` 0/32) at the paper's own 20-trial scale and in closed loop.
+- **The rough 100% is not evidence of perception.** On rough the planner still said
+  `none` half the time (17/35) and hallucinated `stairs` once, and the selector chose
+  the *flat* policy on 267 of 391 calls -- on a rough course -- yet every trial
+  succeeded, because every specialist crosses rough. Same ceiling effect as gate B: a
+  course where the wrong choice is survivable cannot measure choice quality. **Do not
+  read the rough column as validation.**
+- **Deviations from the paper, all forced**, and they bound what this comparison means:
+  intermediations are stairs_up/stairs_down/rough (no ramp or door segment exists in
+  this sim, gaps has terrain but no course segment); the low-level policies are this
+  project's three specialists, not PAS (the PAS replication is degenerate, bug #14, and
+  its estimator-only actor has a different observation width so it cannot enter the
+  policy bank); the VLM is Gemma-4-E4B on one 8 GB laptop GPU, not LLaVA-34B on an
+  8x3090 server; and pose is ground truth. **Because localization is perfect here, the
+  honest comparison is against SARO's `Stable Loc` column, not its `Overall`.**
+
 ## Bugs found and fixed
 
 Ordered roughly by how much they'd silently corrupt a result if unnoticed — read top-to-bottom before trusting any new eval number. *#10 and #11 (2026-09-12) belong near the top by that ordering; they're appended rather than renumbered because other entries reference these numbers.*

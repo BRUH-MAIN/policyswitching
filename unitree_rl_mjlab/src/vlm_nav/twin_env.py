@@ -45,8 +45,14 @@ def make_twin_env_cfg(
   spawn_yaw_range: tuple[float, float] = (0.0, 0.0),
   use_shadows: bool = True,
   terminations: str = "training",
+  leader: bool = False,
 ) -> ManagerBasedRlEnvCfg:
-  """`terminations`: "training" keeps the specialists' own (bad orientation OR any
+  """`leader`: add the scripted kinematic person of `src.vlm_nav.leader` to the
+  scene (a fixed-base entity, so mjlab wraps it in a mocap body whose pose the
+  caller writes each step). Non-colliding and in the camera-only geom group, so
+  it changes neither the physics nor the specialists' height_scan.
+
+  `terminations`: "training" keeps the specialists' own (bad orientation OR any
   non-foot contact > 10 N); "saro" keeps only bad orientation, SARO's definition
   of a fall (Appendix B.3: roll > 0.8 rad / pitch > 1.0 rad), so a knee brushing a
   step edge doesn't end the trial. Observations are identical either way."""
@@ -94,6 +100,11 @@ def make_twin_env_cfg(
     "z": (0.0, 0.0),
     "yaw": spawn_yaw_range,
   }
+
+  if leader:
+    from src.vlm_nav.leader import LEADER_ENTITY, leader_entity_cfg  # noqa: PLC0415
+
+    cfg.scene.entities = {**cfg.scene.entities, LEADER_ENTITY: leader_entity_cfg()}
 
   sensors = []
   for s in cfg.scene.sensors or ():

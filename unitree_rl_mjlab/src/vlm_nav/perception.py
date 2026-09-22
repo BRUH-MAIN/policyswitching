@@ -24,7 +24,7 @@ from dataclasses import dataclass
 import mujoco
 import numpy as np
 
-from src.vlm_nav.camera import CameraSpec
+from src.vlm_nav.camera import CameraSpec, body_to_world
 
 
 @dataclass
@@ -264,3 +264,53 @@ def depth_edge_estimate(
     center_u=w / 2.0,
     n_points=len(rows),
   )
+
+
+def target_from_bearing_column(
+  depth: np.ndarray,
+  camera: CameraSpec,
+  col_px: float,
+  base_pos_w: np.ndarray,
+  base_quat_w: np.ndarray,
+  min_height_m: float = 0.35,
+  half_width_px: int = 6,
+) -> np.ndarray | None:
+  """World-frame (x, y) of the target at image column `col_px`, from depth alone.
+
+  Works for whatever pointed at that column -- the VLM's box centre, or a
+  detector's. The column is the only pixel information used.
+
+  The VLM supplies only the *column* (`col_px`): Phase-2 measurement on the
+  follow course found its box centre horizontally exact (0.08 deg bearing error
+  at 6 m) while its vertical extent was wrong -- it boxed ground below the
+  figure. So the box's y range is discarded and the range is recovered from
+  geometry: deproject a narrow strip of that column and keep returns standing
+  more than `min_height_m` above the local ground, which on flat terrain is the
+  person and nothing else. Their median distance is the range.
+
+  Returns None when the strip holds no such returns (person out of view, or the
+  VLM pointed at empty floor).
+  """
+  h, w = depth.shape[:2]
+  c = int(round(col_px))
+  lo, hi = max(0, c - half_width_px), min(w, c + half_width_px + 1)
+  us, vs = np.meshgrid(np.arange(lo, hi), np.arange(h), indexing="xy")
+  us = us.reshape(-1).astype(np.float64)
+  vs = vs.reshape(-1).astype(np.float64)
+  d = depth[vs.astype(int), us.astype(int)].reshape(-1).astype(np.float64)
+  ok = np.isfinite(d) & (d > 1e-3)
+  if not ok.any():
+    return None
+  pts_body = camera.deproject_body(us[ok], vs[ok], d[ok])
+  pts_w = body_to_world(pts_body, base_pos_w, base_quat_w)
+  # Ground is flat here, so "standing above the floor" is height over the base's
+  # own ground plane (base_pos_w[2] is ~0.33 m above it).
+  ground_z = base_pos_w[2] - 0.33
+  tall = pts_w[:, 2] > ground_z + min_height_m
+  if not tall.any():
+    return None
+  return np.median(pts_w[tall][:, :2], axis=0)
+
+
+# Back-compatible alias: the follow runner's VLM-only path predates the detector seam.
+person_from_bearing_column = target_from_bearing_column

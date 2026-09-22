@@ -7,6 +7,7 @@ import math
 
 import numpy as np
 import pytest
+import torch
 
 from src.vlm_nav import prompts as P
 from src.vlm_nav.camera import CameraSpec, body_to_world
@@ -135,3 +136,83 @@ def test_edge_tracker_keeps_near_edge_seen_before_blind_zone():
   tr.update(IntermediationEstimate(True, near_along=0.8, far_along=2.2, lateral=0.0, origin_w=np.array([1.3, 0.0]), heading_w=heading, center_u=424))
   assert tr.near_remaining(np.array([1.3, 0.0])) == pytest.approx(0.7)
   assert tr.far_remaining(np.array([1.3, 0.0])) == pytest.approx(2.2)
+
+
+# --- person-following: scripted leader + standoff controller -----------------
+
+
+def test_leader_speed_schedule_integrates_and_holds_still_when_stopped():
+  from src.vlm_nav.leader import LeaderPath, SpeedChange
+
+  path = LeaderPath(
+    start_x=1.0, centre_y=3.0, weave_amplitude=0.0,
+    schedule=(SpeedChange(0.0, 1.0), SpeedChange(2.0, 0.0), SpeedChange(4.0, 0.5)),
+  )
+  assert path.distance_at(0.0) == 0.0
+  assert path.distance_at(2.0) == pytest.approx(2.0)
+  # Stopped between t=2 and t=4: distance must not advance.
+  assert path.distance_at(3.9) == pytest.approx(2.0)
+  assert path.distance_at(6.0) == pytest.approx(3.0)
+  assert path.pos_at(6.0)[0] == pytest.approx(4.0)
+
+
+def test_leader_distance_is_monotone_non_decreasing():
+  from src.vlm_nav.leader import LeaderPath
+
+  path = LeaderPath(start_x=1.0, centre_y=3.0)
+  d = [path.distance_at(t) for t in [i * 0.1 for i in range(400)]]
+  assert all(b >= a - 1e-9 for a, b in zip(d, d[1:]))
+
+
+def test_follow_command_signs_and_deadband():
+  from src.vlm_nav.controllers import FollowGains, follow_command
+
+  pos = torch.tensor([[0.0, 0.0, 0.33]])
+  quat = torch.tensor([[1.0, 0.0, 0.0, 0.0]])  # facing +x
+  gap = 2.5
+
+  far, _ = follow_command(pos, quat, torch.tensor([[6.0, 0.0]]), gap, FollowGains())
+  assert far[0, 0] > 0  # too far -> close in
+
+  at, rng = follow_command(pos, quat, torch.tensor([[2.5, 0.0]]), gap, FollowGains())
+  assert rng[0] == pytest.approx(2.5)
+  assert at[0, 0] == pytest.approx(0.0, abs=1e-6)  # deadband -> hold station
+
+  near, _ = follow_command(pos, quat, torch.tensor([[1.0, 0.0]]), gap, FollowGains())
+  assert near[0, 0] < 0  # too close -> back off
+
+
+def test_follow_command_keeps_facing_leader_when_too_close():
+  """Backing off must not turn the robot around -- a follower that loses sight of
+  the leader has failed even if the range is right."""
+  from src.vlm_nav.controllers import follow_command
+
+  pos = torch.tensor([[0.0, 0.0, 0.33]])
+  quat = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+  cmd, _ = follow_command(pos, quat, torch.tensor([[1.0, 0.0]]), 2.5)
+  assert abs(float(cmd[0, 2])) < 1e-6  # already facing it: no yaw command
+
+
+def test_follow_command_turns_toward_offset_leader():
+  from src.vlm_nav.controllers import follow_command
+
+  pos = torch.tensor([[0.0, 0.0, 0.33]])
+  quat = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+  cmd, _ = follow_command(pos, quat, torch.tensor([[0.0, 4.0]]), 2.5)
+  assert float(cmd[0, 2]) > 0.5  # leader to the left -> positive yaw rate
+
+
+def test_follow_feedforward_removes_proportional_droop():
+  """Pure P control against a moving set-point settles at v_leader/k_range of
+  standing error; the feed-forward term must cancel it at the set-point."""
+  from src.vlm_nav.controllers import FollowGains, follow_command
+
+  pos = torch.tensor([[0.0, 0.0, 0.33]])
+  quat = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+  leader = torch.tensor([[2.5, 0.0]])
+  vel = torch.tensor([[0.7, 0.0]])
+
+  no_ff, _ = follow_command(pos, quat, leader, 2.5, FollowGains())
+  with_ff, _ = follow_command(pos, quat, leader, 2.5, FollowGains(), leader_vel_w=vel)
+  assert no_ff[0, 0] == pytest.approx(0.0, abs=1e-6)
+  assert float(with_ff[0, 0]) == pytest.approx(0.7, abs=1e-3)

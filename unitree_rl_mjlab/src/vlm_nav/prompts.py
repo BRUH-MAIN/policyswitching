@@ -184,3 +184,38 @@ def iou(a: list[float], b: list[float]) -> float:
   inter = ix * iy
   union = (a[2] - a[0]) * (a[3] - a[1]) + (b[2] - b[0]) * (b[3] - b[1]) - inter
   return inter / union if union > 0 else 0.0
+
+
+def follow_target(task: str, classes: tuple[str, ...]) -> str:
+  """Ask the planner which detector class accomplishes the task.
+
+  This is the VLM's whole job in the two-rate design: turn a task stated in
+  language into a class name the fast detector can track every control step.
+  """
+  opts = ", ".join(f"'{c}'" for c in classes)
+  return (
+    "You are a robot dog looking through your forward camera. "
+    f"Your task is: {task}. "
+    "Answer which single kind of object in view you must keep track of to do this. "
+    f"Choose exactly one of: {opts}. "
+    'Answer as JSON: {"target": ...}'
+  )
+
+
+def follow_target_schema(classes: tuple[str, ...]) -> dict:
+  return {
+    "type": "object",
+    "properties": {"target": {"type": "string", "enum": list(classes)}},
+    "required": ["target"],
+  }
+
+
+def parse_target(text: str, classes: tuple[str, ...]) -> str | None:
+  from src.vlm_nav.vlm_backend import parse_json  # noqa: PLC0415
+
+  p = parse_json(text)
+  if isinstance(p, dict):
+    v = str(p.get("target", "")).strip().lower()
+    if v in {c.lower() for c in classes}:
+      return v
+  return None

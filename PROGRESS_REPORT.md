@@ -1,271 +1,204 @@
 # Handoff / Progress Report
 
-**As of**: 2026-09-20 · **Repo state**: branch `vlm-pipeline`, 20 commits ahead of `main`
-(`main` is at `5404d89`), working tree clean, **not pushed, not merged**. This branch lives
-in its own linked worktree at `.claude/worktrees/vlm-pipeline` (the shared checkout at the
-repo root stays on `main` — see "Two-machine coordination" in `CLAUDE.md` and the
-multi-session house rules memory for why). **If you're reading this from the `main`
-checkout, `cd` into the worktree (or `git worktree add`/`git switch vlm-pipeline` a copy)
-before doing anything else** — none of the code, results or history below exist on `main`.
-**Written for**: starting a fresh session (human or Claude) with no memory of how this
-state was reached.
+**As of**: 2026-09-22 · **Repo state**: branch `vlm-pipeline`, 20 commits ahead of `origin/main`,
+**plus a large uncommitted working tree** (see §0.1 — this is the first thing to deal with).
+This branch lives in its own linked worktree at `.claude/worktrees/vlm-pipeline`; the shared
+checkout at the repo root stays on `main`. **If you are reading this from the `main` checkout,
+`cd` into the worktree first** — none of the code or results below exist on `main`.
+**Written for**: a fresh session (human or Claude) with no memory of how this state was reached.
 
 ---
 
 ## 0. How to resume
 
-1. Confirm you're on `vlm-pipeline` (`git branch --show-current`), not `main`.
-2. Read `README.md` → `objective.md` → `findings.md` (in that order, per `CLAUDE.md`), then
-   this file. `findings.md`'s "VLM navigation pipeline" section (search for that heading) is
-   the condensed version of everything below; this file has the operational detail and the
-   actual next steps.
-3. `git pull --rebase` before doing anything — another session may have moved things. This
-   branch isn't pushed yet, so a plain `git pull` on `main` won't show any of this; you need
-   to already be on `vlm-pipeline` locally.
-4. Check what's actually running before assuming anything is queued (§5 below) — **this
-   laptop has rebooted unexpectedly several times during this work**, silently killing every
-   background job each time.
-5. Then go to §2 ("what needs a decision") — that's the actionable part.
+1. Confirm you are on `vlm-pipeline` (`git branch --show-current`), not `main`.
+2. Read `README.md` → `objective.md` → `findings.md` (per `CLAUDE.md`), then this file.
+   `findings.md` now has four sections for this branch; the last three are from 2026-09-21/22
+   and are the current work.
+3. Check what is actually running before assuming anything (§5). **This laptop has rebooted
+   unexpectedly several times during this project**, silently killing background jobs.
+4. Then go to §2 — that is the actionable part.
+
+### 0.1 Nothing from 2026-09-21/22 is committed
+
+`git status` shows ~17 modified/untracked paths. The work is real and tested but exists only
+in this working tree, on one laptop that reboots without warning. **Committing this is the
+highest-value, lowest-effort action available.** What is uncommitted:
+
+- **New modules**: `src/vlm_nav/leader.py`, `detector.py`, `overlay.py`
+- **New scripts**: `scripts/vlm_nav_follow.py`, `vlm_nav_make_detector_dataset.py`,
+  `vlm_nav_train_detector.py`
+- **Modified**: `controllers.py` (follow law), `perception.py` (bearing→world estimator),
+  `camera.py` (`project_body`, `world_to_body`), `course.py` (`goal_marker` flag),
+  `twin_env.py` (`leader=`), `prompts.py` (planner target prompt), `scripts/vlm_nav_run.py`
+  (video overlay), `tests/test_vlm_nav.py` (20 tests, all passing), `findings.md`
+- **Do NOT commit**: `unitree_rl_mjlab/yolo11n.pt`, `unitree_rl_mjlab/weights/` — model
+  weights, per `CLAUDE.md`'s rule. Add them to `.gitignore` instead.
 
 ## 1. What this is
 
-`objective.md`'s person-following 2×2 (terrain specialists + anticipatory switching) is a
-separate, still-open line of work — untouched by this branch. This branch is a **user-directed
-pivot** (2026-09-16/17): build SARO's system (arXiv:2407.16412 — a VLM plans, perceives, and
-double-checks sub-tasks in a closed loop to cross one terrain obstacle) in this project's
-simulator, modified so the VLM also **chooses which of the three trained specialists
-(flat/rough/stairs) runs** for each sub-task, and evaluate it against SARO's own objective
-(goal-tracking across one intermediation), not `objective.md`'s.
+Two lines of work share this branch:
 
-VLM: local Gemma-4-E4B-it (Q4_K_M + F16 vision projector) served by llama.cpp
-(`scripts/vlm_server.sh`) on this laptop's RTX 5060. Code: `unitree_rl_mjlab/src/vlm_nav/`
-(camera, courses, controllers, executor, perception, prompts, VLM client, oracle-VLM
-stand-in, policy bank). Scripts: `unitree_rl_mjlab/scripts/vlm_nav_*.py` (smoke test, frame
-rendering, no-VLM baseline, offline perception eval, edge-accuracy eval, closed-loop runner,
-result aggregation). Tests: `unitree_rl_mjlab/tests/test_vlm_nav.py`, 14 passing, pure logic
-only (no simulator/VLM server needed to run them).
+- **SARO replication + VLM specialist selection** (the 2026-09-16 pivot): build SARO's system
+  (arXiv:2407.16412 — a VLM plans, perceives and double-checks sub-tasks to cross one terrain
+  obstacle) in this simulator, modified so the VLM also picks which of the three trained
+  specialists runs.
+- **Person-following** (2026-09-21, new): `objective.md`'s original setting — a scripted
+  leader the robot follows at a standoff — reduced to its locomotion core, plus a two-rate
+  perception architecture (fast detector + slow planner) that came out of it.
 
 ## 2. What needs a decision from you — in priority order
 
-**#1 is the critical path.** Nothing else on this list can produce the actual result
-(anticipatory/reactive switching beating a fixed policy) until it's resolved, because it's
-what blocks the only course design that can test that claim at all (§3.3).
-
-1. **The stairs specialist isn't reliable enough to build a switching demo around, at any
-   tested difficulty.** With a *perfect* (ground-truth) policy chooser, up/down stairs
-   succeed only 75–78% at the gentlest risers tested (0.05 m) and 0–34% at 0.07–0.09 m —
-   confirmed not to be a switching-transient artifact (§3.1). Options, roughly cheapest
-   first:
-   - **Adopt SARO's fall definition** (orientation-only tipping, not knee/calf contact —
-     Appendix B.3). Single-seed exploratory data says this alone fixes descending 0.05–0.07 m
-     stairs (32/32 for every specialist) but does **not** fix climbing (stalls at the top,
-     not falls — timeouts, unaffected by the fall definition). Needs re-confirming on fresh
-     seeds either way; changing the outcome definition after seeing data must be labelled as
-     such.
-   - **Retrain the stairs specialist** on linear stairs at 0.05–0.10 m risers. Needs the
-     cluster — check `coordination/status/cluster.json` for whether the drained-nodes issue
-     from 2026-09-10 has cleared; it hadn't as of the last check before this branch started.
-   - **Design a multi-obstacle course out of terrain the current specialists already handle**
-     (flat + rough only, no stairs). Not a free win: with only flat/rough, one specialist
-     (rough) already wins everywhere on *success*, so this needs a different metric where
-     the tradeoff actually exists — e.g. time-to-goal, if the rough specialist turns out to
-     be slower than flat on long clean stretches. **Not yet measured** whether that tradeoff
-     exists at all; this is the first thing to check if you want to route around stairs
-     entirely. See `coordination/results/vlm-nav-phase1-confirmation-rough.md` §"Reading it"
-     for the reasoning.
-   - **Drop stairs, accept no switching-value demonstration for now**, and report the
-     pipeline + perception findings as the deliverable.
-2. **What counts as a fall** (same knob as #1's first option, called out separately because
-   it also affects how every existing stairs number should be read, independent of which
-   path #1 takes): training terminations (`illegal_contact`, any non-foot contact > 10 N) vs.
-   SARO's orientation-only definition.
-3. **Stairs perception**: Gemma-4-E4B cannot see the simulated stairs regardless of what the
-   specialist can do (§3.2) — it describes a staircase as "a flat, gridded floor" and never
-   once answered "stairs" to the policy-selector question across 32 labelled frames. This is
-   independent of #1: even a perfect stairs specialist is useless if the VLM never engages
-   it. Options, not mutually exclusive:
-   - A larger local VLM. Gemma-4-12B's weights and vision projector are already on the model
-     drive (`gemma-4-12B-it-qat-UD-Q4_K_XL.gguf`) but **untested** — likely won't fit in 8 GB
-     VRAM alongside the simulator; would need to check whether it fits at all, or run
-     sim and VLM at different times.
-   - A hosted API (Claude, GPT-4V, etc.) — sends rendered frames off the laptop, costs money
-     per call, easy to wire in (the `VLM` protocol in `vlm_backend.py` is backend-agnostic).
-   - Feed the VLM a **text description of the depth-derived geometry** instead of relying on
-     it to read the RGB image — `depth_edge_estimate` (§3.2) already extracts an accurate
-     step profile; describing that in the prompt sidesteps the vision problem entirely but
-     is a bigger design change (no longer "the VLM decides from what it sees").
-   - Make the rendered stairs **more visually realistic / higher-contrast** (real stairs have
-     shadow lines, edge highlights, wear patterns that this project's flat-shaded mjlab
-     geometry doesn't reproduce). Untested whether this would actually move the needle —
-     worth a quick experiment (render a few frames with stronger directional lighting and
-     re-run the description probe from Phase 2, `logs/vlm_nav/box_probe/`) before investing
-     in a full re-render pipeline.
-4. **How the VLM is told what each specialist is for**: by terrain label (current default —
-   "the stairs policy is for stairs") or by measured competence (plumbed but off by default,
-   `ExecutorConfig.policy_cards` / `prompts.POLICY_DESCRIPTIONS`). Matters because §3.1 found
-   the label-implied specialist isn't always the best one on its own terrain (rough beats
-   stairs at 0.05 m risers).
-5. **LiDAR** (you asked 2026-09-19; not yet built). The robot has a Livox on the back and one
-   on the front; mjlab's raycast sensor (already used for the specialists' height scan) can
-   represent both with new ray patterns — cheap to add, no new infrastructure. It would fix
-   perception cleanly (geometry instead of appearance — no blind zone, several metres of
-   range instead of the camera's ~0.86 m ground blind zone and the height-scan's ~0.8 m
-   range, immune to the rendering/shading problems in §3.2) but **does not touch #1** — a
-   robot that sees the stairs perfectly still has a stairs specialist that can't reliably
-   climb them. Three roles were proposed, still open:
-   1. LiDAR as the geometry front end (replaces the depth-camera edge-finder), VLM still
-      decides what/which-policy from a rendered height-map image or a text summary.
-   2. Camera + LiDAR fusion (camera for appearance, LiDAR for geometry) — most faithful to
-      the real hardware, most implementation work.
-   3. LiDAR-only reactive switcher, no VLM at all — this is closer to `objective.md`'s
-      original design with a much longer-range sensor than the height scan, and doesn't
-      need SARO's language-reasoning layer.
-   Say which (if any) to build, or hold this until #1–#3 are resolved, since none of them
-   change what LiDAR would need to do.
+1. **Commit and push this branch** (§0.1). Everything below is at risk until then.
+2. **A 4B local VLM is not sufficient for SARO's perception step on this renderer**, and that
+   is now measured at the paper's own protocol (§3.3), not inferred. The options are unchanged
+   and still undecided:
+   - a larger local VLM (Gemma-4-12B weights are already on the model drive, untested, likely
+     will not fit in 8 GB beside the simulator),
+   - a hosted API (sends frames off the laptop, costs money, `VLM` protocol is backend-agnostic
+     so it is easy to wire),
+   - **feed the VLM depth-derived geometry as text** instead of asking it to read the image —
+     the depth estimator already locates edges to 0–8 cm, so this sidesteps the failure
+     entirely, at the cost of "the VLM decides from what it sees",
+   - make the rendered terrain more visually realistic (untested whether it moves the needle).
+3. **The stairs specialist is still the blocker for the switching claim.** Unchanged from the
+   previous report: 75–78% with a *perfect* chooser at the gentlest risers. Retraining needs
+   the cluster. `coordination/status/cluster.json` was last updated 2026-09-12 and said all
+   GPU nodes were drained since 2026-09-10; a request to the cluster session for current
+   status went unanswered on 2026-09-20 (the message could not be delivered).
+4. **Where to take person-following next.** The most valuable idea on the table is
+   *anticipatory terrain switching while following*: the leader walks flat → rough → flat, the
+   robot follows at a gap larger than its 0.8 m height-scan horizon, so the person is literally
+   a preview of terrain the robot has not reached. That is `objective.md`'s thesis and every
+   part now exists. **Prerequisite, not yet measured**: is there any cost to running the rough
+   specialist on flat ground? If rough is as good everywhere, flat↔rough switching has nothing
+   to show and this needs stairs (blocked by #3).
 
 ## 3. What's done and what it found
 
-### 3.1 Phase 1 — does the specialist choice matter? (no VLM; ground-truth "chooser" only)
+### 3.1 Person-following (2026-09-21)
 
-Pre-registered *before* any data existed
-(`coordination/results/vlm-nav-phase1-preregistration.md`, committed `acb76c0`) — calibrate
-course difficulty, then confirm on fresh seeds, with pass/fail criteria written down first.
+`scripts/vlm_nav_follow.py`. A scripted kinematic leader (`src/vlm_nav/leader.py`) walks a flat
+course at a speed that changes occasionally, including a full stop; the robot holds a standoff.
 
-- **Calibration failed the pre-registered 80%-success bar on stairs at every difficulty
-  tested** (`coordination/results/vlm-nav-phase1-calibration.md`): oracle (perfect
-  ground-truth policy choice every step) gets 75–78% on 0.05 m risers, 0–34% at 0.07–0.09 m.
-  Rough ground is 100% up to 0.08 m bump noise. Every stairs failure is a training-rule
-  `illegal_contact` (knee/calf touched a step), never `fell_over`.
-  - **Confirmed the failures aren't a switching artifact**: running the stairs specialist for
-    the *entire* approach (never switching away from it) does as badly or worse than
-    switching at the terrain boundary; switching earlier (1 m before the edge) doesn't help
-    either. The failure is in the stairs specialist's locomotion on this geometry, full stop.
-  - **Exploratory, single-seed** (not yet reconfirmed): the specialist *named* after a
-    terrain isn't always the best one on it, and which one wins flips with step height — at
-    0.05 m risers the **rough** specialist crosses up-stairs more reliably than the stairs
-    specialist (97–100% vs. 81–84%); at 0.07 m it reverses (34% vs. 9%). Under SARO's
-    orientation-only fall definition, essentially every specialist descends 0.05–0.07 m
-    stairs without falling (stalls/timeouts at the top are unaffected, since those are
-    timeouts, not falls).
-- **Confirmation ran only on `rough`** (stairs stayed blocked by the calibration failure) —
-  pre-registered Gate A/B, 192 trials/arm, fresh seeds 200/201, 3 goal offsets
-  (`coordination/results/vlm-nav-phase1-confirmation-rough.md`):
-  - **Gate A passes** (course is crossable: oracle 97.4%, CI 94.0–98.9).
-  - **Gate B fails**: always running the rough specialist (98.4%, CI 95.5–99.5) matches
-    perfect oracle switching (97.4%) — CIs overlap, gap is −1.0 points. **A course with one
-    obstacle type cannot demonstrate switching value even with a perfect chooser.** The wrong
-    fixed choice is expensive (flat 72.9%, stairs 52.6%), but *one* good fixed choice, made
-    once, is exactly as good as switching. This is the reasoning behind decision #1's
-    "different metric" option above.
+- **Ground-truth leader, 2.5 m gap: 0.159 m RMS gap error / 0.256 m max**, no falls, over 42 s
+  and 7 speed changes.
+- The leader is a fixed-base mjlab entity (auto-wrapped as a mocap body), **non-colliding and
+  in the camera-only geom group**, so it cannot perturb the specialists' 187-dim `height_scan`.
+  Same trick the goal flag uses. This is load-bearing, not cosmetic.
+- **Two control defects the varying speed exposed**, both invisible to a constant-speed leader:
+  proportional droop against a moving set-point (fixed with line-of-sight velocity
+  feed-forward), and `FollowGains.v_max` being *below* the leader's top speed so the robot
+  could not close a gap once opened. Both have regression tests.
 
-### 3.2 Phase 2 — can Gemma-4-E4B perceive the obstacle? (offline, 720 labelled frames, no robot)
+### 3.2 Two-rate perception: YOLO tracker + VLM planner (2026-09-21)
 
-`coordination/results/vlm-nav-phase2-perception.md`.
+Putting the VLM *inside* the control loop is why the robot lost the person: ~2 s/call and only
+11 of 84 calls produced a usable position. The fix is structural — split *what* from *where*.
 
-- **Gemma does not see the stairs.** With neutral task instructions (no longer naming the
-  obstacle — an earlier pilot's 8/8 planning score turned out to be reading the answer off
-  the instruction text, not the image), it plans "no obstacle" on every stairs start frame
-  (0/4), the policy-selector question never once answers "stairs" (0/32, always "flat"), and
-  asked to freely describe a frame with a staircase ahead it says "a flat, gridded floor".
-  Rough ground fares better but is still weak (selector recall 42%). Not fully disentangled
-  whether this is the model or the render (0.05 m risers under a low camera do look subtle —
-  a probe at 0.09 m risers still got "flat floor" in free text, though the selector did
-  answer "stairs" 2/3 times there).
-- **Localization (where is the obstacle) with SARO's own prompt format doesn't work at all**:
-  a constant full-frame guess scores a higher IoU (0.43) than the model's actual answers
-  (0.21, almost entirely `[0,0,0,0]` or the whole frame). A detection-style prompt at 560
-  image tokens (needs `-ub ≥ 560` in llama.cpp — the vision tokens attend bidirectionally and
-  the server otherwise aborts on the first image) helps a little (IoU 0.40) but is still
-  unreliable, and live-tested edge errors were 0.4–0.75 m off, versus **0–8 cm** for a
-  from-scratch depth-geometry estimator that never asks the VLM anything (`perception.py:
-  depth_edge_estimate`). **Depth geometry is now the executor's default "where" source**; the
-  VLM's box stays available as an ablation (`--where-source vlm_box`). The VLM still decides
-  *what* the terrain is and *which* specialist to run — only the geometry localization moved
-  off it.
-- **The discriminator double-check ("Is there any stairs?") is 44% accurate** — not usable as
-  SARO's confirmation gate; the executor treats it as advisory, not authoritative.
+| arm | gap error (true) | wall/sim |
+|---|---|---|
+| VLM inside the control loop | 5.88 m | 10.4× slower than realtime |
+| YOLO only | 0.488 m | 0.98× |
+| **VLM planner + YOLO tracker** | **0.495 m** | **1.05×** |
 
-### 3.3 Closed loop — does it work end to end, and does the VLM's choice show up in outcomes?
+- `src/vlm_nav/detector.py` is the seam (`Detector` protocol + `YoloDetector`). The VLM names
+  the target class in language once (blocking, 0.7 s, before the robot moves) and re-confirms
+  **asynchronously** every 5 s; YOLO localizes every control step at **3.95 ms**. 9/9 planner
+  answers correct, 87.5% detector hit rate.
+- **Stock COCO YOLO cannot see this project's leader** — reads the capsule legs as "baseball
+  bat" (0.79 conf), the head sphere as "sports ball", and finds nothing at 6 m. Camera pitch is
+  not the cause (re-tested at 0° and 8°). This is an appearance gap specific to flat-shaded
+  mjlab geoms and **does not carry to hardware**, where a real person is COCO's home ground.
+- **Fine-tuning fixes it and labels are free**: the leader's pose is ours and its geom extents
+  fixed, so the exact 2D box is the projection of its 3D box (`CameraSpec.project_body`,
+  round-trip verified to 6e-14 px). 1000 auto-labelled frames → YOLO11n, 40 epochs:
+  **P 1.000, R 0.942, mAP50 0.951, mAP50-95 0.892**.
+- ⚠️ **The fine-tuned weights are gitignored** (they live under a `logs/` path, which
+  `unitree_rl_mjlab/.gitignore` excludes). Current location:
+  `unitree_rl_mjlab/runs/detect/logs/vlm_nav/detector/leader/weights/best.pt`. A fresh clone
+  will not have them — regenerate with the two scripts (~20 min total) or copy the file.
 
-`coordination/results/vlm-nav-closed-loop-smoke.md`.
+### 3.3 SARO task replication, paper protocol (2026-09-22)
 
-- **The pipeline runs end to end with a real VLM in the loop.** Executor fed a ground-truth
-  stand-in "VLM" (`oracle_vlm.py`) gets 4/4 on rough with switches landing within ~5 cm of
-  the ideal point (this required fixing a real bug first: the camera's ground blind zone
-  froze the near-edge estimate and the robot walked onto rough ground still on the flat
-  policy — fixed by `perception.EdgeTracker`, which only trusts a near-edge sighting taken
-  from beyond the blind zone).
-- **Real Gemma: 2/2 on rough** (planned "rough ground", switched to the rough specialist at
-  the edge) but **0/2 on 0.05 m up-stairs** (planned "no obstacle", stuck at the first step —
-  the §3.2 finding showing up as a behavioural failure, not just a perception-eval number).
-- **4-arm comparison on rough, 16 trials/arm, real Gemma**: VLM-nav+VLM-policy 100%,
-  VLM-nav+oracle-policy 94%, VLM-nav+one-fixed-specialist 94%, ground-truth-both 100%. **All
-  four indistinguishable** — exactly the ceiling effect §3.1's confirmation predicted for a
-  single-obstacle course. Looking underneath the outcome: the VLM's actual decisions were
-  mixed (planned "stairs" 3 times across these runs, on a course with no stairs at all; the
-  policy selector split ~50/50 rough vs. flat) even though the trials still succeeded,
-  because on this course either specialist usually gets across. **The 100% is not evidence
-  the VLM chooses well — this course can't tell a good chooser from a mediocre one apart.**
+SARO's own task (§III.A): goal-tracking across `{P1 → I → P2}`, **20 trials per
+intermediation**, goals off-axis, full closed loop. `logs/vlm_nav/saro_protocol/`.
 
-## 4. Gotchas — read before trusting a new run or number
+| intermediation | VLM Overall | VLM Across | ground-truth ceiling | planner's answer |
+|---|---|---|---|---|
+| stairs_up | **0%** | 0% | 75% | `none` 20/20 |
+| stairs_down | **45%** | 45% | 95% | `none` 20/20 |
+| rough | **100%** | 100% | 100% | `none` 17, `rough ground` 17, `stairs` 1 |
 
-Full mechanisms in `findings.md` ("Bugs found and fixed", #18–#21 are this branch's). The
-ones most likely to bite immediately, beyond the pre-existing repo-wide list (`CLAUDE.md`,
-`findings.md` #1/#10/#11/#15):
+SARO's Table I (real robot, LLaVA-34B): stair 60/70/88, ramp 25/50/67, gap 45/80/94, door 30/50/63.
 
-- **The VLM model files live on an NTFS partition (`/dev/nvme0n1p4`, "New Volume") that
-  unmounts on every reboot and Windows sometimes leaves flagged dirty**, refusing a
-  read-write mount. Mount it read-only before starting the VLM server:
-  `udisksctl mount -b /dev/nvme0n1p4 -o ro`. `scripts/vlm_server.sh` now does this itself and
-  fails loudly (rather than hanging forever) if the server can't come up — but any of the
-  ad-hoc `logs/vlm_nav/*/run.sh` driver scripts written during this work that predate that
-  fix may not; check `curl -s localhost:8091/health` rather than trusting a "queued" job.
-- **This laptop rebooted unexpectedly several times during this work**, silently killing
-  every background job (training runs, the VLM server, monitors) each time with no crash log
-  — `journalctl` showed clean `systemd-poweroff` sequences, not crashes. Cause not
-  identified. Before assuming any run from a previous session is still going: check
-  `pgrep -af "llama-server|vlm_nav_"` and `nvidia-smi`, not just a log file's last line.
-- **mujoco_warp camera depth is distance along each pixel's *ray*, not optical-axis
-  z-depth** — SARO's own deprojection formula (Fig. 8) assumes the latter (RealSense
-  convention) and is wrong here by up to ~10% off-centre. `camera.py:CameraSpec.deproject_body`
-  handles this; a round-trip unit test pins it. Don't re-derive this by hand elsewhere.
-- **mujoco_warp shading has no light-intensity term** (each light adds
-  `base_colour · cos(incidence)`, unboundedly) and **only textures planes/meshes, not
-  boxes/heightfields** — a naive multi-light or textured-box setup saturates to white or
-  renders flat. `course.py`'s two-low-oblique-lights-on-a-dark-base-colour setup and the
-  grout-line tiling (geoms, not textures) work around both; don't add a third light or a box
-  texture without re-checking against a rendered frame.
-- **Gemma-4-E4B under a yes/no JSON schema returns empty content** (spends the whole token
-  budget in hidden reasoning). Discriminator questions must be free text
-  (`prompts.parse_yes_no`); the policy-selector JSON schema is fine.
-- **`ExecutorConfig.where_source` defaults to `"depth"`**, not the VLM's box — see §3.2. If
-  you're specifically trying to test SARO's own perception path, pass `--where-source
-  vlm_box` explicitly; the default will silently use depth geometry instead.
+- **The failure is perception and it is upstream of everything.** On both stairs courses the
+  planner answered `intermediation: none` on **40/40** trials — it never emits a `climb`
+  sub-task because it never concedes there is anything to climb. The ground-truth arm crosses
+  the same courses at 75%/95%, so the terrain is crossable and the locomotion works.
+- **The rough 100% is NOT evidence of perception.** The planner still said `none` half the time
+  there and the selector chose the *flat* policy on 267/391 calls — on rough ground — yet every
+  trial passed, because every specialist survives rough. Same ceiling effect as gate B. Do not
+  cite that column as validation.
+- **Deviations from the paper, all forced**: intermediations are stairs_up/stairs_down/rough
+  (no ramp or door segment exists here); low-level policies are the three specialists, not PAS
+  (the PAS replication is degenerate, bug #14, and its estimator-only actor has a different
+  observation width so it cannot enter the policy bank); VLM is Gemma-4-E4B on one 8 GB laptop
+  GPU, not LLaVA-34B on an 8×3090 server; pose is ground truth. **Because localization is
+  perfect here, compare against SARO's `Stable Loc` column, not its `Overall`.**
+
+### 3.4 Still true from before this branch
+
+Three specialists trained (flat/rough/stairs, 10k iters). Gate 1 (specialization matters)
+passes robustly. Gate B fails: on a single-obstacle course one good fixed choice matches
+perfect switching. Gemma cannot see the simulated stairs (Phase 2, 0/32) — now reconfirmed in
+closed loop at 40/40.
+
+## 4. Gotchas — read before trusting a new run
+
+Full list in `findings.md` ("Bugs found and fixed"). Beyond the repo-wide ones in `CLAUDE.md`:
+
+- **A follower's self-reported range cannot validate a follower.** The first VLM follow run
+  scored a near-perfect 0.15 m gap error while the person walked away to 16.5 m — the robot had
+  locked onto the **goal flag** and parked 6 m from it. The metric was computed from the very
+  estimate under test. Only an independently logged ground-truth range exposed it. Fixed via
+  `CourseSpec.goal_marker=False` for follow courses, but the lesson generalises: any real scene
+  has other vertical objects.
+- **The camera cannot see a person at close follow range.** Pitched 15° down with a 42.5°
+  vertical FOV it sees ~6.25° above horizontal, so at 1.5–2.5 m only the leader's legs are in
+  frame. Camera-driven following on this rig needs ~6 m standoff, or a re-aimed camera.
+- **The VLM's horizontal localization is far better than its boxes** — 0.08° bearing error at
+  6 m while the vertical extent was flatly wrong. Use the column, recover range from depth.
+- **GPU contention is real on this 8 GB card.** Running the llama.cpp server and the simulator
+  together has OOM'd the server mid-run (`ErrorOutOfDeviceMemory`). Use `CTX=4096 PARALLEL=1
+  UBATCH=576`, or render frames first and query the VLM after. A Jupyter kernel unrelated to
+  this project has also held ~5.6 GB — check `nvidia-smi --query-compute-apps` before blaming
+  your own job, and do not kill processes you did not start.
+- **The VLM model drive is NTFS and unmounts on reboot**: `udisksctl mount -b /dev/nvme0n1p4 -o ro`.
+- **An instruction that names the answer contaminates the planner.** The follow task string is
+  "follow the person ahead of you", so the planner choosing `person` demonstrates language→class
+  mapping, not visual grounding. Phase 2 was bitten by the same thing.
+- **`pgrep -f <pattern>` matches your own shell** when the pattern appears in your command line.
+  Several "still running" readings this session were false positives. Use `pgrep -x`.
 
 ## 5. Operational state right now
 
-- VLM server: **stopped** (intentionally, to free the GPU between sessions). Restart with
-  `scripts/vlm_server.sh` (reads `IMAGE_MAX_TOKENS`, `PARALLEL`, `CTX` from the environment;
-  560 image tokens is what Phase 2's better numbers used).
-- GPU: free (checked via `nvidia-smi`, ~14 MiB used) as of the last session.
-- No background jobs running or queued.
-- Other Claude sessions may be using this same laptop/GPU concurrently — see
-  `coordination_multisession_house_rules` memory; announce before launching a GPU job.
-- This worktree's `.claude/worktrees/vlm-pipeline` path is excluded via `.git/info/exclude`
-  in the main checkout (not the shared `.gitignore`) so `git status` on `main` doesn't show
-  it as untracked — that's local-only config, won't follow a fresh clone.
+- VLM server: **stopped**. Restart with `scripts/vlm_server.sh` (mount the drive first).
+- GPU: free. No background jobs, no queued runs.
+- Tests: **20/20 passing** (`PYTHONPATH=$PWD python3 -m pytest tests/test_vlm_nav.py -q`).
+- `ultralytics` was installed into the `unitree_rl_mjlab` conda env on 2026-09-21. A dry-run
+  confirmed it added packages only — torch/torchvision/numpy were untouched.
+- Videos: nine, in `/home/rohan/policyswitching_videos/` (outside the repo, not committed).
+- Other Claude sessions may share this laptop/GPU — announce before launching a GPU job.
 
 ## 6. File map
 
 | Want to know... | Read |
 |---|---|
-| The condensed version of everything in §3 | `findings.md`, heading "VLM navigation pipeline" |
-| Exact pre-registered pass/fail criteria, written before any data existed | `coordination/results/vlm-nav-phase1-preregistration.md` |
-| Full stairs-calibration numbers, diagnostics, decision options | `coordination/results/vlm-nav-phase1-calibration.md` |
-| Full rough-course confirmation numbers and gate math | `coordination/results/vlm-nav-phase1-confirmation-rough.md` |
-| Full perception numbers (planning/localization/discriminator/selector) | `coordination/results/vlm-nav-phase2-perception.md` |
-| Closed-loop smoke-test and 4-arm comparison detail | `coordination/results/vlm-nav-closed-loop-smoke.md` |
-| The pipeline code itself | `unitree_rl_mjlab/src/vlm_nav/` (one module per concern — camera, course, controllers, executor, perception, prompts, vlm_backend, oracle_vlm, policy_bank, twin_env) |
-| How to run anything (baseline, closed loop, perception eval, aggregation) | `--help` on the matching `unitree_rl_mjlab/scripts/vlm_nav_*.py`; each has a usage example in its module docstring |
-| Unit tests (pure logic, no sim/VLM needed) | `unitree_rl_mjlab/tests/test_vlm_nav.py` |
-| The pre-pivot specialist/gate-1/gate-2 project state (still valid, untouched by this branch) | `main`'s `PROGRESS_REPORT.md` (as of `5404d89`) |
+| Condensed version of §3 | `findings.md`, the four `vlm-pipeline` sections |
+| SARO protocol numbers + transcripts | `logs/vlm_nav/saro_protocol/` |
+| Person-following runs | `logs/vlm_nav/follow_*`, `trace.json` per run |
+| How to run anything | `--help` on `scripts/vlm_nav_*.py`; each has a usage example in its docstring |
+| The pipeline code | `src/vlm_nav/` (camera, course, controllers, detector, executor, leader, overlay, perception, prompts, vlm_backend, oracle_vlm, policy_bank, twin_env) |
+| Unit tests (no sim/VLM needed) | `tests/test_vlm_nav.py` |
+| Pre-pivot state (specialists, gate 1/2) | `main`'s `PROGRESS_REPORT.md` |

@@ -47,6 +47,7 @@ from src.vlm_nav.camera import CameraSpec  # noqa: E402
 from src.vlm_nav.course import saro_courses  # noqa: E402
 from src.vlm_nav.executor import ExecutorConfig, SaroAgent  # noqa: E402
 from src.vlm_nav.oracle_vlm import OracleVLM  # noqa: E402
+from src.vlm_nav.overlay import annotate_saro  # noqa: E402
 from src.vlm_nav.policy_bank import PolicyBank, default_checkpoints  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, CAMERA_SENSOR_NAME, make_twin_env_cfg, set_velocity_command  # noqa: E402
 from src.vlm_nav.vlm_backend import OpenAICompatVLM, health  # noqa: E402
@@ -96,6 +97,9 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
   cam = u.scene[CAMERA_SENSOR_NAME]
   tm = u.termination_manager
   frames = []
+  pol0 = None
+  seen_events = 0
+  banner: list = []
   pool = ThreadPoolExecutor(max(1, args.vlm_workers))
   wall0 = time.time()
   max_steps = int(args.time_limit / dt)
@@ -117,6 +121,8 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
       if not active[i]:
         continue
       cmd, pol = agents[i].control(step, pos[i], quat[i])
+      if i == 0:
+        pol0 = pol
       cmds[i] = cmd
       pidx[i] = bank.names.index(pol)
       x_course = course.world_to_course_x(float(pos[i, 0]))
@@ -127,7 +133,24 @@ def run_arm(env, bank, course, camera, arm: str, args, out: Path, device: str) -
         outcome[i], t_end[i], active[i] = "success", step * dt, False
     set_velocity_command(env, cmds)
     if args.video and active[0] and step % 2 == 0:
-      frames.append(cam.data.rgb[0].cpu().numpy())
+      a0 = agents[0]
+      # New agent-0 events become a short banner (plan made, switch, subtask done).
+      for ev in a0.events[seen_events:]:
+        det = ev.detail or {}
+        if ev.kind == "plan":
+          banner.append((ev.step * dt, f"VLM plan: intermediation = {det.get('intermediation')}"))
+        elif ev.kind == "switch":
+          banner.append((ev.step * dt, f"switch -> {det.get('to', det)}"))
+        elif ev.kind == "subtask_done":
+          banner.append((ev.step * dt, f"subtask done: {det.get('reason')}"))
+      seen_events = len(a0.events)
+      inter = next((e.detail.get("intermediation") for e in a0.events if e.kind == "plan"), None)
+      cur = a0.current
+      frames.append(annotate_saro(
+        cam.data.rgb[0].cpu().numpy(), t=step * dt, intermediation=inter,
+        subtask=(cur.action, cur.ending) if cur else None, policy=pol0,
+        subtask_idx=a0.idx, n_subtasks=len(a0.plan or []), events=banner,
+      ))
     obs, _, dones, extras = env.step(bank.act_per_env(obs, pidx))
     done = dones.bool().cpu().numpy()
     timeouts = extras.get("time_outs", torch.zeros_like(dones)).bool().cpu().numpy()

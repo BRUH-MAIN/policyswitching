@@ -102,6 +102,13 @@ class CourseSpec:
   base_height: float = 0.0
   """Height of the first segment above the surrounding floor (a stairs-down
   course starts on a raised platform)."""
+  goal_marker: bool = True
+  """Render the goal flag. A following task has no goal, and the flag is the only
+  other object standing above a flat floor -- a depth estimator looking for "the
+  thing in front of me that isn't ground" latches onto it once the person is out of
+  detection range, then holds station off the flag while the person walks away
+  (measured: robot parked 6.15 m from the flag reporting a 0.15 m gap error while
+  the person receded to 16.5 m)."""
 
   @property
   def length(self) -> float:
@@ -163,7 +170,7 @@ class CourseSpec:
       num_cols=1,
       curriculum=True,
       color_scheme="height",  # applies the per-geom colours set below
-      sub_terrains={"course": CourseTerrainCfg(course=self)},
+      sub_terrains={"course": CourseTerrainCfg(course=self, goal_marker=self.goal_marker)},
       difficulty_range=(1.0, 1.0),
       add_lights=False,
     )

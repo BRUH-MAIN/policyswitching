@@ -86,6 +86,27 @@ class CameraSpec:
     return p_cam @ self.rotation_body_from_cam.T + np.asarray(self.pos)
 
 
+  def project_body(self, points_body: np.ndarray) -> np.ndarray:
+    """Base_link-frame points -> pixel (u, v). Exact inverse of `deproject_body`'s
+    ray model. Points at or behind the image plane come back as NaN."""
+    p = np.atleast_2d(np.asarray(points_body, dtype=np.float64)) - np.asarray(self.pos)
+    p_cam = p @ self.rotation_body_from_cam
+    z = p_cam[:, 2]
+    out = np.full((p_cam.shape[0], 2), np.nan)
+    front = z < -1e-6  # camera looks along -z
+    f = self.focal_px
+    out[front, 0] = f * p_cam[front, 0] / (-z[front]) + self.width / 2.0 - 0.5
+    out[front, 1] = -f * p_cam[front, 1] / (-z[front]) + self.height / 2.0 - 0.5
+    return out
+
+
+def world_to_body(points_w: np.ndarray, base_pos_w: np.ndarray, base_quat_w: np.ndarray) -> np.ndarray:
+  """Inverse of `body_to_world`."""
+  rot = np.zeros(9)
+  mujoco.mju_quat2Mat(rot, np.asarray(base_quat_w, dtype=np.float64))
+  return (np.atleast_2d(np.asarray(points_w)) - np.asarray(base_pos_w)) @ rot.reshape(3, 3)
+
+
 def _mat_to_quat(mat: np.ndarray) -> np.ndarray:
   quat = np.zeros(4)
   mujoco.mju_mat2Quat(quat, np.ascontiguousarray(mat, dtype=np.float64).reshape(9))

@@ -12,3 +12,8 @@ deploy/robots/r1/build
 deploy/robots/a2/build
 src/assets/motions/g1/dance1_subject2.npz
 simulate/build
+# Detector weights. Ultralytics downloads its base checkpoint into the CWD and
+# writes runs/ output; neither belongs in git (CLAUDE.md: never commit weights).
+yolo11*.pt
+weights/
+runs/
