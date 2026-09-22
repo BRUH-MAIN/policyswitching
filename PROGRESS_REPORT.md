@@ -19,6 +19,14 @@ given — read that file rather than asking to re-derive it.
 > tested) that no course exists yet where switching can be shown to beat a fixed policy —
 > that, not the VLM or its perception, is still the critical path. The rest of this file
 > (§1–3, specialists, gate 1/2) is still accurate and untouched by that branch.
+> **Cluster update, 2026-09-20/22** (`coordination/results/2026-09-20-stairs-step0-cluster-status.md`,
+> `findings.md`): the "drained since 2026-09-10" framing below (§1) is stale — nodes resumed
+> ~09-17, the constraint now is GPU queue wait (all 6 allocated by other users, ~12–19h
+> projected for a fresh submission). Job 11914 (Gaps blended-terrain retrain) **completed**
+> 09-17 — a Gaps specialist checkpoint exists, not yet evaluated. Jobs 11918 (generalist) and
+> 11919 (eval matrix) were **cancelled by root**, never ran, and haven't been resubmitted yet
+> (deferred for GPU priority on a stairs investigation: job 12033 tests whether the stairs
+> specialist's unreliability is specific to pyramid-stairs geometry, queued not yet run).
 > **If you want to draft an IEEE-style report from this project, read
 > `report_content/ieee_report_source.md` on that branch** — it organizes everything (this
 > file, `objective.md`, `findings.md`, and the `coordination/results/` write-ups) into paper
