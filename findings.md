@@ -133,6 +133,25 @@ Actor `height_scan` has `Unoise(±0.1 m)` applied before `scale=1/5` (mjlab's pi
 
 Rough and Stairs sit barely above Flat. Assuming the noise is independent, the terrain-plus-body-motion component is only ~0.005 scaled (~2–3 cm), well below the ~5.8 cm noise std. That is plausible given `ROUGH_TERRAINS_CFG`'s mild geometry (stairs ≤10 cm, rough noise 2–10 cm). This doesn't prove the policies ignore the scan: 187 spatially correlated rays can be pooled. But it's a real risk for the switching design, whose reactive classifier and gating input both assume the scan is informative. **Test**: the height-scan ablation cells in job 11919. If fall rate and error barely move with the scan replaced by a constant, the terrain signal (noise level, difficulty range) needs fixing before Phase 4. It also means any warm start onto stepping stones (gaps drop 2 m → ~17σ on these stats) must reset normalizer statistics, which `warm_start_ckpt.py` does by default.
 
+### Why the specialists are weak: the command curriculum collapses the terrain curriculum at iteration 5000 (2026-10-03)
+
+Found from the per-iteration training logs of jobs 11849 (Stairs) and 11851 (Rough), pulled by the cluster session (`coordination/results/2026-10-03-stairs-training-curve.md`). Both runs show the same thing:
+
+| | terrain level at iter 5000 | peak (iter 5100) | iter 6000 | iter 9999 |
+|---|---|---|---|---|
+| Stairs | 1.92 | 2.63 | 0.79 | 0.97 |
+| Rough | 2.14 | 2.65 | 0.42 | 0.53 |
+
+`velocity_env_cfg.py`'s `command_vel` curriculum has two stages keyed on `common_step_counter`: `lin_vel_x` (-0.5, 1.0) / `lin_vel_y` (-0.5, 0.5) until step 5000 × 24, then (-1.0, 2.0) / (-1.0, 1.0). Step 5000 × 24 is iteration 5000. `terrain_levels_vel` promotes an env that walks more than half a patch (4 m) in an episode and demotes one that walks less than half its commanded distance. The trigger is established by timing (both runs, the same iteration, right at the stage change); the mechanism is inferred, not measured: with commands up to 2 m/s the policy presumably falls or falls short of 4 m far more often on anything but easy rows, so it is demoted. Either way it spends the remaining ~4,700 iterations on rows 0-1 of 10 and never climbs back.
+
+Consequences:
+
+- **The specialists finished training on nearly flat ground.** Terrain row `r` is generated at difficulty ≈ `r/10`, and a stair riser is `0.1 × difficulty`, so level 0.97 is risers of about 1 cm and even the pre-collapse level of ~2 is 2-3 cm. The Stairs specialist has never practised the 5 cm risers it is evaluated on (job 12033: 6.1 falls/100 m at d = 0.5; laptop courses: 75-84% across 1.5 m of 0.05 m stairs). Its weakness is this, not pyramid-vs-straight geometry and not too few iterations.
+- **Mean reward and episode length do not show it.** Both are flat across the collapse, because the curriculum trades terrain difficulty for survival. Nothing in the logged scalars except `terrain_levels` moves, and that was not in the Specialists table above. Same family as bug #10: a curriculum quietly changing what a number means.
+- **A stairs v2 is a config change, not more iterations.** Hold the command range at stage 0 (the follow task never commands above 1.0 m/s) or key the terrain curriculum to a fixed fraction of commanded distance. Not submitted; proposal in `coordination/inbox/to-cluster.md`.
+- **The generalist will train under the same curriculum.** That keeps arm 1 matched to the specialists as designed, and means it should be read as "a generalist with the same handicap", not as the best generalist this simulator can produce.
+- **Gate 1's result stands but its interpretation narrows.** The specialists do differ by terrain (rough best on rough, stairs best on down-stairs), but they are specialists of the first 5,000 iterations of their curricula, then 5,000 iterations of mostly flat-ground fine-tuning at high speed.
+
 ## VLM navigation pipeline: SARO + VLM specialist selection (2026-09-17, laptop, branch `vlm-pipeline`)
 
 User decision, 2026-09-16: build SARO's high-level pipeline (arXiv:2407.16412: VLM planning, perception
