@@ -166,6 +166,25 @@ def compare(arms: dict[str, Arm], a_spec: str, b_spec: str) -> None:
           f"{sum(da) / len(da):.3f} vs {sum(db) / len(db):.3f} -> difference {m:+.3f} (95% CI {mlo:+.3f} to {mhi:+.3f})")
 
 
+def classifier_report(a: Arm) -> None:
+  """Agreement with the footprint rule, and the lead at which the classifier first
+  selected each non-flat segment's class (positive = before the boundary)."""
+  agree = [t["clf_agree"] for t in a.trials]
+  print(f"\n**`{a.spec}`**: agrees with the footprint rule on {100 * sum(agree) / len(agree):.1f}% of steps")
+  n_seg = len(a.trials[0]["clf_leads"])
+  for k in range(n_seg):
+    # Only trials that got as far as the segment say anything about the switch into it.
+    leads = [t["clf_leads"][k] for t in a.trials]
+    got = sorted(v for v in leads if v is not None)
+    if not got:
+      print(f"- segment {k + 1}: never selected")
+      continue
+    q = lambda f: got[min(len(got) - 1, int(f * len(got)))]  # noqa: E731
+    late = sum(v < 0 for v in got)
+    print(f"- segment {k + 1}: selected in {len(got)}/{len(leads)} trials; lead median {q(0.5):+.2f} m, "
+          f"10th-90th pct {q(0.1):+.2f} to {q(0.9):+.2f}; {100 * late / len(got):.0f}% after the boundary")
+
+
 def main() -> None:
   ap = argparse.ArgumentParser()
   ap.add_argument("mode", choices=("calib", "confirm"))
@@ -181,6 +200,9 @@ def main() -> None:
     print(HEADER)
     for a in arms.values():
       print(row(a))
+  for a in arms.values():
+    if a.spec.startswith("clf:"):
+      classifier_report(a)
   for pair in args.pairs:
     a_spec, b_spec = pair.split(">")
     compare(arms, a_spec, b_spec)

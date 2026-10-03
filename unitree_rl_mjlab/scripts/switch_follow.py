@@ -8,6 +8,9 @@ of the course (`src/vlm_nav/schedule.py`):
   fixed:<policy>               one policy for the whole run
   hard:<lead>:<mapping>        hard switch <lead> m before each non-flat segment
   soft:<start>:<end>:<mapping> linear cross-fade from <start> to <end> m before it
+  clf:<weights>:<alpha>:<hold> hard switch driven by a classifier on the robot's own
+                               height scan (src/vlm_nav/scan_classifier.py) -- the
+                               only arm that does not read the segment layout
 
 A lead above the onboard scan horizon (0.8 m) needs terrain knowledge from beyond
 it, i.e. the leader. Design and analysis rules:
@@ -50,6 +53,8 @@ from mjlab.utils.torch import configure_torch_backends  # noqa: E402
 from src.vlm_nav.controllers import FollowGains, follow_command  # noqa: E402
 from src.vlm_nav.course import saro_courses  # noqa: E402
 from src.vlm_nav.policy_bank import POLICY_NAMES, PolicyBank, default_checkpoints  # noqa: E402
+from src.vlm_nav.course import SEGMENT_CLASS  # noqa: E402
+from src.vlm_nav.scan_classifier import CLASSES, SwitchFilter, load_classifier, scan_slice  # noqa: E402
 from src.vlm_nav.schedule import MAPPINGS, Schedule, class_boundaries, policy_weights, segment_spans  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, make_twin_env_cfg, set_velocity_command  # noqa: E402
 
@@ -91,14 +96,26 @@ def _stats(values: torch.Tensor) -> dict:
   return dict(n=int(v.numel()), mean=float(v.mean()), p99=float(torch.quantile(v, 0.99)))
 
 
-def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str) -> dict:
+def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorder: dict | None = None) -> dict:
   u = env.unwrapped
   robot = u.scene["robot"]
   n, dt = u.num_envs, u.step_dt
   names = bank.names
-  fixed, schedule, mapping_name = parse_arm(spec)
+  clf = filt = None
+  if spec.startswith("clf:"):
+    _, weights_path, alpha, hold = spec.split(":")
+    clf = load_classifier(weights_path, device)
+    filt = SwitchFilter(n, float(alpha), int(hold), device, initial=CLASSES.index("flat"))
+    fixed = schedule = mapping_name = None
+  else:
+    fixed, schedule, mapping_name = parse_arm(spec)
   if fixed is not None and fixed not in names:
     raise KeyError(f"{spec}: no policy {fixed!r} in the bank ({names})")
+  scan_sl = scan_slice(env)
+  # What the footprint rule (hard switch 0.3 m ahead, label mapping) would have active:
+  # the classifier's training target, and the reference its decisions are scored against.
+  footprint = Schedule(0.3, 0.3)
+  class_to_policy = torch.tensor([names.index(c) for c in CLASSES], device=device)
 
   spans = segment_spans(course)
   success_x = max(x1 for _, x1, kind in spans if kind != "flat") + args.success_margin
@@ -127,6 +144,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str) -> dict
   log_force_rate = torch.full((max_steps, n), nan, device=device)
   log_track_err = torch.full((max_steps, n), nan, device=device)
   log_gap_err = torch.full((max_steps, n), nan, device=device)
+  log_sel = torch.full((max_steps, n), -1, dtype=torch.int8, device=device) if clf is not None else None
 
   for step in range(max_steps):
     pos = robot.data.root_link_pos_w
@@ -148,9 +166,21 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str) -> dict
     cmd[~active] = 0.0
     set_velocity_command(env, cmd)
 
+    target = policy_weights(x_course, course, list(CLASSES), footprint, MAPPINGS["label"]).argmax(dim=1)
+    if recorder is not None and step % recorder["every"] == 0:
+      keep = active.nonzero().flatten()
+      recorder["scan"].append(obs["actor"][keep][:, scan_sl].detach().cpu())
+      recorder["label"].append(target[keep].cpu())
+      recorder["trial"].append((keep + recorder["trial_offset"]).cpu())
     if fixed is not None:
       weights = torch.zeros(n, len(names), device=device)
       weights[:, names.index(fixed)] = 1.0
+    elif clf is not None:
+      with torch.inference_mode():
+        sel = filt.step(torch.softmax(clf(obs["actor"][:, scan_sl]), dim=1))
+      log_sel[step] = torch.where(active, sel, torch.full_like(sel, -1)).to(torch.int8)
+      weights = torch.zeros(n, len(names), device=device)
+      weights[torch.arange(n, device=device), class_to_policy[sel]] = 1.0
     else:
       weights = policy_weights(x_course, course, names, schedule, MAPPINGS[mapping_name])
     obs, _, dones, extras = env.step(bank.act_blend(obs, weights))
@@ -214,10 +244,30 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str) -> dict
     fr_all=per_trial(log_force_rate), fr_entry=per_trial(log_force_rate, windows["entry"]),
     fr_exit=per_trial(log_force_rate, windows["exit"]),
   )
+  clf_cols: dict[str, list] = {}
+  if clf is not None:
+    # Agreement with the footprint rule, and the lead at which the classifier first
+    # selected each non-flat segment's class (None: never, within 1.5 m before it or on it).
+    seen = log_sel >= 0
+    ref = policy_weights(
+      torch.nan_to_num(log_x, nan=-1e6).flatten(), course, list(CLASSES), footprint, MAPPINGS["label"]
+    ).argmax(dim=1).view(max_steps, n)
+    agree = ((log_sel.long() == ref) & seen).sum(dim=0).float() / seen.sum(dim=0).clamp_min(1)
+    clf_cols["clf_agree"] = agree.tolist()
+    leads = []
+    for x0, x1, kind in spans:
+      if kind == "flat":
+        continue
+      hit = seen & (log_sel.long() == CLASSES.index(SEGMENT_CLASS[kind])) & (log_x >= x0 - 1.5) & (log_x < x1)
+      first = torch.where(hit.any(dim=0), hit.float().argmax(dim=0), torch.full((n,), -1, device=device, dtype=torch.long))
+      x_first = log_x[first.clamp_min(0), torch.arange(n, device=device)]
+      leads.append([None if first[i] < 0 else round(float(x0 - x_first[i]), 3) for i in range(n)])
+    clf_cols["clf_leads"] = [list(v) for v in zip(*leads)]
   trials = []
   for i in range(n):
     row = dict(outcome=outcome[i], time_s=float(t_end[i]), end_x=float(end_x[i]), path_m=float(path[i]),
                fall_term=fall_term[i])
+    row.update({k: v[i] for k, v in clf_cols.items()})
     row.update({k: (None if v[i] != v[i] else round(v[i], 5)) for k, v in cols.items()})
     trials.append(row)
 
@@ -252,6 +302,13 @@ def main() -> None:
   ap.add_argument("--spawn-xy-jitter", type=float, default=0.15)
   ap.add_argument("--spawn-yaw", type=float, default=0.3)
   ap.add_argument("--terminations", default="training", choices=("training", "saro"))
+  ap.add_argument("--obs-noise", action="store_true",
+                  help="Re-enable the training observation noise (height scan +-0.1 m etc.). The twin env "
+                       "is built on the play config, which turns it off.")
+  ap.add_argument("--record-scans", default=None, metavar="OUT.pt",
+                  help="Save (height scan, footprint-rule class) pairs seen by the arms run, for "
+                       "training the scan classifier.")
+  ap.add_argument("--record-every", type=int, default=3)
   ap.add_argument("--resume", action="store_true")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
@@ -266,7 +323,8 @@ def main() -> None:
   if args.time_limit is None:
     args.time_limit = 2.0 * (success_x - course.start_x) / args.leader_speed + 10.0
 
-  conditions = {k: v for k, v in vars(args).items() if k not in ("arms", "arm_set", "resume", "json_out")}
+  conditions = {k: v for k, v in vars(args).items()
+                if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")}
   out_path = Path(args.json_out)
   result = dict(conditions=conditions, course=asdict(course), arms={})
   if out_path.exists():
@@ -282,6 +340,8 @@ def main() -> None:
     spawn_xy_jitter=args.spawn_xy_jitter, spawn_yaw_range=(-args.spawn_yaw, args.spawn_yaw),
     terminations=args.terminations,
   )
+  if args.obs_noise:
+    cfg.observations["actor"].enable_corruption = True
   env = RslRlVecEnvWrapper(ManagerBasedRlEnv(cfg=cfg, device=device), clip_actions=load_rl_cfg(BASE_TASK).clip_actions)
   checkpoints = dict(default_checkpoints(args.ckpt_root))
   for item in args.extra_policy:
@@ -289,18 +349,28 @@ def main() -> None:
     checkpoints[name] = Path(ckpt)
   bank = PolicyBank(env, checkpoints, device)
 
+  recorder = None
+  if args.record_scans:
+    recorder = dict(every=args.record_every, scan=[], label=[], trial=[], trial_offset=0)
   out_path.parent.mkdir(parents=True, exist_ok=True)
   for spec in arms:
     if spec in result["arms"]:
       print(f"[SKIP] {spec}: already in {out_path.name}")
       continue
     t0 = time.time()
-    result["arms"][spec] = run_arm(env, bank, course, spec, args, device)
+    result["arms"][spec] = run_arm(env, bank, course, spec, args, device, recorder)
+    if recorder is not None:
+      recorder["trial_offset"] += args.num_envs
     s = result["arms"][spec]["summary"]
     print(f"[RESULT] {course.name} {args.level} s{args.seed} {spec:>20}: "
           + " ".join(f"{k}={v:.2f}" if isinstance(v, float) else f"{k}={v}" for k, v in s.items())
           + f"  ({time.time() - t0:.0f}s)", flush=True)
     out_path.write_text(json.dumps(result))
+  if recorder is not None:
+    torch.save(dict(scan=torch.cat(recorder["scan"]), label=torch.cat(recorder["label"]),
+                    trial=torch.cat(recorder["trial"]), classes=list(CLASSES), conditions=conditions),
+               args.record_scans)
+    print(f"[INFO] wrote {sum(len(x) for x in recorder['label'])} scan samples to {args.record_scans}")
 
 
 if __name__ == "__main__":
