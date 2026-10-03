@@ -107,3 +107,33 @@ shown alongside so a seed-driven effect is visible.
 - Selecting the best of several arms on 512 trials is optimistic; that is what stage 2 is for.
 - The anticipatory arms get the best case for preview: exact labels, exact boundary location.
   A null under these conditions is strong; a positive result would still need a real sensor.
+
+## Addendum, 2026-10-03: a real reactive arm (written before any classifier data exists)
+
+Written after the stage 1/2 results above were in (on-time switching 91.5%, switching 1.5 m
+early 74.6%, switching 0.3 m late ~60%), and before collecting a single labelled scan.
+
+Every switching arm so far reads ground-truth labels. `objective.md`'s arm 2a is a *terrain
+classifier* on the robot's own height scan. Stage 1 showed the switch has to land within a few
+tenths of a metre of the boundary, so the open question is whether onboard sensing can deliver
+that. If it can, the leader adds neither horizon nor labels. If it cannot, the leader's value
+is as a label source, and the lead sweep says how much that is worth.
+
+- **Arm `clf`**: an MLP on the 187-dim `height_scan` slice of the actor observation, predicting
+  the class the footprint rule (hard switch 0.3 m ahead, `label` mapping) has active. Its output
+  drives a hard switch through a smoothing-plus-hold filter (`scan_classifier.SwitchFilter`).
+- **Training data**: single-obstacle courses `rough`, `stairs_up`, `stairs_down` at L1, seeds
+  700 and 701, robot driven by hard:0.3. The `multi` course is never trained on.
+- **Two sensing conditions**, each with its own classifier: observation noise as in training
+  (height scan +-0.1 m; `--obs-noise`), and noise off (the twin env's default, used by every
+  result above).
+- **Filter**: (alpha, hold) chosen from {(1.0, 1), (0.3, 3), (0.1, 5), (0.05, 10)} by success on
+  seeds 400/401; evaluated once on seeds 500-502.
+- **H4**: under the same sensing condition, `clf` vs label-timed hard:0.3. "Onboard sensing
+  suffices" if the 95% interval of the success difference lies inside +-5 points. "The leader is
+  worth its labels" if `clf` is lower with an interval excluding 0; the size of that difference
+  is the result. Also reported: agreement with the footprint rule, and the lead at which the
+  classifier first selects each non-flat segment's class.
+- Known limit, stated now: the stairs in `multi` are the same straight 0.05 m stairs the
+  classifier trains on, so this is the easy case for a classifier. A failure here is strong; a
+  success does not show it would generalise to unseen stair geometry.
