@@ -12,6 +12,13 @@ locomotion line) are given from memory and should be verified (exact venue/year/
 before submission — only the SARO citation (arXiv:2407.16412, PDF vendored at
 `2407.16412v3.pdf`) has been checked against a document actually in this repo.
 
+> **Update 2026-10-03: read `final_report.md` first.** The switching comparison this file
+> calls "still unbuilt" (Sections I, VIII) has since been run, and `final_report.md` is a
+> complete report built on it. Its outcome changes the framing below: switching beats any
+> fixed specialist, but the anticipation hypothesis is not supported. This file is kept as the
+> per-section source notes for everything up to 2026-09-22; Sections I, II, VII and VIII are
+> out of date wherever they describe the switching result as future work.
+
 ---
 
 ## I. Suggested title / framing
