@@ -42,3 +42,42 @@ signal (terrain_levels) was actively retreating from its iteration-5100 peak for
 45% of the run. Nothing in this curve argues for "more iterations of the same config would
 help." Whether that collapse itself is fixable (and would be worth chasing before any
 retrain) is a separate, undiagnosed question.
+
+**Update 2026-10-03 (laptop session)**: not a mystery — `velocity_env_cfg.py`'s command
+curriculum switches `lin_vel_x`/`lin_vel_y` to a wider range at step 5000\*24, i.e. exactly
+iteration 5000. Commanded up to 2 m/s on stairs, the policy stops covering a full patch,
+`terrain_levels_vel` demotes it, and it spends the remaining ~4,700 iterations at level ~0.9
+of 10 (≈1 cm risers). So this is a config issue (hold the command range at stage 0 for a
+stairs run), not an iteration-budget one. Write-up and proposal to follow in `findings.md` /
+`to-cluster.md`.
+
+## Cross-check: Rough specialist (job 11851) — same collapse, same trigger
+
+Requested read-only follow-up, same grid, same source pattern (`go2-spec-11851.out`):
+
+| iteration | mean reward | mean ep length | terrain_levels | illegal_contact (per ep) |
+|---|---|---|---|---|
+| 1000 | 39.52 | 922.40 | 1.26 | 0.63 |
+| 2000 | 43.48 | 952.65 | 1.86 | 0.67 |
+| 3000 | 44.31 | 964.97 | 2.03 | 0.75 |
+| 4000 | 44.00 | 959.80 | 2.12 | 0.38 |
+| 5000 | 43.89 | 953.93 | 2.14 | 0.50 |
+| 6000 | 38.38 | 990.73 | 0.42 | 0.08 |
+| 7000 | 38.10 | 978.61 | 0.47 | 0.42 |
+| 8000 | 38.71 | 986.32 | 0.56 | 0.38 |
+| 9000 | 38.59 | 980.04 | 0.55 | 0.46 |
+| 9999 | 39.13 | 983.48 | 0.53 | 0.50 |
+
+Finer grid around the transition (4700–5500):
+
+| iteration | 4700 | 4800 | 4900 | 5000 | 5100 | 5200 | 5300 | 5400 | 5500 |
+|---|---|---|---|---|---|---|---|---|---|
+| terrain_levels | 2.16 | 2.15 | 2.17 | 2.14 | **2.65** | 2.11 | 1.50 | 1.10 | 0.82 |
+
+Same signature: peaks at iteration 5100 (2.65, this run's max too), then a multi-step decline
+through 5500, settling at 0.42–0.56 for the remaining ~45% of training (lower than stairs'
+0.65–0.97 plateau, and the decline here is a few hundred iterations slower than stairs'
+sharper 5100→5300 drop, but the trigger iteration and the overall shape are identical). Mean
+reward also steps down at the same point (~44 → ~38) and never recovers. Consistent with the
+laptop's command-curriculum diagnosis being a general effect of the step-5000 velocity-range
+switch, not something specific to the stairs terrain class.
