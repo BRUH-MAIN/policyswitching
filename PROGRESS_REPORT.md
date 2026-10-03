@@ -97,6 +97,8 @@ have not been checked against the sources.
   500-502 (768 trials per arm), with robustness runs (observation noise on, orientation-only
   falls, harder level) and a scan-classifier reactive arm (pre-registered addendum).
 - `findings.md`, `objective.md`, this file and the final report updated.
+- **`vlm-pipeline` was fast-forwarded into `main`** (same commit on both, pushed). The linked
+  worktree at `.claude/worktrees/vlm-pipeline` still exists; new work can go on `main`.
 
 ## 4. Gotchas added today (full list: `findings.md`, "Bugs found and fixed")
 
