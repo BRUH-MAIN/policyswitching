@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-20T16:51:08Z",
+  "last_updated_utc": "2026-10-03T09:10:00Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -92,26 +92,31 @@
       "notes": "Job 11918 (sensing-matched generalist) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- it never ran, no checkpoint exists. Needs resubmission: SPEC=Generalist sbatch a100/train_specialist_slurm.sh. Same fate for eval-matrix job 11919. Not resubmitted yet (waiting for the stairs-course work to settle GPU priorities)."
     }
   },
-  "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session). Keep current via coordination/scripts/cluster_update_status.sh; hand-edited fields: cluster_state, go2_generalist cancellation, go2_spec_gaps notes, jobs.stairs_pyramid_eval.",
+  "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session), refreshed again 2026-10-03 (cluster session, status check requested by laptop session 'policyswitching-b3'). Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist cancellation, go2_spec_gaps notes, jobs.*. No new checkpoint was produced between 2026-09-20 and 2026-10-03 (only an eval job, 12033, ran), so cluster_update_status.sh had nothing to register this pass -- see jobs.stairs_pyramid_eval below for the hand edit instead.",
   "cluster_state": {
-    "as_of_utc": "2026-09-20T16:51:08Z",
-    "nodes": "asaicomputemaster (2x RTX 6000 Ada), asaicomputenode02/03 (2x A100 each): all three MIXED+PLANNED -- NOT drained. Resumed by ~2026-09-17.",
-    "gpus_free": "0 of 6 -- every GPU is allocated (mostly idle Jupyter/OnDemand sessions and long jobs from other users), 9 jobs pending behind by Priority/Resources.",
-    "queue_wait_estimate": "sbatch --test-only on 2026-09-20 22:17 local: 1-day gpu:a100:1 job (train_specialist_slurm.sh) -> start ~2026-09-21T17:25 (~19 h); 30-min gpu:1 any-type job -> ~2026-09-21T10:25 on asaicomputemaster (~12 h). Age-based FIFO, no fairshare, so short walltime helps only via backfill.",
-    "admin_cancellations": "Jobs 11915 (csasr-t2), 11918 (go2_generalist), 11919 (go2-eval-matrix) were CANCELLED by uid 0 (root) at 2026-09-17T11:04:55 without ever starting -- presumably when the nodes were resumed. 11916 (csasr-eval, other project) is still PENDING with DependencyNeverSatisfied; left alone."
+    "as_of_utc": "2026-10-03T09:03:37Z",
+    "nodes": "asaicomputemaster (2x RTX 6000 Ada), asaicomputenode02/03 (2x A100 each): all three MIXED. Not drained, not pending an admin action.",
+    "gpus_free": "1 of 6 -- asaicomputemaster has 1 free RTX 6000 Ada; both A100 nodes (node02/03) are fully allocated (2/2 each) by other users' jobs. 0 jobs pending cluster-wide right now (squeue -t PD empty) -- a short gpu:1-any-type job would likely start immediately via backfill; a gpu:a100:1 job (e.g. train_specialist_slurm.sh as written) would queue behind whichever other-user A100 job frees first, no ETA available since those aren't our jobs.",
+    "queue_wait_estimate": "Stale (2026-09-20 estimate removed) -- cluster state changed materially since (9 pending jobs then -> 0 now; 0/6 GPUs free then -> 1/6 now). Re-run sbatch --test-only before relying on a number.",
+    "admin_cancellations": "Unchanged since 2026-09-20: jobs 11915 (csasr-t2), 11918 (go2_generalist), 11919 (go2-eval-matrix) were CANCELLED by uid 0 (root) at 2026-09-17T11:04:55 without ever starting. Neither 11918 nor 11919 has been resubmitted as of 2026-10-03 (confirmed via sacct -u d_palmani --starttime 2026-09-20: no job with those names appears)."
   },
   "jobs": {
     "stairs_pyramid_eval": {
       "slurm_job_id": "12033",
       "script": "a100/eval_stairs_pyramid_slurm.sh",
       "purpose": "Step 1: Stairs specialist model_9999.pt on pinned pyramid stairs at difficulty 0.5/0.7/0.9 -- fails-on-pyramids-too vs overfit-to-pyramid-geometry test",
-      "status": "pending",
+      "status": "completed",
       "submitted": "2026-09-20",
-      "outputs": "unitree_rl_mjlab/eval_results/stairs_pyramid/go2_spec_stairs_pyramid_d{0.5,0.7,0.9}.json"
+      "started": "2026-09-21T10:26:23Z",
+      "ended": "2026-09-21T10:30:37Z",
+      "exit": "0:0 (clean, per sacct; .err empty)",
+      "outputs": "unitree_rl_mjlab/eval_results/stairs_pyramid/go2_spec_stairs_pyramid_d{0.5,0.7,0.9}.json (committed 2026-10-03 -- sat uncommitted on cluster disk since the run)",
+      "results_writeup": "coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md",
+      "headline": "survival 65.3%/43.5%/31.8% at d=0.5/0.7/0.9, falls/100m 6.1/12.6/16.9. Interpretation (vs the 75-78% 'gentlest stairs' number on the vlm-pipeline branch) and the step-2 go/no-go are open -- see the writeup, methods aren't yet confirmed comparable."
     },
     "stairs_v2_train": {
       "status": "not_submitted",
-      "notes": "Step 2 held until step 1 is reported."
+      "notes": "Step 2 was held until step 1 reported. Step 1 reported 2026-10-03 (coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md) -- unblocked pending someone making the go/no-go call, not yet decided or submitted."
     }
   }
 }
