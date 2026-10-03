@@ -27,6 +27,13 @@ this data) · **Raw**: `unitree_rl_mjlab/eval_results/switch_follow/*.json` ·
    this course and there is nothing to win; at the harder level the advantage reappears
    (+10.5 points). Findings 2-4 hold in every one of these conditions.
 
+6. **The robot's own height scan is enough to time the switch.** A small classifier on the
+   187-ray scan, driving the same hard switch, matches the ground-truth-label switch: 87.5% vs
+   88.3% with the training observation noise on (difference -0.8 points, CI -4.1 to +2.5) and
+   90.0% vs 90.6% with it off (-0.7, CI -3.6 to +2.3). It switches a median 0.17-0.28 m before
+   each boundary and never after it. So on this course the leader adds neither horizon nor
+   labels.
+
 The sensing-matched generalist (arm 1) is not in any table: its training job has not run
 (cluster submission blocked on a permission prompt, 2026-10-03).
 
@@ -166,8 +173,50 @@ measurable transient to avoid.
 
 What the sweep does show is that **timeliness is everything**: 0.3 m late costs 16-30 points
 depending on condition, 0.6 m late costs over 50. Whether the robot's own scan can deliver a
-label that promptly is a separate question, tested in the addendum below. That, not horizon, is
-where a followed person could still be worth something.
+label that promptly is a separate question, tested next. That, not horizon, is where a followed
+person could still have been worth something.
+
+## Addendum: a real reactive arm (pre-registered in the addendum, before any classifier data)
+
+`objective.md`'s arm 2a is a terrain classifier on the height scan, not ground-truth labels.
+An MLP (187 -> 128 -> 64 -> 3) reads the `height_scan` slice of the actor observation and
+predicts which specialist the footprint rule has active; its output passes through an
+exponential average and a hold-to-switch filter and drives a hard switch. Trained on
+single-obstacle courses (`rough`, `stairs_up`, `stairs_down`, L1, seeds 700/701, ~142k scans
+from 768 trials); the `multi` course is never trained on. One classifier per sensing condition.
+
+| | held-out per-step accuracy | recall flat / rough / stairs |
+|---|---|---|
+| noise off | 99.6% | 99.4 / 99.9 / 99.8 |
+| training noise on (scan +-0.1 m) | 83.8% | 82.5 / 69.4 / 96.2 |
+
+With noise on, a single scan confuses flat and rough about a quarter of the time (the rough
+ground's 2-6 cm relief is under the +-10 cm ray noise) but almost never misses stairs. The
+filter averages the rest away.
+
+Filter chosen on seeds 400/401 by success (all four candidates were within 2 points of each
+other and of the label-timed arm): alpha 0.1 / hold 5 with noise on, alpha 0.3 / hold 3 with
+noise off. Confirmation, seeds 500-502, 768 trials per arm, same sensing condition in both arms:
+
+| sensing | label-timed hard 0.3 | scan classifier | difference (95% CI) | classifier's lead at the three entries (median) | agreement with footprint rule |
+|---|---|---|---|---|---|
+| training noise on | 88.3% | 87.5% | -0.8 (-4.1 to +2.5) | +0.17 / +0.20 / +0.23 m | 84.4% of steps |
+| noise off | 90.6% | 90.0% | -0.7 (-3.6 to +2.3) | +0.28 / +0.27 / +0.26 m | 92.7% of steps |
+
+**H4: "onboard sensing suffices" holds in both conditions** (both intervals inside +-5 points).
+The classifier is never late: in no trial did it first select a segment's class after the
+boundary. Its disagreements with the footprint rule are mostly on the release side (staying on
+a specialist a little longer after its segment) and, with noise on, brief flat/rough flicker
+on ground where either specialist is fine.
+
+Limit, as stated in the addendum: the stairs in `multi` are the same straight 0.05 m stairs the
+classifier trained on, and the specialists it selects among are forgiving of flat/rough
+confusion. This is the easy case for a classifier. It shows onboard sensing can be enough; it
+does not show a scan classifier generalises to unseen stair geometry, where gate 2a's
+difficulty-pooled measurement was much less favourable.
+
+(Same seeds, same arm, different runs: hard 0.3 scored 91.5% and 90.6% with noise off, 87.4%
+and 88.3% with noise on. Run-to-run spread from simulator nondeterminism is about 1 point.)
 
 ## Limits
 
