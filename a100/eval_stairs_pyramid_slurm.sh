@@ -14,6 +14,12 @@
 #
 #   sbatch a100/eval_stairs_pyramid_slurm.sh
 #   CKPT=<other .pt> LABEL=<name> sbatch a100/eval_stairs_pyramid_slurm.sh
+#
+# EVAL_EXTRA_ARGS forwards flags to eval_checkpoint.py. The default command range is the
+# FINAL stage of training's command curriculum (lin_vel_x up to 2 m/s); to evaluate at the
+# stage-0 range instead (what the follow task actually commands, <= 1 m/s):
+#   EVAL_EXTRA_ARGS="--lin-vel-x -0.5 1.0 --lin-vel-y -0.5 0.5" LABEL=<name> sbatch ...
+# Always set a distinct LABEL with it -- LABEL names the output JSONs.
 
 #SBATCH --job-name=go2-stairs-pyr-eval
 #SBATCH --partition=workq
@@ -38,6 +44,9 @@ export PYTHONPATH="$REPO/unitree_rl_mjlab:${PYTHONPATH:-}"
 cd "$REPO/unitree_rl_mjlab"
 mkdir -p "$OUT_DIR"
 
+read -r -a EXTRA_ARGS <<< "${EVAL_EXTRA_ARGS:-}"
+echo "[INFO] checkpoint=$CKPT label=$LABEL extra_args=${EVAL_EXTRA_ARGS:-<none>}"
+
 # A failing difficulty must not stop the others from running.
 for D in 0.5 0.7 0.9; do
   echo "================ difficulty $D ================"
@@ -47,5 +56,6 @@ for D in 0.5 0.7 0.9; do
     --num-envs 1024 --steps 1200 \
     --label "${LABEL}_pyramid_d${D}" \
     --json-out "$OUT_DIR/${LABEL}_pyramid_d${D}.json" \
+    ${EXTRA_ARGS[@]+"${EXTRA_ARGS[@]}"} \
     || echo "[ERROR] difficulty $D failed (exit $?)"
 done

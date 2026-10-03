@@ -12,6 +12,7 @@ from .env_cfgs import (
   unitree_go2_spec_gaps_warm_env_cfg,
   unitree_go2_spec_rough_env_cfg,
   unitree_go2_spec_stairs_env_cfg,
+  unitree_go2_spec_stairs_v2_env_cfg,
 )
 from .rl_cfg import unitree_go2_pas_ppo_runner_cfg, unitree_go2_ppo_runner_cfg
 
@@ -58,10 +59,13 @@ register_mjlab_task(
 # network can blend them -- see `_unitree_go2_specialist_env_cfg`.
 # GapsWarm is the 100%-stepping_stones redesign of Gaps, meant to be
 # warm-started (see `unitree_go2_spec_gaps_warm_env_cfg`).
+# StairsV2 is Stairs with the command range held at its first stage (see
+# `unitree_go2_spec_stairs_v2_env_cfg`); it does not replace Stairs.
 for _spec_name, _spec_cfg_fn in (
   ("Flat", unitree_go2_spec_flat_env_cfg),
   ("Rough", unitree_go2_spec_rough_env_cfg),
   ("Stairs", unitree_go2_spec_stairs_env_cfg),
+  ("StairsV2", unitree_go2_spec_stairs_v2_env_cfg),
   ("Gaps", unitree_go2_spec_gaps_env_cfg),
   ("GapsWarm", unitree_go2_spec_gaps_warm_env_cfg),
 ):

@@ -365,6 +365,32 @@ def unitree_go2_spec_stairs_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
 
 
+def unitree_go2_spec_stairs_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs specialist v2: Stairs with the command range held at its first stage.
+
+  Differs from `unitree_go2_spec_stairs_env_cfg` ONLY in the `command_vel`
+  curriculum, which keeps stage 0 (lin_vel_x up to 1 m/s) for the whole run
+  instead of widening to 2 m/s at iteration 5000. In the v1 run that widening
+  dropped the terrain curriculum from level ~1.9 to ~0.9 for the remaining
+  half of training (a robot that covers less than half its commanded distance
+  is demoted), and the policy lost stairs ability it already had: on pinned
+  pyramid stairs model_9999 falls 2.6-3.6x as often per 100 m as model_4800,
+  the last checkpoint before the widening
+  (coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md).
+
+  The terrain mix is deliberately unchanged, so a v1-vs-v2 difference has one
+  cause. Evaluate at the range it trains on: eval_checkpoint.py's default
+  command range is the widened one, so pass
+  `--lin-vel-x -0.5 1.0 --lin-vel-y -0.5 0.5`.
+  """
+  cfg = _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
+  # Play mode has no curriculum at all.
+  if "command_vel" in cfg.curriculum:
+    params = cfg.curriculum["command_vel"].params
+    params["velocity_stages"] = params["velocity_stages"][:1]
+  return cfg
+
+
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Gap specialist: stepping stones, blended with easier terrain during training.
 

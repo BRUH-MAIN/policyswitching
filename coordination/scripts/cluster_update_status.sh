@@ -77,6 +77,7 @@ if [ -z "${TASK:-}" ]; then
     go2_spec_flat)     TASK="Unitree-Go2-Spec-Flat" ;;
     go2_spec_rough)    TASK="Unitree-Go2-Spec-Rough" ;;
     go2_spec_stairs)   TASK="Unitree-Go2-Spec-Stairs" ;;
+    go2_spec_stairs_v2) TASK="Unitree-Go2-Spec-StairsV2" ;;
     go2_spec_gaps)     TASK="Unitree-Go2-Spec-Gaps" ;;
     *)
       echo "[ERROR] no task name known for run_id '$RUN_ID'." >&2

@@ -10,6 +10,10 @@
 # SPEC:
 #   Flat | Rough | Stairs | Gaps   -> Unitree-Go2-Spec-<SPEC>, experiment go2_spec_<spec>
 #   GapsWarm                       -> 100% stepping_stones, warm-started (see INIT_FROM)
+#   StairsV2                       -> Unitree-Go2-Spec-StairsV2, experiment go2_spec_stairs_v2:
+#                                     Stairs with the command range held at stage 0. A
+#                                     separate experiment, so it never resumes or overwrites
+#                                     go2_spec_stairs (whose model_9999.pt every result uses)
 #   Generalist                     -> Unitree-Go2-Generalist, experiment go2_generalist:
 #                                     all four terrain classes, otherwise identical to a
 #                                     specialist (obs, rewards, runner, budget)
@@ -49,17 +53,21 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, Gaps, GapsWarm, Generalist (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
     EXPERIMENT_NAME="go2_spec_$(echo "$SPEC" | tr '[:upper:]' '[:lower:]')"
     ;;
+  StairsV2)
+    TASK="Unitree-Go2-Spec-StairsV2"
+    EXPERIMENT_NAME="go2_spec_stairs_v2"
+    ;;
   Generalist)
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, Gaps, GapsWarm, Generalist (got '$SPEC')" >&2; exit 1 ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
