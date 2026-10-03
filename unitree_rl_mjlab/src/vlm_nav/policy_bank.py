@@ -66,6 +66,16 @@ class PolicyBank:
     stacked = torch.stack([self.policies[n](obs) for n in self.names], dim=0)
     return stacked[policy_idx, torch.arange(stacked.shape[1], device=stacked.device)]
 
+  @torch.inference_mode()
+  def act_blend(self, obs, weights: torch.Tensor) -> torch.Tensor:
+    """Weighted sum of the specialists' actions: weights (N, K) over `names`.
+
+    A one-hot row reproduces `act_per_env` exactly (the other terms are multiplied
+    by zero), so a hard switch and a blend go through the same code path.
+    """
+    stacked = torch.stack([self.policies[n](obs) for n in self.names], dim=0)
+    return torch.einsum("nk,kna->na", weights, stacked)
+
   @property
   def names(self) -> list[str]:
     return list(self.policies)
