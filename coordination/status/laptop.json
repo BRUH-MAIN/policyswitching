@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-11T00:00:00Z",
+  "last_updated_utc": "2026-10-03T12:30:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -17,6 +17,12 @@
       "verdict": "GATE 1 PASSES on the informative columns: rough specialist wins rough (2.4x runner-up), stairs specialist wins stairs (1.4x, single-seed, provisional). flat is a 3-way tie at floor (0 falls). gaps/mixed catastrophic for every specialist (no gaps specialist exists). Both PAS modes excluded as degenerate (8-11% of commanded speed everywhere, bug #14) -- not competitive evidence either way. Read via falls/100m, not fall_pct (bug #15: fall_pct pools per episode, silently over-weights fast-cycling subpopulations -- caught via a mixed-terrain anomaly that took two rejected hypotheses (allocation rounding, commanded lateral drift) before landing on the real cause). Height-scan ablation: inconclusive as a gate-2 test (needs the generalist, job 11918, doesn't exist yet), but the stairs specialist shows a real positive scan-dependence on its home terrain (+30% falls/100m without the scan, while moving faster -- not just being more cautious). gaps ablation cells are artifacts (policy nearly stops moving, so 'falls less' is bug #1 again).",
       "caveats": "Regenerate any pas_oracle number before trusting it against a cached file older than 2026-09-12 21:00 IST -- eval_matrix.py's resumable skip-if-exists logic silently reused pre-bug-#12-fix cells from an earlier same-day run once already.",
       "see": "coordination/results/gate1-cross-terrain-matrix-analysis.md, findings.md bugs #12-#15"
+    },
+    "switch_follow_2x2": {
+      "run": "unitree_rl_mjlab/scripts/switch_follow.py on course multi L1, follow task; go2_spec_flat/rough/stairs model_9999; calibration seeds 400/401 (512 trials/arm), confirmation seeds 500-502 (768 trials/arm); robustness: --obs-noise, --terminations saro, --level L2; scan-classifier arm",
+      "verdict": "Switching beats the best fixed specialist (+15.0 pts as pre-registered, +4.2 with observation noise on). Optimum switch lead 0-0.3 m; switching >=0.8 m early is 7-17 pts worse and no better than never switching; 0.3 m late is 16-30 pts worse. Blending: no effect. Scan classifier matches ground-truth labels (within +-5 pts, both noise conditions). Anticipation hypothesis NOT supported. Generalist arm missing (no checkpoint).",
+      "caveats": "Twin env has observation noise and pushes off unless --obs-noise (findings.md #22). Under orientation-only falls nothing separates at L1. Specialists are weak (curriculum collapse at iteration 5000).",
+      "see": "coordination/results/switch-follow-results.md, coordination/results/switch-follow-preregistration.md, report_content/final_report.md"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

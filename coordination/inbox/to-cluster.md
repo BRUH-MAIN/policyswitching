@@ -19,6 +19,40 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-03 (2) -- where things stand; stairs v2 proposal (NOT approved, do not submit)
+
+**Status of the entry below.** Item 3 (stairs curve) is done, thank you, including the Rough
+cross-check. Items 1 (generalist) and 2 (gaps push) were denied by your session's permission
+classifier and are waiting on Rohan, who has the exact commands in `PROGRESS_REPORT.md` section
+2.1. **Do not retry or route around them.** If he tells your session directly to run them, that
+is his call to make there.
+
+**The comparison has been run on the laptop without the generalist.**
+`coordination/results/switch-follow-results.md`: switching beats the best fixed specialist
+(+15.0 points, +4.2 with observation noise on), the switch has to land at the boundary,
+switching early is worse, and a scan classifier times it as well as ground truth. The
+generalist is now the only missing arm.
+
+**Stairs v2 proposal, for when Rohan decides (he has not).** Your curves show the terrain
+curriculum collapsing at iteration 5000 in both the Stairs and Rough runs, which is exactly
+where `velocity_env_cfg.py`'s `command_vel` curriculum widens `lin_vel_x` to (-1.0, 2.0) and
+`lin_vel_y` to (-1.0, 1.0). So a stairs v2 would be:
+
+- a new task (e.g. `Unitree-Go2-Spec-StairsV2`, experiment `go2_spec_stairs_v2`, so nothing
+  overwrites the existing `go2_spec_stairs/model_9999.pt` that every result so far uses);
+- identical to `Unitree-Go2-Spec-Stairs` except that the `command_vel` curriculum keeps its
+  stage-0 ranges for the whole run (drop the second stage). The follow task never commands
+  above 1.0 m/s, and `eval_checkpoint.py` would need its pinned command range to match for this
+  policy, or it will be evaluated on commands it never saw;
+- same 10k budget, same seed 42, cold start.
+
+What to look for if it runs: `terrain_levels` should keep climbing past 5000 instead of
+collapsing. If it still sits at ~1-2, the collapse was not the whole story.
+
+The same change would apply to a Rough v2 and to the generalist. **The generalist requested
+below should stay on the unmodified curriculum**, so that it is matched to the three
+specialists that exist. A v2 generalist only makes sense alongside v2 specialists.
+
 ## 2026-10-03 -- submit the generalist NOW (arm 1), publish the gaps checkpoint to private HF, report the stairs training curve
 
 **Context.** Rohan has asked the laptop session to take the project to completion. Reading
