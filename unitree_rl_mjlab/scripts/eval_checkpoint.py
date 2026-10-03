@@ -279,6 +279,10 @@ def main():
   total_episodes = 0
   total_timeouts = 0
   total_fails = 0
+  # Per-termination-term counts over completed episodes (an env can trip several
+  # terms on one step, so these can sum to more than total_episodes).
+  term_manager = unwrapped.termination_manager
+  term_counts = {name: 0 for name in term_manager.active_terms}
   sum_ep_len_at_end = 0.0
   sum_return_at_end = 0.0
 
@@ -378,6 +382,8 @@ def main():
       n_timeout = (timeouts.bool() & done_mask).sum().item()
       n_fail = n_done - n_timeout
 
+      for name in term_counts:
+        term_counts[name] += int((term_manager.get_term(name).bool() & done_mask).sum())
       total_episodes += n_done
       total_timeouts += n_timeout
       total_fails += n_fail
@@ -417,6 +423,9 @@ def main():
           f"({survival['survival_pct']:.1f}%)")
     print(f"  failed early (fell / illegal contact / etc): {total_fails} "
           f"({survival['fall_pct']:.1f}%)")
+    survival["terminations"] = dict(term_counts)
+    print("  terminations by cause (episodes; terms can overlap): "
+          + ", ".join(f"{k}={v}" for k, v in term_counts.items()))
     print(f"  mean episode length at end: {survival['mean_ep_len']:.1f}")
     print(f"  mean episode return: {survival['mean_return']:.3f}")
   else:
@@ -438,6 +447,8 @@ def main():
       ang_vel_error_per_step=sum_ang_vel_error / locomotion_samples,
       distance_rate=sum_distance / locomotion_samples / dt,
       stalled_pct=100 * stalled_steps / moving_cmd_steps if moving_cmd_steps else None,
+      total_distance_m=sum_distance,
+      falls_per_100m=100 * total_fails / sum_distance if sum_distance > 1e-6 else None,
     )
     achieved = f"  mean achieved speed:   {mean_actual:.3f} m/s"
     if locomotion["achieved_pct_of_cmd"] is not None:
@@ -449,6 +460,8 @@ def main():
     print(f"  angular vel error, per step: {locomotion['ang_vel_error_per_step']:.3f} rad/s")
     print(f"  mean distance travelled per env per second: {locomotion['distance_rate']:.3f} m/s")
     print(f"  total distance travelled (all envs): {sum_distance:.0f} m")
+    if locomotion["falls_per_100m"] is not None:
+      print(f"  falls per 100 m travelled: {locomotion['falls_per_100m']:.2f}")
     if moving_cmd_steps:
       print(f"  stalled while commanded to move "
             f"(cmd > {args.moving_command_threshold} m/s, achieved < "

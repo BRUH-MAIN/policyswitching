@@ -19,6 +19,65 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-03 -- submit the generalist NOW (arm 1), publish the gaps checkpoint to private HF, report the stairs training curve
+
+**Context.** Rohan has asked the laptop session to take the project to completion. Reading
+of your step 1 result: 6.1 falls/100 m on pinned pyramid stairs at d=0.5 means the stairs
+specialist is weak on its *own training terrain*, which matches the 75-84% it gets across a
+few metres of straight 0.05 m stairs on the laptop courses. So it is "weak on stairs
+generally", not "overfit to pyramid geometry". **Decision: the comparison does not wait for a
+stairs retrain.** The laptop is building the switching experiment on a rough + stairs-down
+course with the three existing specialists, where the calibration data already show no
+fixed specialist does well (rough specialist 25% on stairs-down, stairs specialist 25% on
+rough, oracle ~81-100%). What the cluster has to supply is the one arm that does not exist
+at all: the sensing-matched generalist.
+
+**1. Submit the generalist today -- this is the long pole for the whole project.**
+
+`SPEC=Generalist sbatch a100/train_specialist_slurm.sh`, defaults otherwise (seed 42,
+`BUDGET=10000`, 8192 envs). Two requirements:
+
+- **`HF_TOKEN` must be exported at submission**, so every checkpoint is pushed to the private
+  `RohanRamesh/go2-specialists` under `go2_generalist/`. The laptop has no working SSH/rsync
+  route to the cluster this session, so HF is the only way the checkpoint reaches the eval.
+  If there is no `HF_TOKEN` on the cluster, submit anyway and tell me -- do not hold the job
+  for it.
+- **Do not wait for an A100.** The script hard-codes `--gres=gpu:a100:1` and both A100 nodes
+  are full; you reported one free RTX 6000 Ada. Override on the command line
+  (`sbatch --gres=gpu:1 ...`, command-line options win over `#SBATCH` lines), checking with
+  `sbatch --test-only` first. Leave the script's default alone. If the Ada has been taken by
+  the time you read this, or 8192 envs do not fit on it, queue it as written.
+
+After it starts: job id and node into `cluster.json` (`runs.go2_generalist`), and
+`cluster_update_status.sh` when the final checkpoint exists.
+
+**Early plateau check -- please actually do this one.** A quarter of the generalist's terrain
+is stepping stones, and the Gaps specialist plateaued twice at 100% stepping stones (episodes
+of ~10 steps, reward flat at -6 to -8). Look at the log once it has passed ~1500 iterations.
+If mean episode length is still under ~100 steps and mean reward has not moved for 500
+iterations, report that rather than letting it burn the full 12 h.
+
+**2. Push the Gaps attempt-3 checkpoint to the private HF repo.**
+`unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt` ->
+`RohanRamesh/go2-specialists`, `go2_spec_gaps/model_9999.pt` (`a100/backfill_specialist_hf.py`
+is the tool that did this for the other three), then set `hf_repo`/`hf_stage` on
+`runs.go2_spec_gaps` in `cluster.json` so `laptop_pull_and_eval.sh` can fetch it. It has
+never been evaluated anywhere. Needs `HF_TOKEN`; same rule, tell me if there is none.
+
+**3. Report the stairs specialist's training curve -- no job, just numbers.** From job 11849's
+training log (`go2_spec_stairs/2026-09-05_22-37-43`): mean reward, mean episode length,
+terrain level, and `illegal_contact` per episode, one row per 1000 iterations from 1000 to
+9999. This decides whether a "same task, more iterations" stairs v2 is worth a GPU-day: if
+terrain level and reward were still climbing at 10k it probably is, if they were flat from
+~6k it is not. **Do not submit a stairs job** -- `stairs_v2_train` stays `not_submitted`
+until that table has been read here.
+
+**Not requested**: the eval matrix (11919) -- the laptop will run the generalist and gaps rows
+itself once the checkpoints are on HF; `GapsWarm`; anything on `vlm-pipeline`.
+
+**Reply with**: the generalist's job id, node and (projected) start time; whether `HF_TOKEN`
+was set; whether the gaps push worked; the stairs table.
+
 ## 2026-09-13 (2) -- `eval_matrix.py`'s generated `summary.md` contradicts the analysis it summarises
 
 The gate 1 analysis (`coordination/results/gate1-cross-terrain-matrix-analysis.md`) is

@@ -17,6 +17,22 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-10-03 -- stairs step 1 (job 12033) results are in, written up, step 2 is unblocked
+
+Job completed 2026-09-21 (clean exit) but sat uncommitted until this status check. Results +
+JSON outputs now committed: `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md`.
+Headline: survival 65.3% / 43.5% / 31.8% at pyramid-stairs difficulty 0.5 / 0.7 / 0.9 -- degrades
+hard with difficulty, failure mode is `illegal_contact` not falling over. The writeup flags an
+unverified discrepancy against the 75-78% "gentlest stairs" number on `vlm-pipeline` (different
+branch/harness, not confirmed comparable) rather than asserting fails-on-pyramids-too vs
+overfit-to-pyramid-geometry -- that call, and whether to submit step 2 (`stairs_v2_train`,
+still `not_submitted`), is yours.
+
+## 2026-09-20 -- go2_spec_gaps step 9999 ready
+Source: local (cluster disk only, not on HF -- see findings.md bug #4).
+Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
+SLURM job 11914.
+
 ## 2026-09-12 -- go2_spec_stairs step 9999 ready
 Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs/model_9999.pt).
 

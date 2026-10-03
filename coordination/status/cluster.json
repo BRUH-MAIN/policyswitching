@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-09-12T14:49:37Z",
+  "last_updated_utc": "2026-10-03T10:05:00Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -62,12 +62,14 @@
     "go2_spec_gaps": {
       "task": "Unitree-Go2-Spec-Gaps",
       "source": "local",
-      "path_on_cluster": null,
-      "iteration": null,
-      "sha256": null,
-      "status": "in_progress",
+      "path_on_cluster": "unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt",
+      "iteration": 9999,
+      "sha256": "b79ddd9b120d704015f9ee91abeef40486a05ec84a3da2324e93e1d16874e743",
+      "status": "complete",
       "slurm_job_id": "11914",
-      "notes": "Attempt 3 (blended terrain: 20% stepping_stones / 40% flat / 40% random_rough), fixing the plateau seen in attempts 1-2 at 100% stepping_stones. Queued/running as of 2026-09-11 -- cluster session: run coordination/scripts/cluster_update_status.sh once this finishes or times out. 2026-09-12: still PENDING, never started (all nodes drained since 2026-09-10). Note the blended mix trains 80% on non-gap terrain, making this barely a gap specialist -- see go2_spec_gapswarm and findings.md 'Terrain specialists'."
+      "notes": "Attempt 3 (blended terrain 20% stepping_stones / 40% flat / 40% random_rough). Job 11914 SUBMITTED 2026-09-11, sat PENDING 6 days, STARTED 2026-09-17 08:47, COMPLETED 2026-09-17 21:24 (12h37m, 10k iterations). model_9999.pt on cluster local disk only (no HF_TOKEN at submission). Final training log: terrain_levels 0.54, illegal_contact 1.33 / fell_over 0.125 / time_out 6.5 per iteration. Blended mix trains 80% on non-gap terrain -- see go2_spec_gapswarm and findings.md 'Terrain specialists'. Not yet evaluated on the laptop. 2026-10-03: an attempt to push this checkpoint to the private HF repo (coordination/inbox/to-cluster.md item 2) was BLOCKED by this cluster session's own permission settings (Claude Code auto-mode classifier, reason 'Data Exfiltration') -- not retried/worked around. Still local-disk only; needs either a human running the upload directly or a permission rule added for this session.",
+      "hf_repo": null,
+      "hf_stage": null
     },
     "go2_spec_gapswarm": {
       "task": "Unitree-Go2-Spec-GapsWarm",
@@ -77,7 +79,7 @@
       "sha256": null,
       "status": "not_submitted",
       "slurm_job_id": null,
-      "notes": "Gaps redesign (2026-09-12): 100% stepping_stones, warm-started from the Rough specialist via a100/warm_start_ckpt.py, instead of diluting the training terrain the way attempt 3 does. Built and verified but NOT submitted -- open decision whether to cancel 11914 in favour of it or run both. Seeded here so cluster_update_status.sh has a task name to attach to (the script itself never writes the 'task' field that laptop_pull_and_eval.sh requires)."
+      "notes": "Gaps redesign (2026-09-12): 100% stepping_stones, warm-started from the Rough specialist via a100/warm_start_ckpt.py, instead of diluting the training terrain the way attempt 3 does. Built and verified but NOT submitted -- open decision whether to cancel 11914 in favour of it or run both. Seeded here so cluster_update_status.sh has a task name to attach to (the script itself never writes the 'task' field that laptop_pull_and_eval.sh requires). 2026-09-20: still not submitted."
     },
     "go2_generalist": {
       "task": "Unitree-Go2-Generalist",
@@ -85,10 +87,36 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "in_progress",
+      "status": "cancelled",
       "slurm_job_id": "11918",
-      "notes": "Sensing-matched generalist baseline (arm 1 of the revised objective.md comparison): stock PPO over all four terrain classes at equal class weight, identical observation space / rewards / runner / 10k-iteration budget to a specialist. Replaces PAS as arm 1 -- PAS estimator-only reads no height_scan, adds reward terms no specialist has, and got ~8x the env steps. Submitted 2026-09-12, PENDING (nodes drained). Local disk only, like the specialists."
+      "notes": "Job 11918 (sensing-matched generalist) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- it never ran, no checkpoint exists. Needs resubmission: SPEC=Generalist sbatch a100/train_specialist_slurm.sh. Same fate for eval-matrix job 11919. 2026-10-03: laptop session asked for resubmission now (coordination/inbox/to-cluster.md), with HF_TOKEN exported and --gres=gpu:1 override (confirmed via sbatch --test-only, GPU was free). The attempt was BLOCKED by this cluster session's own permission settings (Claude Code auto-mode classifier, reason 'Modify Shared Resources') before sbatch ran -- not retried/worked around. Still not_submitted; needs either a human running sbatch directly or a permission rule added for this session."
     }
   },
-  "notes": "Seeded from findings.md as of 2026-09-11 (job log + specialist table) so this heartbeat isn't empty on first use. Cluster session: keep this current via coordination/scripts/cluster_update_status.sh rather than hand-editing."
+  "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed again 2026-10-03 twice in one session, first for the stairs step-1 status check, then for the laptop's 'submit the generalist / push gaps to HF / report stairs curve' request (coordination/inbox/to-cluster.md) -- the first two of those three were BLOCKED by this session's own permission settings (see runs.go2_generalist and runs.go2_spec_gaps notes; details in coordination/log/2026-10-03-cluster.md), the third is coordination/results/2026-10-03-stairs-training-curve.md. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist cancellation, go2_spec_gaps notes, jobs.*.",
+  "cluster_state": {
+    "as_of_utc": "2026-10-03T09:03:37Z",
+    "nodes": "asaicomputemaster (2x RTX 6000 Ada), asaicomputenode02/03 (2x A100 each): all three MIXED. Not drained, not pending an admin action.",
+    "gpus_free": "1 of 6 -- asaicomputemaster has 1 free RTX 6000 Ada; both A100 nodes (node02/03) are fully allocated (2/2 each) by other users' jobs. 0 jobs pending cluster-wide right now (squeue -t PD empty) -- a short gpu:1-any-type job would likely start immediately via backfill; a gpu:a100:1 job (e.g. train_specialist_slurm.sh as written) would queue behind whichever other-user A100 job frees first, no ETA available since those aren't our jobs.",
+    "queue_wait_estimate": "Stale (2026-09-20 estimate removed) -- cluster state changed materially since (9 pending jobs then -> 0 now; 0/6 GPUs free then -> 1/6 now). Re-run sbatch --test-only before relying on a number.",
+    "admin_cancellations": "Unchanged since 2026-09-20: jobs 11915 (csasr-t2), 11918 (go2_generalist), 11919 (go2-eval-matrix) were CANCELLED by uid 0 (root) at 2026-09-17T11:04:55 without ever starting. Neither 11918 nor 11919 has been resubmitted as of 2026-10-03 (confirmed via sacct -u d_palmani --starttime 2026-09-20: no job with those names appears)."
+  },
+  "jobs": {
+    "stairs_pyramid_eval": {
+      "slurm_job_id": "12033",
+      "script": "a100/eval_stairs_pyramid_slurm.sh",
+      "purpose": "Step 1: Stairs specialist model_9999.pt on pinned pyramid stairs at difficulty 0.5/0.7/0.9 -- fails-on-pyramids-too vs overfit-to-pyramid-geometry test",
+      "status": "completed",
+      "submitted": "2026-09-20",
+      "started": "2026-09-21T10:26:23Z",
+      "ended": "2026-09-21T10:30:37Z",
+      "exit": "0:0 (clean, per sacct; .err empty)",
+      "outputs": "unitree_rl_mjlab/eval_results/stairs_pyramid/go2_spec_stairs_pyramid_d{0.5,0.7,0.9}.json (committed 2026-10-03 -- sat uncommitted on cluster disk since the run)",
+      "results_writeup": "coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md",
+      "headline": "survival 65.3%/43.5%/31.8% at d=0.5/0.7/0.9, falls/100m 6.1/12.6/16.9. Interpretation (vs the 75-78% 'gentlest stairs' number on the vlm-pipeline branch) and the step-2 go/no-go are open -- see the writeup, methods aren't yet confirmed comparable."
+    },
+    "stairs_v2_train": {
+      "status": "not_submitted",
+      "notes": "Step 2 was held until step 1 reported. Step 1 reported 2026-10-03 (coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md) -- unblocked pending someone making the go/no-go call, not yet decided or submitted."
+    }
+  }
 }
