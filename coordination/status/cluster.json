@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-03T13:04:06Z",
+  "last_updated_utc": "2026-10-03T14:38:45Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -105,6 +105,18 @@
       "sha256": null,
       "notes": "NOT a separate training run: checkpoint 4800 of go2_spec_stairs (job 11849), the last one saved clearly before the iteration-5000 command-range widening that collapsed the terrain curriculum. Same task, network and observations as go2_spec_stairs/model_9999.pt. Pushed to private HF 2026-10-03 (sha256 1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320, verified against the remote LFS hash). Evaluate at the stage-0 command range. See coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md.",
       "slurm_job_id": "11849"
+    },
+    "go2_spec_stairs_v2": {
+      "task": "Unitree-Go2-Spec-StairsV2",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v2",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "pending",
+      "slurm_job_id": "12490",
+      "notes": "Queued 2026-10-03 20:08 IST, not started. No checkpoint yet -- nothing to pull. See jobs.stairs_v2_train."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed three times more on 2026-10-03: stairs step-1 status check, the laptop's 'submit generalist / push gaps to HF / report stairs curve' request (2 of 3 blocked by this session's own permission layer -- see coordination/log/2026-10-03-cluster.md), then Rohan ran the generalist sbatch himself directly after the cluster session's attempt to even self-edit its own settings.local.json to allow it was *also* blocked (reason 'Self-Modification') -- job 12479 is now RUNNING (runs.go2_generalist). The gaps->HF push is still not done; still needs a human to run it directly (see runs.go2_spec_gaps notes) -- it was not re-attempted here. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist, go2_spec_gaps notes, jobs.*. TIMEZONE: fields ending in Z are UTC. squeue/sacct/scontrol print the cluster's local time (Asia/Kolkata, UTC+05:30) with no suffix -- convert before writing a Z timestamp. Two entries were mislabeled this way on 2026-10-03 and have been corrected (jobs.stairs_pyramid_eval, runs.go2_generalist). 2026-10-03 evening: jobs.stairs_precollapse_eval and jobs.stairs_v2_train hand-edited by session cluster-sess.",
@@ -130,11 +142,13 @@
       "headline": "survival 65.3%/43.5%/31.8% at d=0.5/0.7/0.9, falls/100m 6.1/12.6/16.9, per-step lin-vel error 0.80/0.84/0.84 m/s -- at the WIDENED command range. Verdict settled by jobs.stairs_precollapse_eval: weak on stairs generally, caused by the back half of training."
     },
     "stairs_v2_train": {
-      "status": "not_submitted",
+      "status": "pending",
       "task": "Unitree-Go2-Spec-StairsV2",
       "experiment": "go2_spec_stairs_v2",
-      "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV2 sbatch a100/train_specialist_slurm.sh",
-      "notes": "Code ready 2026-10-03 (Stairs with command_vel held at stage 0; terrain unchanged; config-checked on CPU, never run). Waiting on Rohan's go -- PROGRESS_REPORT.md section 2.3. Supported by jobs.stairs_precollapse_eval. Judge by the pinned eval at the stage-0 command range, not by terrain_levels climbing."
+      "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV2 sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "Stairs with command_vel held at stage 0; terrain unchanged; cold start, seed 42, 10k iterations, 8192 envs, HF backup to RohanRamesh/go2-specialists/go2_spec_stairs_v2/. PENDING (Resources) at submission: all 6 GPUs allocated. --gres=gpu:1 (any type) so it can take the RTX 6000 the generalist frees when it finishes (~02:15 IST 2026-10-04 at its current 3.4 s/iteration); the scheduler's walltime-based worst case is ~16:02 IST 2026-10-04 on asaicomputenode02. The config was checked on CPU but has never run a training iteration -- check the first lines of go2-spec-12490.out once it starts. Judge the result by the pinned pyramid eval at the stage-0 command range (jobs.stairs_precollapse_eval), not by terrain_levels climbing.",
+      "slurm_job_id": "12490",
+      "submitted": "2026-10-03 20:08 IST, on Rohan's go-ahead"
     },
     "stairs_precollapse_eval": {
       "slurm_job_ids": [
