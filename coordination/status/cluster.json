@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-03T09:10:00Z",
+  "last_updated_utc": "2026-10-03T10:05:00Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -67,7 +67,7 @@
       "sha256": "b79ddd9b120d704015f9ee91abeef40486a05ec84a3da2324e93e1d16874e743",
       "status": "complete",
       "slurm_job_id": "11914",
-      "notes": "Attempt 3 (blended terrain 20% stepping_stones / 40% flat / 40% random_rough). Job 11914 SUBMITTED 2026-09-11, sat PENDING 6 days, STARTED 2026-09-17 08:47, COMPLETED 2026-09-17 21:24 (12h37m, 10k iterations). model_9999.pt on cluster local disk only (no HF_TOKEN at submission). Final training log: terrain_levels 0.54, illegal_contact 1.33 / fell_over 0.125 / time_out 6.5 per iteration. Blended mix trains 80% on non-gap terrain -- see go2_spec_gapswarm and findings.md 'Terrain specialists'. Not yet evaluated on the laptop.",
+      "notes": "Attempt 3 (blended terrain 20% stepping_stones / 40% flat / 40% random_rough). Job 11914 SUBMITTED 2026-09-11, sat PENDING 6 days, STARTED 2026-09-17 08:47, COMPLETED 2026-09-17 21:24 (12h37m, 10k iterations). model_9999.pt on cluster local disk only (no HF_TOKEN at submission). Final training log: terrain_levels 0.54, illegal_contact 1.33 / fell_over 0.125 / time_out 6.5 per iteration. Blended mix trains 80% on non-gap terrain -- see go2_spec_gapswarm and findings.md 'Terrain specialists'. Not yet evaluated on the laptop. 2026-10-03: an attempt to push this checkpoint to the private HF repo (coordination/inbox/to-cluster.md item 2) was BLOCKED by this cluster session's own permission settings (Claude Code auto-mode classifier, reason 'Data Exfiltration') -- not retried/worked around. Still local-disk only; needs either a human running the upload directly or a permission rule added for this session.",
       "hf_repo": null,
       "hf_stage": null
     },
@@ -89,10 +89,10 @@
       "sha256": null,
       "status": "cancelled",
       "slurm_job_id": "11918",
-      "notes": "Job 11918 (sensing-matched generalist) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- it never ran, no checkpoint exists. Needs resubmission: SPEC=Generalist sbatch a100/train_specialist_slurm.sh. Same fate for eval-matrix job 11919. Not resubmitted yet (waiting for the stairs-course work to settle GPU priorities)."
+      "notes": "Job 11918 (sensing-matched generalist) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- it never ran, no checkpoint exists. Needs resubmission: SPEC=Generalist sbatch a100/train_specialist_slurm.sh. Same fate for eval-matrix job 11919. 2026-10-03: laptop session asked for resubmission now (coordination/inbox/to-cluster.md), with HF_TOKEN exported and --gres=gpu:1 override (confirmed via sbatch --test-only, GPU was free). The attempt was BLOCKED by this cluster session's own permission settings (Claude Code auto-mode classifier, reason 'Modify Shared Resources') before sbatch ran -- not retried/worked around. Still not_submitted; needs either a human running sbatch directly or a permission rule added for this session."
     }
   },
-  "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session), refreshed again 2026-10-03 (cluster session, status check requested by laptop session 'policyswitching-b3'). Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist cancellation, go2_spec_gaps notes, jobs.*. No new checkpoint was produced between 2026-09-20 and 2026-10-03 (only an eval job, 12033, ran), so cluster_update_status.sh had nothing to register this pass -- see jobs.stairs_pyramid_eval below for the hand edit instead.",
+  "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed again 2026-10-03 twice in one session, first for the stairs step-1 status check, then for the laptop's 'submit the generalist / push gaps to HF / report stairs curve' request (coordination/inbox/to-cluster.md) -- the first two of those three were BLOCKED by this session's own permission settings (see runs.go2_generalist and runs.go2_spec_gaps notes; details in coordination/log/2026-10-03-cluster.md), the third is coordination/results/2026-10-03-stairs-training-curve.md. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist cancellation, go2_spec_gaps notes, jobs.*.",
   "cluster_state": {
     "as_of_utc": "2026-10-03T09:03:37Z",
     "nodes": "asaicomputemaster (2x RTX 6000 Ada), asaicomputenode02/03 (2x A100 each): all three MIXED. Not drained, not pending an admin action.",
