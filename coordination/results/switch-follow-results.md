@@ -205,9 +205,11 @@ noise off. Confirmation, seeds 500-502, 768 trials per arm, same sensing conditi
 
 **H4: "onboard sensing suffices" holds in both conditions** (both intervals inside +-5 points).
 The classifier is never late: in no trial did it first select a segment's class after the
-boundary. Its disagreements with the footprint rule are mostly on the release side (staying on
-a specialist a little longer after its segment) and, with noise on, brief flat/rough flicker
-on ground where either specialist is fine.
+boundary. Where its remaining disagreements with the footprint rule fall was not broken down.
+One pattern is visible in the lead distribution: for one stairs segment in each condition the
+90th-percentile lead sits at the 1.5 m window limit, so in at least a tenth of trials it was
+already on the stairs specialist well before that staircase (not released since the previous
+one, or selected early). Success is unaffected at this sample size.
 
 Limit, as stated in the addendum: the stairs in `multi` are the same straight 0.05 m stairs the
 classifier trained on, and the specialists it selects among are forgiving of flat/rough
