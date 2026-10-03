@@ -1,6 +1,6 @@
 # Step 1 results — stairs specialist on pinned pyramid stairs (job 12033)
 
-**Job ran**: 2026-09-21 10:26–10:30 (4m14s, `asaicomputemaster`) · **Written up**: 2026-10-03
+**Job ran**: 2026-09-21 10:26–10:30 IST (cluster local time; 04:56–05:00 UTC) (4m14s, `asaicomputemaster`) · **Written up**: 2026-10-03
 (cluster session, during a status check requested by the laptop session). The job completed
 cleanly 12 days ago but the results sat uncommitted on cluster local disk the whole time —
 nobody had written this up or run `git add` on the output JSONs. Flagging that gap rather
