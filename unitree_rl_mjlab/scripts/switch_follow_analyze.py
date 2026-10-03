@@ -74,17 +74,23 @@ class Arm:
   def pct(self, outcome: str) -> float:
     return 100 * self.count(outcome) / self.n
 
+  def _pooled_mean(self, metric: str, kind: str) -> float:
+    """Sample-weighted mean over seeds; NaN if no seed has a sample (a policy that
+    never reaches a boundary has no boundary window)."""
+    blocks = [s[metric][kind] for s in self.smooth if s[metric][kind]["n"]]
+    n = sum(b["n"] for b in blocks)
+    return sum(b["mean"] * b["n"] for b in blocks) / n if n else float("nan")
+
   def whole_mean(self, metric: str) -> float:
-    num = sum(s[metric]["whole"]["mean"] * s[metric]["whole"]["n"] for s in self.smooth)
-    return num / sum(s[metric]["whole"]["n"] for s in self.smooth)
+    return self._pooled_mean(metric, "whole")
 
   def window_rel(self, metric: str, kind: str, stat: str = "mean") -> float:
     """Boundary-window value over whole-rollout value. Means pool exactly (weighted
     by sample count); a p99 cannot be pooled from per-seed p99s, so it is their average."""
     if stat == "mean":
-      num = sum(s[metric][kind]["mean"] * s[metric][kind]["n"] for s in self.smooth)
-      return num / sum(s[metric][kind]["n"] for s in self.smooth) / self.whole_mean(metric)
-    return sum(s[metric][kind]["p99_rel"] for s in self.smooth) / len(self.smooth)
+      return self._pooled_mean(metric, kind) / self.whole_mean(metric)
+    vals = [s[metric][kind]["p99_rel"] for s in self.smooth if s[metric][kind]["n"]]
+    return sum(vals) / len(vals) if vals else float("nan")
 
   def per_trial_rel(self, key: str, metric: str) -> list[float]:
     """Per-trial boundary-window mean, normalised by this arm's whole-rollout mean."""
@@ -93,7 +99,7 @@ class Arm:
 
   def mean(self, key: str) -> float:
     vals = [t[key] for t in self.trials if t.get(key) is not None]
-    return sum(vals) / len(vals)
+    return sum(vals) / len(vals) if vals else float("nan")
 
 
 def load(paths: list[str]) -> tuple[dict[str, Arm], list[dict]]:
@@ -161,6 +167,9 @@ def compare(arms: dict[str, Arm], a_spec: str, b_spec: str) -> None:
         f"{100 * d:+.1f} points (95% CI {100 * lo:+.1f} to {100 * hi:+.1f})")
   for label, key, metric in (("action rate", "ar_entry", "action_rate"), ("actuator-force rate", "fr_entry", "force_rate")):
     da, db = a.per_trial_rel(key, metric), b.per_trial_rel(key, metric)
+    if len(da) < 2 or len(db) < 2:
+      print(f"- {label} in entry-boundary windows: not comparable, an arm has no trial that reached a boundary")
+      continue
     m, mlo, mhi = welch(da, db)
     print(f"- {label} in entry-boundary windows, relative to own whole-rollout mean: "
           f"{sum(da) / len(da):.3f} vs {sum(db) / len(db):.3f} -> difference {m:+.3f} (95% CI {mlo:+.3f} to {mhi:+.3f})")

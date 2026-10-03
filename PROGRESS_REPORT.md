@@ -10,7 +10,7 @@ is named; read it rather than re-deriving it.
 
 1. `git pull --rebase`, then read `README.md` → `objective.md` → `findings.md` (per `CLAUDE.md`).
 2. On the laptop (`romen`) read `docs/CLAUDE.laptop.md`; on the cluster, `docs/CLAUDE.cluster.md`.
-3. Come back to §2. One thing there needs a human.
+3. Come back to §2. The first item there is the only thing still owed.
 
 ## 1. Where the project stands
 
@@ -27,7 +27,7 @@ The experiment the project was built for has been run, and its answer is in
   useful horizon, and a classifier on the robot's own height scan times the switch as well as
   ground-truth labels do, so it adds no useful labels either.
 - **Blending the specialists' actions** instead of switching hard changes nothing.
-- **One planned arm is missing**: the sensing-matched generalist was never trained (§2.1).
+- **One planned arm is missing**: the sensing-matched generalist is training as of 2026-10-03 and has not been evaluated (§2.1).
 
 Everything else in the project (the three specialists, gate 1, gate 2, the PAS replication,
 the VLM/SARO pipeline, person-following and its two-rate perception) is unchanged from the
@@ -35,36 +35,30 @@ previous report and summarised in the final report, Section V.H.
 
 ## 2. What needs a decision or an action from you
 
-### 2.1 Train the generalist: needs a human at the cluster
+### 2.1 The generalist is training; add its arm when it finishes
 
-The cluster session tried on 2026-10-03 and its own permission classifier denied the `sbatch`
-("Modify Shared Resources"). Nothing is wrong with the cluster: one RTX 6000 Ada was free and
-nothing was queued. Either tell the cluster session directly to submit it, or run it by hand
-on `asaicomputemaster`:
+Job **12479** on `asaicomputemaster` (RTX 6000 Ada), started 2026-10-03 ~16:43 IST, 1-day
+walltime, seed 42, 10k iterations, pushing every checkpoint to the private
+`RohanRamesh/go2-specialists` under `go2_generalist/`. You submitted it by hand after the
+cluster session's permission classifier refused three times (`coordination/log/2026-10-03-cluster.md`).
+Expect ~12-13 hours if the Ada keeps an A100's pace. The cluster session is watching for a
+stepping-stones plateau at ~1,500 iterations. If the walltime runs out first, resubmitting the
+same command resumes from the last checkpoint.
 
-```
-cd /dist_home/d_palmani/c-08/policyswitching && git pull
-export HF_TOKEN=$(cat ~/.hf_token)
-SPEC=Generalist sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
-```
-
-`--gres=gpu:1` lets it start on whichever GPU is free instead of waiting for an A100.
-`HF_TOKEN` makes it push checkpoints to the private `RohanRamesh/go2-specialists` repo, which
-is how the laptop gets them. About 12 hours. Check the log after ~1,500 iterations: a quarter
-of its terrain is stepping stones, which the Gaps specialist never learned from a cold start.
-
-When `go2_generalist/model_9999.pt` exists, the arm is one command on the laptop (from
-`unitree_rl_mjlab/`, once per seed 500, 501, 502):
+When `go2_generalist/model_9999.pt` is on HF, the arm is one command on the laptop:
 
 ```
-python scripts/switch_follow.py --seed 500 --arms fixed:generalist hard:0.3:label fixed:stairs \
-    --extra-policy generalist=<path>/model_9999.pt --ckpt-root <eval_ckpts> \
-    --json-out eval_results/switch_follow/generalist_s500.json
+unitree_rl_mjlab/scripts/switch_follow_generalist.sh
 ```
 
-then `switch_follow_analyze.py confirm ... --pairs "hard:0.3:label>fixed:generalist"`, and
-again with `--obs-noise`. That fills the one empty cell in the final report (Section VIII.1)
-and answers the question `objective.md` says the project rests on.
+It downloads the checkpoint, runs `fixed:generalist` next to the on-time switch and the stairs
+specialist on seeds 500-502 with observation noise off and on, and prints the comparisons. The
+whole path was code-checked on 2026-10-03 with the job's iteration-0 checkpoint (0% success, as
+an untrained policy should score). Then: put the numbers into
+`coordination/results/switch-follow-results.md`, `report_content/final_report.md` (Sections
+V.B, V.F, VII and VIII.1 all say the generalist is missing) and `objective.md`'s "What the
+result was". Before trusting a good-looking number, check it is walking and not bracing
+(findings.md bugs #1 and #14): look at `lost %` and the tracking error, not only falls.
 
 ### 2.2 Gaps checkpoint: same block
 
