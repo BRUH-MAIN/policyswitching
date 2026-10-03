@@ -32,10 +32,8 @@ caveats: `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`
 with this checkpoint as the stairs specialist. If it carries over, the 0.07-0.09 m courses
 (0-34% with `model_9999`) may become usable.
 
-Source: **cluster disk only, not on HF yet** -- the push needs Rohan (command in the
-write-up; suggested destination `go2_spec_stairs_it4800/model_4800.pt`, so `go2_spec_stairs/`
-still resolves to `model_9999`).
-Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs/2026-09-05_22-37-43/model_4800.pt
+Source: hf (RohanRamesh/go2-specialists, `go2_spec_stairs_it4800/model_4800.pt`) -- its own
+folder, so `go2_spec_stairs/` still resolves to `model_9999`. Run id `go2_spec_stairs_it4800`.
 sha256 1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320. Task
 `Unitree-Go2-Spec-Stairs` (same network, same observations as `model_9999`).
 

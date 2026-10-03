@@ -48,8 +48,8 @@ shown for orientation only — it pools per episode (bug #15); read the falls/10
    policy lost capability, by a factor of about three, and did not merely stop improving.
 2. **A better stairs specialist already exists on disk.** No GPU-day is needed to get one:
    `unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs/2026-09-05_22-37-43/model_4800.pt`
-   (sha256 `1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320`). It is on
-   cluster disk only — only `model_9999.pt` was backfilled to HF.
+   (sha256 `1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320`). On private HF
+   since the evening of 2026-10-03 as `go2_spec_stairs_it4800/model_4800.pt`.
 3. **Step 1's fall rates were not a command-range artifact, but its tracking numbers
    were.** `model_9999` at the widened range vs the stage-0 range: falls/100 m 6.08 → 4.10
    at d = 0.5, 12.58 → 12.02 at 0.7, 16.95 → 18.06 at 0.9. Achieved speed goes from 24–27%
@@ -61,7 +61,7 @@ shown for orientation only — it pools per episode (bug #15); read the falls/10
 
 - **Nothing here is on the straight course.** Pyramid stairs, 20 s episodes, random
   commands. Whether `model_4800` lifts the 0–34% crossing rate at 0.07–0.09 m risers on the
-  laptop's straight staircase is the laptop's test to run, and it needs the checkpoint.
+  laptop's straight staircase is the laptop's test to run.
 - **One training run, one eval seed.** The gap is large against sampling noise (132 vs 345
   `illegal_contact` episodes at d = 0.5), but it is one seed of each.
 - **`model_4800` was picked before looking**, as "the last checkpoint clearly before
@@ -112,16 +112,12 @@ range at stage 0, and to judge it by whether `terrain_levels` "keeps climbing pa
 
 ## What is left to decide (Rohan)
 
-1. **Get `model_4800.pt` to the laptop** — the cheapest next step, no GPU. Not done from
-   this session: it sends weights to an external service and was not asked for. Suggested
-   destination is its own folder, so "highest iteration under the stage" still resolves to
-   `model_9999` for `go2_spec_stairs`:
-   ```
-   export HF_TOKEN=$(cat ~/.hf_token)
-   ~/.venvs/policyswitching-pas/bin/huggingface-cli upload RohanRamesh/go2-specialists \
-     unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs/2026-09-05_22-37-43/model_4800.pt \
-     go2_spec_stairs_it4800/model_4800.pt
-   ```
+1. ~~Get `model_4800.pt` to the laptop~~ — **done 2026-10-03 ~18:30 IST**, on Rohan's instruction: private
+   `RohanRamesh/go2-specialists`, `go2_spec_stairs_it4800/model_4800.pt`, remote LFS sha256 matches the
+   local file. Registered as `runs.go2_spec_stairs_it4800` in `cluster.json`. It has its own folder so
+   that "highest iteration under the stage" still resolves to `model_9999` for `go2_spec_stairs`.
+   (An earlier revision of this file gave a `huggingface-cli upload` command; that CLI is deprecated
+   and no longer works. The upload went through `HfApi.upload_file`, as `backfill_specialist_hf.py` does.)
 2. **Whether to train stairs v2** (a GPU-day; `PROGRESS_REPORT.md` §2.3 reserves this):
    ```
    export HF_TOKEN=$(cat ~/.hf_token)

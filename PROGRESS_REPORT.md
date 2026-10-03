@@ -80,9 +80,9 @@ specialist. Proposal is in `coordination/inbox/to-cluster.md`; `stairs_v2_train`
 - A better stairs specialist already exists: `model_4800.pt` of the same run, saved before
   the collapse, falls 2.6–3.6× less often per 100 m than `model_9999.pt` on pinned pyramid
   stairs (1.57 vs 4.10 at 5 cm risers, 5.06 vs 18.06 at 9 cm), at the same speed. It is on
-  cluster disk only. Pushing it to the private HF repo is one command and no GPU; it is in
-  `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`, which also has
-  the caveats (pyramid terrain only, one eval seed, untested on the straight course).
+  the private HF repo as `go2_spec_stairs_it4800/model_4800.pt` (`runs.go2_spec_stairs_it4800`
+  in `cluster.json`). Write-up and caveats (pyramid terrain only, one eval seed, untested on
+  the straight course): `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`.
 - The v2 task is built and config-checked, not submitted: `SPEC=StairsV2 sbatch
   a100/train_specialist_slurm.sh` (experiment `go2_spec_stairs_v2`, separate from
   `go2_spec_stairs`). Judge it by that same pinned eval, not by `terrain_levels` climbing —
