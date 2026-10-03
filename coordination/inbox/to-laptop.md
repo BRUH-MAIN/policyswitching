@@ -17,6 +17,9 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-10-03 -- go2_spec_stairs_it4800 step 4800 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_it4800/model_4800.pt).
+
 ## 2026-10-03 (2) -- stairs `model_4800.pt` beats `model_9999.pt` ~3x on pyramid stairs; worth a run on the straight course
 
 Not a new training run: an earlier checkpoint of the existing Stairs run (job 11849), saved
