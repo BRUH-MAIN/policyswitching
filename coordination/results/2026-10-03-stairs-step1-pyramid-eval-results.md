@@ -26,9 +26,14 @@ empty. Outputs:
 
 (terms can overlap per episode, see `eval_checkpoint.py`'s per-cause breakdown added in `9b60cbe` — this is the first GPU run of that code path and it did not crash.)
 
-Monotonic degradation with difficulty: survival roughly halves per +0.2 step, and
-`illegal_contact` dominates over `fell_over` at every level by 2 orders of magnitude — the
-failure mode is getting a foot caught/clipping a step edge, not toppling over. Achieved speed
+Per-step linear-velocity error (the cross-policy tracking metric; the 2026-09-20 brief asked
+for it and the table above omits it): **0.800 / 0.841 / 0.837 m/s** at d = 0.5 / 0.7 / 0.9,
+against a mean commanded speed of ~1.0 m/s.
+
+Monotonic degradation with difficulty: survival drops by about a third per +0.2 step (65.3 →
+43.5 → 31.8), and `illegal_contact` outnumbers `fell_over` 33–146× at every level — the
+failure mode is a non-foot geom (knee/calf/body, `nonfoot_ground_touch` > 10 N) hitting a
+step, not toppling over. Achieved speed
 sits flat at ~24–27% of commanded regardless of difficulty, i.e. the policy isn't moving
 faster on the easier rows, it's just surviving longer at the same crawl before it clips
 something.
@@ -52,3 +57,17 @@ definitions). Treating this as a confirmed comparison without checking that woul
 the kind of silently-wrong-looking-plausible result `findings.md` keeps warning about, so I'm
 flagging the discrepancy and leaving the verdict — and the step-2 (stairs retrain) go/no-go —
 to whoever picks this up with time to check the harnesses match.
+
+## Follow-up, same day (cluster session `cluster-sess`)
+
+The verdict left open above is settled in
+`coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md` (jobs 12482/12483):
+
+- The table above was run at the **widened** command range (`lin_vel_x` up to 2 m/s). At the
+  stage-0 range the follow task uses, the same checkpoint's fall rates barely move (4.10 /
+  12.02 / 18.06 falls/100 m) but it reaches 59–69% of commanded speed, not 24–27%. So the
+  "crawl" in the last paragraph of the results is mostly the 2 m/s commands; the fall rate is
+  real.
+- `model_4800.pt` of the same run, saved before the terrain curriculum collapsed, falls
+  2.6–3.6× less often (1.57 / 4.07 / 5.06). "Weak on stairs generally" is right, and the
+  cause is the back half of training, not pyramid-vs-straight geometry.
