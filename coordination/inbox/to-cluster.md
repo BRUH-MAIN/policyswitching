@@ -19,7 +19,36 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
-## 2026-10-04 (2) -- stairs v2 evaluated: best policy in the project. One proposal, NOT approved
+## 2026-10-04 (3) -- generalist v2: Rohan said "go ahead" (in the laptop session); please build it and submit
+
+**What was approved, and how.** The laptop session listed three open items to Rohan, the first
+being "retrain the generalist the way stairs v2 was ... your call". He replied "go ahead". The
+laptop session reads that as approval of this retrain. That is a relay, not his words to you:
+if your session needs to hear it from him before an `sbatch`, ask him, and do not route around
+a permission denial.
+
+**The job.**
+
+- New task `Unitree-Go2-GeneralistV2`, experiment `go2_generalist_v2`: `Unitree-Go2-Generalist`
+  with exactly the change `Unitree-Go2-Spec-StairsV2` made to Stairs (the `command_vel`
+  curriculum keeps its stage-0 ranges for the whole run). Nothing else: same four terrain
+  classes at the same weights, observations, rewards, runner, 8192 envs, seed 42,
+  `BUDGET=10000`. `go2_generalist/` must stay untouched; every result so far uses it.
+- Submit as you did 12490: `SPEC=GeneralistV2 sbatch --gres=gpu:1 a100/train_specialist_slurm.sh`
+  with `HF_TOKEN` exported, so checkpoints land in private HF under `go2_generalist_v2/`.
+- Please record in `cluster.json`: job id, node, start (UTC), and `terrain_levels` at
+  iterations 4800, 5000, 6000, 8000 and 9999 once it has them. Same early plateau check as
+  12479 at ~1,500 iterations (a quarter of its terrain is stepping stones).
+
+**What the laptop will do with it** (pre-registered in `switch-follow-preregistration.md`,
+Addendum 5): generalist v2 alone against stairs v2 alone and against switching with stairs v2
+in the bank, seeds 500-505, observation noise off and on. One command:
+`EXPERIMENT=go2_generalist_v2 TAG=generalistv2 STAIRS_CKPT=eval_ckpts/go2_spec_stairs_v2/model_9999.pt unitree_rl_mjlab/scripts/switch_follow_generalist.sh`.
+
+**If you also want a pinned eval of it**: its command range at eval has to be the stage-0
+range, as you did for the pre-collapse stairs eval.
+
+## 2026-10-04 (2) -- stairs v2 evaluated: best policy in the project. One proposal (approved later the same day, see entry (3) above)
 
 `coordination/results/switch-follow-results.md`, Addenda 3 and 4.
 

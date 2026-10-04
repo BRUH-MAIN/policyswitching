@@ -207,3 +207,24 @@ and on, L2 seeds 600-601, the same eight arms, everything reported. Same two que
 (early minus on-time) and H5b (switch minus stairs alone), plus one comparison across
 checkpoints: stairs v2 alone against `model_4800` alone, which says whether the retrain did as
 well as, better than, or worse than stopping the original run early.
+
+## Addendum 5, 2026-10-04: generalist v2 (written before it is trained)
+
+Rohan approved retraining the generalist with the command range held (`Unitree-Go2-GeneralistV2`,
+experiment `go2_generalist_v2`), the change that produced stairs v2. This is the comparison
+`objective.md` calls the one the project rests on, with a properly trained policy on each side.
+
+- Course `multi` L1, follow task, seeds 500-505, 256 trials each, observation noise off and on.
+  Bank: flat and rough as trained, stairs = stairs v2.
+- Arms: `fixed:generalist` (generalist v2 `model_9999`), `fixed:stairs` (stairs v2 alone),
+  `hard:0.3:label`. Run with `scripts/switch_follow_generalist.sh`.
+- Reported, pooled over the six seeds per condition: stairs alone minus generalist v2, switch
+  minus generalist v2, and generalist v2 against the as-trained generalist's numbers from
+  Addendum 2A (different runs, so read with the 2-3.5 point run-to-run spread in mind).
+- Reading: if generalist v2 is within 2 points of stairs v2 alone in both conditions, "one
+  well-trained policy is enough, specialist or not". If stairs v2 is ahead with an interval
+  excluding 0, specialisation still pays on this course. Both arms are near ceiling at L1
+  (stairs v2: 99.7-99.9%), so the same three arms are also run at L2 on seeds 600-601 (noise
+  off), where there is room to differ. Whatever comes out is reported.
+- Before reading success, check generalist v2 is walking (lost %, tracking error), and note
+  its terrain level through iteration 5000 from the cluster log.
