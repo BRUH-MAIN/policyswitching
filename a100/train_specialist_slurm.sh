@@ -17,6 +17,9 @@
 #   Generalist                     -> Unitree-Go2-Generalist, experiment go2_generalist:
 #                                     all four terrain classes, otherwise identical to a
 #                                     specialist (obs, rewards, runner, budget)
+#   GeneralistV2                   -> Unitree-Go2-GeneralistV2, experiment go2_generalist_v2:
+#                                     Generalist with the command range held at stage 0 (the
+#                                     StairsV2 change). Separate experiment from go2_generalist
 #
 # Optional env:
 #   SEED       default 42 (mjlab's default, used by every run so far). Any other seed gets
@@ -53,7 +56,7 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
@@ -67,7 +70,11 @@ case "$SPEC" in
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist (got '$SPEC')" >&2; exit 1 ;;
+  GeneralistV2)
+    TASK="Unitree-Go2-GeneralistV2"
+    EXPERIMENT_NAME="go2_generalist_v2"
+    ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"

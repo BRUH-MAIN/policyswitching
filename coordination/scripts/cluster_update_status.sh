@@ -73,6 +73,7 @@ if [ -z "${TASK:-}" ]; then
     go2_pas_stage1)    TASK="Unitree-Go2-PAS-Oracle" ;;
     go2_pas_stage2)    TASK="Unitree-Go2-PAS-Anneal" ;;
     go2_generalist)    TASK="Unitree-Go2-Generalist" ;;
+    go2_generalist_v2) TASK="Unitree-Go2-GeneralistV2" ;;
     go2_spec_gapswarm) TASK="Unitree-Go2-Spec-GapsWarm" ;;
     go2_spec_flat)     TASK="Unitree-Go2-Spec-Flat" ;;
     go2_spec_rough)    TASK="Unitree-Go2-Spec-Rough" ;;

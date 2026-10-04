@@ -365,6 +365,15 @@ def unitree_go2_spec_stairs_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   return _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
 
 
+def _hold_command_range_at_stage0(cfg: ManagerBasedRlEnvCfg) -> ManagerBasedRlEnvCfg:
+  """Cut the `command_vel` curriculum to its first stage (the "v2" change)."""
+  # Play mode has no curriculum at all.
+  if "command_vel" in cfg.curriculum:
+    params = cfg.curriculum["command_vel"].params
+    params["velocity_stages"] = params["velocity_stages"][:1]
+  return cfg
+
+
 def unitree_go2_spec_stairs_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Stairs specialist v2: Stairs with the command range held at its first stage.
 
@@ -383,12 +392,9 @@ def unitree_go2_spec_stairs_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvC
   command range is the widened one, so pass
   `--lin-vel-x -0.5 1.0 --lin-vel-y -0.5 0.5`.
   """
-  cfg = _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
-  # Play mode has no curriculum at all.
-  if "command_vel" in cfg.curriculum:
-    params = cfg.curriculum["command_vel"].params
-    params["velocity_stages"] = params["velocity_stages"][:1]
-  return cfg
+  return _hold_command_range_at_stage0(
+    _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
+  )
 
 
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
@@ -437,6 +443,19 @@ def unitree_go2_generalist_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   return _unitree_go2_specialist_env_cfg(
     tuple(proportions), play=play, proportions=proportions
   )
+
+
+def unitree_go2_generalist_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Generalist v2: the generalist with the command range held at its first stage.
+
+  Differs from `unitree_go2_generalist_env_cfg` ONLY in the `command_vel`
+  curriculum -- the same change `unitree_go2_spec_stairs_v2_env_cfg` makes to
+  Stairs. The v1 generalist's terrain curriculum collapsed at iteration 5000
+  like the specialists' (terrain_levels 1.52 -> 0.4-0.5, job 12479), so against
+  Stairs v2 it is the handicapped arm; this is the matched one. As with Stairs
+  v2, evaluate at `--lin-vel-x -0.5 1.0 --lin-vel-y -0.5 0.5`.
+  """
+  return _hold_command_range_at_stage0(unitree_go2_generalist_env_cfg(play=play))
 
 
 def unitree_go2_pas_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
