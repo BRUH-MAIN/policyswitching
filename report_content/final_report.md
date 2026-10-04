@@ -162,26 +162,43 @@ Both are reported; "noise on" is the more deployment-like condition.
 
 ## V. Results
 
-### A. Specialists differ by terrain
+### A. Specialists differ by terrain; the generalist is close to the best of them on each
 
-Falls per 100 m travelled at pinned difficulty 0.5, with training noise on (the generalist row
-was measured on 2026-10-04 with the same settings):
+Falls per 100 m travelled at pinned difficulty 0.5, with training noise on (128 robots for
+24 s per cell; the generalist row was measured on 2026-10-04 with the same settings):
 
-| policy \ terrain | flat | rough | stairs |
-|---|---|---|---|
-| Flat specialist | 0.00 | 14.41 | 10.42 |
-| Rough specialist | 0.00 | **5.36** | 11.14 |
-| Stairs specialist | 0.00 | 13.02 | **7.60** |
-| Generalist | 0.00 | 4.70 | 8.33 |
+| policy \ terrain | flat | rough | stairs | gaps | mixed |
+|---|---|---|---|---|---|
+| Flat specialist | 0.00 | 14.41 | 10.42 | 684 | 154 |
+| Rough specialist | 0.00 | **5.36** | 11.14 | 1357 | 272 |
+| Stairs specialist | 0.00 | 13.02 | **7.60** | 975 | 303 |
+| Generalist | 0.00 | 4.70 | 8.33 | 29.7 | 7.5 |
 
 Among the specialists the best policy changes with the terrain, which is the condition
 switching needs. The rough margin is solid (2.4× the runner-up under three different fall
 metrics); the stairs margin is 1.4× on a single seed. The generalist is close to the best
-specialist in each column (each cell is 128 robots for 24 s, so differences of this size
-between the generalist and the column's best specialist are within sampling noise). The stairs
-specialist is weak in absolute terms: on its own training terrain it falls 6.1, 12.6 and 16.9
-times per 100 m at difficulty 0.5, 0.7 and 0.9, nearly all from non-foot contact with a step
-edge.
+specialist on rough ground and stairs (differences of that size are within the sampling noise
+of a cell), and it is the only policy that copes with stepping-stone gaps at all, though it
+does so at 10% of commanded speed. The course used below has no gaps segment, so it does not
+test that advantage.
+
+The stairs specialist is weak in absolute terms: on its own training terrain it falls 6.1,
+12.6 and 16.9 times per 100 m at difficulty 0.5, 0.7 and 0.9, nearly all from non-foot contact
+with a step edge.
+
+**The generalist depends on its height scan; the specialists barely do.** Replacing the scan
+with a constant (the policy's own average scan) on the same pinned terrain:
+
+| generalist, falls per 100 m | flat | rough | stairs | gaps |
+|---|---|---|---|---|
+| with its scan | 0.00 | 4.70 | 8.33 | 29.7 |
+| scan replaced by a constant | 65.4 | 188.4 | 67.0 | 430 |
+
+The same ablation moved the specialists' fall rates by between −16% and +30%. For a policy
+trained on every terrain the scan is how it tells them apart, and a constant scan is a wrong
+picture of the ground, not merely a missing one, which is why it falls even on flat ground.
+This closes the project's second premise gate: a policy that saw varied terrain in training
+uses the scan heavily.
 
 ### B. Switching against single policies
 
@@ -215,9 +232,10 @@ Pooled over every run of the two arms (2,304 trials each): +14.6 points with noi
 Two independent runs on different seeds agree. The generalist is walking, not bracing: it
 never loses the leader, and its tracking error and traverse time equal the switching arm's.
 With noise on it loses trials at the lip of the down-stairs (0.7% → 5.4%) and on the stairs
-(8.3% → 11.2%), while every specialist does better with noise on than off. One reading is that
-the generalist must rely on the scan to know what terrain it is on, so scan noise costs it;
-that was not tested.
+(8.3% → 11.2%), while every specialist does better with noise on than off. This fits the
+ablation in Section V.A: the generalist relies on the scan to know what terrain it is on, so
+noise on the scan costs it, and the specialists, which lean on the scan far less, are not hurt.
+The link is an inference from those two measurements, not a direct test.
 
 ### C. Switch timing: not late, and no benefit from early
 
@@ -448,7 +466,7 @@ was at the low end of a spread whose pooled value is +7.3.
 
 | Section | Source |
 |---|---|
-| V.A | `coordination/results/gate1-cross-terrain-matrix-analysis.md`; `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md`; generalist row: `unitree_rl_mjlab/eval_results/matrix_generalist/` |
+| V.A | `coordination/results/gate1-cross-terrain-matrix-analysis.md` (specialist rows and their ablation); `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md`; generalist row and ablation: `unitree_rl_mjlab/eval_results/matrix_generalist/` |
 | V.B-F | `coordination/results/switch-follow-results.md`; raw `unitree_rl_mjlab/eval_results/switch_follow/`; rules `coordination/results/switch-follow-preregistration.md` |
 | V.G | `coordination/results/2026-10-03-stairs-training-curve.md`; `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`; `switch-follow-results.md`, Addendum 2B; `findings.md`, "Why the specialists are weak" |
 | V.H | `findings.md` (PAS, VLM navigation, person-following, SARO protocol sections); `coordination/results/vlm-nav-*.md` |

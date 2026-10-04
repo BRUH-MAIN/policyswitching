@@ -1,0 +1,54 @@
+{
+  "label": "generalist",
+  "task": "Unitree-Go2-Generalist",
+  "checkpoint": "/home/rohan/rl/policyswitching/unitree_rl_mjlab/eval_ckpts/go2_generalist/model_9999.pt",
+  "num_envs": 128,
+  "steps": 1200,
+  "conditions": {
+    "keep_curricula": false,
+    "seed": 0,
+    "terrain": "stairs",
+    "difficulty": 0.5,
+    "lin_vel_x": [
+      -1.0,
+      2.0
+    ],
+    "lin_vel_y": [
+      -1.0,
+      1.0
+    ],
+    "ang_vel_z": [
+      -1.0,
+      1.0
+    ],
+    "ablate_height_scan": true
+  },
+  "survival": {
+    "episodes": 277,
+    "survival_pct": 17.32851985559567,
+    "fall_pct": 82.67148014440433,
+    "mean_ep_len": 385.62093862815885,
+    "mean_return": 10.79375623882032,
+    "terminations": {
+      "time_out": 48,
+      "fell_over": 0,
+      "illegal_contact": 229
+    }
+  },
+  "locomotion": {
+    "mean_cmd_speed": 1.0012459883605256,
+    "mean_actual_speed": 0.1120552307158837,
+    "achieved_pct_of_cmd": 11.191578495047633,
+    "lin_vel_error_per_step": 1.008516455017298,
+    "ang_vel_error_per_step": 0.21429296909289805,
+    "distance_rate": 0.1114686727399403,
+    "stalled_pct": 21.111301781240346,
+    "total_distance_m": 341.81422621011734,
+    "falls_per_100m": 66.99545613974269
+  },
+  "smoothness": {
+    "action_rate_l2": 2.5559376935752183,
+    "actuator_force_rate": 299.3575038352867,
+    "actuator_force_rate_p99": 1115.3077198884405
+  }
+}

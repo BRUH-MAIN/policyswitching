@@ -258,10 +258,13 @@ Per seed, generalist: 89.5 / 89.8 / 91.4 / 89.8 / 92.2 / 90.2 with noise off; 82
   result. It is.
 - **Where the generalist loses with noise on**: at the lip of the down-stairs (0.7% of trials
   with noise off, 5.4% with it on) and on the down-stairs themselves (8.3% -> 11.2%). The
-  specialists move the other way: every one of them does better with the noise on. A natural
-  reading is that the generalist has to read the scan to know what terrain it is on, so scan
-  noise costs it, while a specialist can afford to lean on it less. That is an inference from
-  the failure locations, not something tested here.
+  specialists move the other way: every one of them does better with the noise on. The
+  height-scan ablation run the same day fits this: with its scan replaced by a constant the
+  generalist's falls per 100 m on pinned terrain go from 0.00 / 4.70 / 8.33 to 65.4 / 188.4 /
+  67.0 on flat / rough / stairs (`eval_results/matrix_generalist/`), where the same ablation
+  moved the specialists by -16% to +30%. The generalist reads the scan to know what terrain it
+  is on, so noise on the scan costs it. That link is an inference from two measurements, not a
+  direct test.
 - With noise on the generalist is no better than the stairs specialist alone (82.5% vs 82.0%,
   +0.5, CI -2.2 to +3.2). With noise off it is 15.7 points better.
 - The generalist shares the specialists' handicap: it trained under the curriculum that

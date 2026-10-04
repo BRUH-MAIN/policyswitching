@@ -138,6 +138,20 @@ Actor `height_scan` has `Unoise(±0.1 m)` applied before `scale=1/5` (mjlab's pi
 
 Rough and Stairs sit barely above Flat. Assuming the noise is independent, the terrain-plus-body-motion component is only ~0.005 scaled (~2–3 cm), well below the ~5.8 cm noise std. That is plausible given `ROUGH_TERRAINS_CFG`'s mild geometry (stairs ≤10 cm, rough noise 2–10 cm). This doesn't prove the policies ignore the scan: 187 spatially correlated rays can be pooled. But it's a real risk for the switching design, whose reactive classifier and gating input both assume the scan is informative. **Test**: the height-scan ablation cells in job 11919. If fall rate and error barely move with the scan replaced by a constant, the terrain signal (noise level, difficulty range) needs fixing before Phase 4. It also means any warm start onto stepping stones (gaps drop 2 m → ~17σ on these stats) must reset normalizer statistics, which `warm_start_ckpt.py` does by default.
 
+### Gate 2, second half closed: the generalist uses its height scan heavily, the specialists barely (2026-10-04)
+
+`objective.md` said the height-scan ablation was only meaningful on a policy that saw scan variation in training, i.e. the generalist. Run on the laptop with `a100/eval_matrix.py --only generalist --difficulties 0.5 --num-envs 128` (`eval_results/matrix_generalist/`, training config, so observation noise on):
+
+| generalist, falls per 100 m (falls / distance) | flat | rough | stairs | gaps | mixed |
+|---|---|---|---|---|---|
+| with scan | 0.00 (0 / 948 m) | 4.70 (37 / 787 m) | 8.33 (69 / 828 m) | 29.7 (89 / 299 m) | 7.47 |
+| scan replaced by its normalizer mean | 65.4 (223 / 341 m) | 188.4 (833 / 442 m) | 67.0 (229 / 342 m) | 430 (1725 / 401 m) | not run |
+
+- **The generalist is unusable without its scan**, even on flat ground, and its speed drops from 26-30% of commanded to 11-15%. The same ablation moved the three specialists by -16% to +30% (gate-1 analysis). So the answer to "do these policies use `height_scan` at all" is: the generalist, completely; the specialists, hardly.
+- **Read the size with care.** For a generalist the normalizer mean is an average over flat ground, stairs and stepping-stone holes, so the constant fed to it is not "no information" but a picture of terrain that does not exist. The ablation shows dependence, not what the policy would do with a blank scan.
+- **With its scan the generalist is close to the best specialist on rough and stairs** (4.70 vs 5.36, 8.33 vs 7.60; within a cell's sampling noise) **and is the only policy that copes with gaps** (29.7 against 684-1357 for the specialists), though at 10% of commanded speed there, so bug #1's caution applies to that cell.
+- It also explains the generalist's behaviour on the mixed course: it loses 8 points when observation noise is switched on, while every specialist gains (see "Switching while following").
+
 ### Why the specialists are weak: the command curriculum collapses the terrain curriculum at iteration 5000 (2026-10-03)
 
 Found from the per-iteration training logs of jobs 11849 (Stairs) and 11851 (Rough), pulled by the cluster session (`coordination/results/2026-10-03-stairs-training-curve.md`). Both runs show the same thing:
