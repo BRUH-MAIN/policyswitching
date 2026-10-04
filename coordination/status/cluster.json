@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-04T04:34:51Z",
+  "last_updated_utc": "2026-10-04T04:34:56Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -92,7 +92,7 @@
       "node": "asaicomputemaster",
       "started": "2026-10-03T11:13:26Z",
       "walltime_end": "2026-10-04T11:13:26Z",
-      "notes": "Job 11918 (first attempt) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- never ran, no checkpoint. Same fate for eval-matrix job 11919. 2026-10-03: the cluster session's own permission layer blocked a Claude-driven resubmission attempt twice (reason 'Modify Shared Resources', then again even after the user said to proceed, and again when the session tried to self-edit its own settings.local.json to allow it -- that third attempt was blocked too, reason 'Self-Modification'). Rohan then ran it himself directly in a shell: `export HF_TOKEN=$(cat ~/.hf_token) && SPEC=Generalist sbatch --gres=gpu:1 a100/train_specialist_slurm.sh` -> job 12479, SUBMITTED and STARTED immediately (same second) on asaicomputemaster's free RTX 6000 Ada, gres/gpu:rtx6000=1, cpu=8, mem=48G. Confirmed via squeue/scontrol RUNNING, and go2-spec-12479.out shows a clean start: fresh run (no existing checkpoint), seed 42, budget 10000, 8192 envs, HF_TOKEN confirmed set (pushing to hf.co/RohanRamesh/go2-specialists/go2_generalist/), logging to logs/rsl_rl/go2_generalist/2026-10-03_16-45-00. 1-day walltime (ends ~2026-10-04T11:13Z). Per the laptop's 2026-10-03 request: check the log at ~1500 iterations for a stepping-stones plateau signature (mean ep length <~100 steps, reward flat for 500 iterations) before letting it run the full 12h+. Plateau check 2026-10-03 18:33 IST (iteration 1800): PASSED -- mean episode length 773-873 steps and mean reward 31-38 over iterations 1000-1800, terrain_levels 1.20 -> 1.41; nothing like the Gaps plateau (~10-step episodes, reward -6 to -8). Checkpoints through model_1600.pt are on HF.",
+      "notes": "Job 11918 (first attempt) was CANCELLED by root (uid 0) on 2026-09-17T11:04:55 while still PENDING -- never ran, no checkpoint. Same fate for eval-matrix job 11919. 2026-10-03: the cluster session's own permission layer blocked a Claude-driven resubmission attempt twice (reason 'Modify Shared Resources', then again even after the user said to proceed, and again when the session tried to self-edit its own settings.local.json to allow it -- that third attempt was blocked too, reason 'Self-Modification'). Rohan then ran it himself directly in a shell: `export HF_TOKEN=$(cat ~/.hf_token) && SPEC=Generalist sbatch --gres=gpu:1 a100/train_specialist_slurm.sh` -> job 12479, SUBMITTED and STARTED immediately (same second) on asaicomputemaster's free RTX 6000 Ada, gres/gpu:rtx6000=1, cpu=8, mem=48G. Confirmed via squeue/scontrol RUNNING, and go2-spec-12479.out shows a clean start: fresh run (no existing checkpoint), seed 42, budget 10000, 8192 envs, HF_TOKEN confirmed set (pushing to hf.co/RohanRamesh/go2-specialists/go2_generalist/), logging to logs/rsl_rl/go2_generalist/2026-10-03_16-45-00. 1-day walltime (ends ~2026-10-04T11:13Z). Per the laptop's 2026-10-03 request: check the log at ~1500 iterations for a stepping-stones plateau signature (mean ep length <~100 steps, reward flat for 500 iterations) before letting it run the full 12h+. Plateau check 2026-10-03 18:33 IST (iteration 1800): PASSED -- mean episode length 773-873 steps and mean reward 31-38 over iterations 1000-1800, terrain_levels 1.20 -> 1.41; nothing like the Gaps plateau (~10-step episodes, reward -6 to -8). Checkpoints through model_1600.pt are on HF. COMPLETED 2026-10-04 02:42 IST (9h59m, exit 0:0, RTX 6000 Ada); model_9999.pt on private HF. terrain_levels 1.52 at iteration 5000 -> 0.39-0.50 from 6000 on: the same iteration-5000 collapse as the Stairs and Rough specialists, as expected on the unmodified curriculum.",
       "hf_repo": "RohanRamesh/go2-specialists",
       "hf_stage": "go2_generalist"
     },
@@ -116,9 +116,9 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "pending",
+      "status": "in_progress",
       "slurm_job_id": "12490",
-      "notes": "Queued 2026-10-03 20:08 IST, not started. No checkpoint yet -- nothing to pull. See jobs.stairs_v2_train."
+      "notes": "RUNNING since 2026-10-04 02:42 IST on asaicomputemaster (RTX 6000 Ada, the GPU the generalist freed), 3.11 s/iteration. Iteration 8241 of 10000 at 10:04 IST, so it should finish around 11:35 IST. No errors in .out/.err; checkpoints through model_8200.pt on HF. terrain_levels did NOT collapse at 5000: 1.87 (4800), 1.93 (5000), 1.99 (6000), 2.15 (7000), 2.13 (8000). Not yet evaluated -- the pinned pyramid eval at the stage-0 command range is the test (jobs.stairs_precollapse_eval)."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed three times more on 2026-10-03: stairs step-1 status check, the laptop's 'submit generalist / push gaps to HF / report stairs curve' request (2 of 3 blocked by this session's own permission layer -- see coordination/log/2026-10-03-cluster.md), then Rohan ran the generalist sbatch himself directly after the cluster session's attempt to even self-edit its own settings.local.json to allow it was *also* blocked (reason 'Self-Modification') -- job 12479 is now RUNNING (runs.go2_generalist). The gaps->HF push is still not done; still needs a human to run it directly (see runs.go2_spec_gaps notes) -- it was not re-attempted here. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist, go2_spec_gaps notes, jobs.*. TIMEZONE: fields ending in Z are UTC. squeue/sacct/scontrol print the cluster's local time (Asia/Kolkata, UTC+05:30) with no suffix -- convert before writing a Z timestamp. Two entries were mislabeled this way on 2026-10-03 and have been corrected (jobs.stairs_pyramid_eval, runs.go2_generalist). 2026-10-03 evening: jobs.stairs_precollapse_eval and jobs.stairs_v2_train hand-edited by session cluster-sess.",
@@ -144,13 +144,14 @@
       "headline": "survival 65.3%/43.5%/31.8% at d=0.5/0.7/0.9, falls/100m 6.1/12.6/16.9, per-step lin-vel error 0.80/0.84/0.84 m/s -- at the WIDENED command range. Verdict settled by jobs.stairs_precollapse_eval: weak on stairs generally, caused by the back half of training."
     },
     "stairs_v2_train": {
-      "status": "pending",
+      "status": "running",
       "task": "Unitree-Go2-Spec-StairsV2",
       "experiment": "go2_spec_stairs_v2",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV2 sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
       "notes": "Stairs with command_vel held at stage 0; terrain unchanged; cold start, seed 42, 10k iterations, 8192 envs, HF backup to RohanRamesh/go2-specialists/go2_spec_stairs_v2/. PENDING (Resources) at submission: all 6 GPUs allocated. --gres=gpu:1 (any type) so it can take the RTX 6000 the generalist frees when it finishes (~02:15 IST 2026-10-04 at its current 3.4 s/iteration); the scheduler's walltime-based worst case is ~16:02 IST 2026-10-04 on asaicomputenode02. The config was checked on CPU but has never run a training iteration -- check the first lines of go2-spec-12490.out once it starts. Judge the result by the pinned pyramid eval at the stage-0 command range (jobs.stairs_precollapse_eval), not by terrain_levels climbing.",
       "slurm_job_id": "12490",
-      "submitted": "2026-10-03 20:08 IST, on Rohan's go-ahead"
+      "submitted": "2026-10-03 20:08 IST, on Rohan's go-ahead",
+      "progress": "RUNNING since 2026-10-04 02:42 IST on asaicomputemaster (RTX 6000 Ada, the GPU the generalist freed), 3.11 s/iteration. Iteration 8241 of 10000 at 10:04 IST, so it should finish around 11:35 IST. No errors in .out/.err; checkpoints through model_8200.pt on HF. terrain_levels did NOT collapse at 5000: 1.87 (4800), 1.93 (5000), 1.99 (6000), 2.15 (7000), 2.13 (8000). Not yet evaluated -- the pinned pyramid eval at the stage-0 command range is the test (jobs.stairs_precollapse_eval)."
     },
     "stairs_precollapse_eval": {
       "slurm_job_ids": [
