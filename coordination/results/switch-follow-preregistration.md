@@ -177,3 +177,21 @@ switching minus generalist -0.7 points with noise off, +9.2 with noise on). Beca
 disagreement is the result and it rests on one run per condition, the same three arms are
 re-run on fresh seeds 503, 504, 505 in both conditions (`TAG=generalist_rep`). Reported
 alongside the first run and pooled with it; neither run is dropped whatever it shows.
+
+## Addendum 3, 2026-10-04: the generalist's own pre-collapse checkpoint (written before it is run)
+
+Addendum 2 compared an undamaged stairs policy (`model_4800`) with a generalist that trained
+through the same curriculum collapse (`model_9999`). The fair version of "specialists plus a
+switch against one generalist" has undamaged policies on both sides. `go2_generalist/model_4800.pt`
+exists (job 12479 saved every 200 iterations) and has not been run on anything.
+
+- Course `multi` L1, follow task, seeds 500-502 and 503-505, observation noise off and on,
+  256 trials per seed. Bank: flat and rough as trained, stairs = `go2_spec_stairs_it4800/model_4800.pt`.
+- Arms: `fixed:generalist48` (generalist iteration 4800), `fixed:generalist` (iteration 9999,
+  same-run reference), `fixed:stairs` (stairs iteration 4800 alone), `hard:0.3:label`.
+- Reported: all four arms, pooled over the six seeds per condition, with
+  generalist48 minus generalist (did the collapse hurt the generalist too?),
+  hard:0.3 minus generalist48, and stairs-alone minus generalist48.
+- No selection; whatever comes out is reported. Whether the generalist's terrain curriculum
+  collapsed at iteration 5000 has not been checked (asked of the cluster session); this run
+  does not depend on the answer.
