@@ -40,19 +40,14 @@ and its two-rate perception) is unchanged and summarised in the final report, Se
 
 ## 2. What is still open
 
-### 2.1 Generalist v2: approved, waiting on the cluster
+### 2.1 Generalist v2 is training; evaluate it when it finishes
 
-You approved it on 2026-10-04 ("go ahead"). The request is the top entry in
-`coordination/inbox/to-cluster.md`: new task `Unitree-Go2-GeneralistV2` (the `StairsV2` change
-applied to the generalist), experiment `go2_generalist_v2`, submitted like job 12490. **The
-cluster session was not reachable by message when this was written, so it will only see the
-request when it next pulls.** If it has not picked it up, tell it directly, or once the task
-exists run on `asaicomputemaster`:
-
-```
-export HF_TOKEN=$(cat ~/.hf_token)
-SPEC=GeneralistV2 sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
-```
+You approved it on 2026-10-04 and pointed the cluster session at the request. Job **12518** on
+`asaicomputemaster` (RTX 6000 Ada), started 2026-10-04 15:50 IST: `Unitree-Go2-GeneralistV2`
+(the generalist with the `StairsV2` change), experiment `go2_generalist_v2`, seed 42, 10k
+iterations, checkpoints on private HF. Expected to finish around 01:15 IST on 10-05. The
+cluster session has no wake-up scheduled, so its plateau check (~1,500 iterations) and the
+terrain-level readings happen only when someone prompts it.
 
 About 10 GPU-hours. When `go2_generalist_v2/model_9999.pt` is on HF, the laptop run is
 pre-registered (Addendum 5) and is one command:
