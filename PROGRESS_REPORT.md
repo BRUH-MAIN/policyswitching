@@ -40,16 +40,32 @@ and its two-rate perception) is unchanged and summarised in the final report, Se
 
 ## 2. What is still open
 
-### 2.1 Retrain the generalist the way stairs v2 was (your call)
+### 2.1 Generalist v2: approved, waiting on the cluster
 
-Stairs v2 finished and was evaluated on 2026-10-04; it is the best policy in the project. The
-one comparison still lopsided is specialist against generalist: the generalist (job 12479)
-trained through the curriculum collapse and its earlier checkpoint is worse, so there is no
-undamaged generalist. A generalist with the command range held needs a new task config on the
-cluster (the `StairsV2` change applied to `Unitree-Go2-Generalist`) and about 10 GPU-hours.
-The laptop side is one command once its checkpoint is on HF:
-`ITER=9999 HF_REPO=... scripts/switch_follow_generalist.sh` after pointing it at the new
-experiment name. Not submitted; nothing in the report claims its result.
+You approved it on 2026-10-04 ("go ahead"). The request is the top entry in
+`coordination/inbox/to-cluster.md`: new task `Unitree-Go2-GeneralistV2` (the `StairsV2` change
+applied to the generalist), experiment `go2_generalist_v2`, submitted like job 12490. **The
+cluster session was not reachable by message when this was written, so it will only see the
+request when it next pulls.** If it has not picked it up, tell it directly, or once the task
+exists run on `asaicomputemaster`:
+
+```
+export HF_TOKEN=$(cat ~/.hf_token)
+SPEC=GeneralistV2 sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
+```
+
+About 10 GPU-hours. When `go2_generalist_v2/model_9999.pt` is on HF, the laptop run is
+pre-registered (Addendum 5) and is one command:
+
+```
+EXPERIMENT=go2_generalist_v2 TAG=generalistv2 SEEDS="500 501 502 503 504 505" \
+  STAIRS_CKPT=unitree_rl_mjlab/eval_ckpts/go2_spec_stairs_v2/model_9999.pt \
+  unitree_rl_mjlab/scripts/switch_follow_generalist.sh
+```
+
+plus the same three arms at `--level L2` on seeds 600-601 (the script runs L1 only). It answers
+whether a properly trained generalist matches a properly trained stairs specialist, which is
+the one comparison in the report still made against a damaged policy (Section VII).
 
 ### 2.2 Gaps checkpoint: still on the cluster only
 
