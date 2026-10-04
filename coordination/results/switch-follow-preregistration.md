@@ -170,3 +170,10 @@ the lip of the down-stairs when it walks the approach. So:
 - No selection: every arm above is reported, on the seeds named.
 - Limit: `model_4800` is one earlier checkpoint of the same single-seed run, not a retrained
   specialist. Stairs v2 (job 12490) is the retrain; this is what can be tested today.
+
+**Addendum 2, note added 2026-10-04 08:10 IST, after part A's first run and before the
+replication.** Part A came out differently in the two noise conditions (seeds 500-502:
+switching minus generalist -0.7 points with noise off, +9.2 with noise on). Because that
+disagreement is the result and it rests on one run per condition, the same three arms are
+re-run on fresh seeds 503, 504, 505 in both conditions (`TAG=generalist_rep`). Reported
+alongside the first run and pooled with it; neither run is dropped whatever it shows.
