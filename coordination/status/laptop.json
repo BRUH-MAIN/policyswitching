@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-03T12:30:00Z",
+  "last_updated_utc": "2026-10-04T04:30:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -23,6 +23,19 @@
       "verdict": "Switching beats the best fixed specialist (+15.0 pts as pre-registered, +4.2 with observation noise on). Optimum switch lead 0-0.3 m; switching >=0.8 m early is 7-17 pts worse and no better than never switching; 0.3 m late is 16-30 pts worse. Blending: no effect. Scan classifier matches ground-truth labels (within +-5 pts, both noise conditions). Anticipation hypothesis NOT supported. Generalist arm missing (no checkpoint).",
       "caveats": "Twin env has observation noise and pushes off unless --obs-noise (findings.md #22). Under orientation-only falls nothing separates at L1. Specialists are weak (curriculum collapse at iteration 5000).",
       "see": "coordination/results/switch-follow-results.md, coordination/results/switch-follow-preregistration.md, report_content/final_report.md"
+    },
+    "go2_generalist": {
+      "iteration": 9999,
+      "run": "switch_follow.py, course multi L1, follow task, fixed:generalist vs hard:0.3:label vs fixed:stairs; seeds 500-502 and replication 503-505, 256 trials each, observation noise off and on (1536 trials/arm/condition)",
+      "verdict": "Noise off: generalist 90.5% vs switching 89.3% (-1.2 pts, CI -3.4..+0.9) -- no difference. Noise on: generalist 82.5% vs switching 90.9% (+8.4, CI +6.0..+10.8). Two runs agree. Walking, not bracing (lost 0%, tracking error 0.170 vs 0.169, same traverse time). Pinned terrain d=0.5 (eval_matrix, 128 envs): 0.00 / 4.70 / 8.33 falls per 100 m on flat / rough / stairs, i.e. close to the best specialist per column.",
+      "see": "coordination/results/switch-follow-results.md (Addendum 2A), unitree_rl_mjlab/eval_results/matrix_generalist/"
+    },
+    "go2_spec_stairs_it4800": {
+      "iteration": 4800,
+      "run": "switch_follow.py with --extra-policy stairs=<model_4800>; L1 seeds 500-502 (noise off and on), L2 seeds 600-601 (noise off); fixed arms + hard leads -0.3/0/0.3/0.8/1.5",
+      "verdict": "Stairs-alone crosses the mixed course 97.7% at L1 (94.9% noise on), 82.8% at L2, vs 76.6 / 83.2 / 33.4 for model_9999. Switching adds nothing at L1 (-1.0, CI -2.8..+0.7), +3.7 at L2 (CI -0.7..+8.1). Early switching free (1.5 vs 0.3 m: +0.7, +0.8, +1.0, all CIs include 0); lip failures gone. Late switching worse than ever at L2 (boundary 39.8%, 0.3 m late 21.3% vs 86.5% at 0.3 m ahead).",
+      "caveats": "Follow task on the multi course, not the single-obstacle goal-controller courses of Phase 1 (findings.md #23 explains why the follow task is the one used). One earlier checkpoint of one run, not a retrain.",
+      "see": "coordination/results/switch-follow-results.md (Addendum 2B)"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

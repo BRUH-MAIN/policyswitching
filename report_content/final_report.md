@@ -1,28 +1,28 @@
 # Terrain-Specialist Switching for a Person-Following Quadruped: Does Looking Further Ahead Help?
 
-*Project report, 2026-10-03. Simulation study, Unitree Go2 in `mjlab` (MuJoCo). Every number
-here traces to a file named in the Appendix. One planned arm, the matched generalist policy,
-has not been trained; Section VIII says what that leaves open.*
+*Project report, 2026-10-04. Simulation study, Unitree Go2 in `mjlab` (MuJoCo). Every number
+here traces to a file named in the Appendix.*
 
 ## Abstract
 
 A quadruped that follows a person could, in principle, use that person as a preview of the
 terrain ahead and switch between terrain-specialist locomotion policies before its own sensors
-see the change. We trained three specialists (flat, rough, stairs) for a Unitree Go2 and
-tested that idea in a pre-registered experiment on a mixed-terrain course, with the robot
-following a scripted leader. Switching between specialists by terrain is worth having: 91.5%
-of trials cross the course against 76.6% for the best single specialist (+15.0 points, 95% CI
-+11.4 to +18.6; +4.2 points when the training sensor noise is switched back on). But the
-switch has to happen at the terrain boundary. Switching 0.3 m late costs 16 to 30 points, and
-switching 1.5 m early, which is what a preview beyond the robot's 0.8 m height scan would
-allow, costs 7 to 17 points and is no better than never switching. Blending the specialists'
-actions instead of switching hard changes nothing. A small classifier on the robot's own
-height scan times the switch as well as ground-truth labels do. The anticipation hypothesis is
-therefore not supported: on this course the followed person adds neither useful horizon nor
-useful labels. We also report why the specialists themselves are weak (their training
-curriculum collapsed halfway through), a replication of the SARO vision-language pipeline in
-which a 4B local model fails to perceive simulated stairs, and a two-rate perception design
-that makes camera-based person-following run in real time.
+see the change. We trained three specialists (flat, rough, stairs) and a matched generalist
+for a Unitree Go2 and tested the idea in a pre-registered experiment on a mixed-terrain
+course, with the robot following a scripted leader. Three findings. First, the anticipation
+hypothesis is not supported: the switch must not be late (0.3 m late costs 13 to 33 points of
+course success), but switching earlier than the boundary is never better, and a small
+classifier on the robot's own height scan times the switch as well as ground-truth labels do.
+The followed person adds neither useful horizon nor useful labels. Second, whether switching
+beats a single policy depends on the conditions: with the policies as trained it beats the
+best specialist by 15 points (7 with sensor noise on), and it beats the matched generalist by
+8 points with sensor noise on and not at all without. Third, and largest, the policies'
+training mattered more than any switching. A curriculum interaction demoted both non-flat
+specialists to near-flat terrain halfway through training; the stairs run's own checkpoint
+from before that point, used alone, crosses the whole course 98% of the time (95% with sensor
+noise on), better than every switching system and better than the generalist. We also report a replication of the
+SARO vision-language pipeline in which a 4B local model fails to perceive simulated stairs,
+and a two-rate perception design that makes camera-based person-following run in real time.
 
 ## I. Introduction
 
@@ -40,24 +40,22 @@ sees. The claim is about *horizon extension*, so the experiment is built to meas
 a function of how far ahead of a terrain boundary the switch begins.
 
 The design is a 2×2 of {hard switch, soft blend} × {reactive, anticipatory}, against
-fixed-policy baselines, with every comparison isolating one factor. A null result was
-anticipated as possible and the analysis rules were fixed in advance so that it would be
-reportable.
+fixed-policy baselines and a matched generalist, with every comparison isolating one factor. A
+null result was anticipated as possible and the analysis rules were fixed in advance so that
+it would be reportable.
 
 **Contributions.**
 
-1. A closed-loop demonstration that switching between frozen terrain specialists beats any
-   single one of them on a mixed course, with the conditions under which that advantage is
-   large, small, or absent.
-2. A measurement of how success depends on switch timing, showing the optimum lies at the
-   terrain boundary and inside the onboard sensing horizon, and identifying why early switching
-   fails.
-3. A negative result for the anticipation hypothesis under best-case conditions for it
-   (exact labels, exact boundary positions), and a demonstration that an onboard scan
-   classifier is sufficient to time the switch.
-4. A diagnosis of why the specialists are weak: an interaction between two curricula that
-   leaves them training on near-flat ground for the second half of their budget, invisible in
-   reward and episode length.
+1. A negative result for the anticipation hypothesis under best-case conditions for it
+   (exact labels, exact boundary positions), with the mechanism: the best switch moment lies
+   inside the onboard sensing horizon and nothing is gained by being earlier.
+2. A measurement of how success depends on switch timing, and a demonstration that an
+   onboard scan classifier is sufficient to time the switch.
+3. A closed-loop comparison of switching against fixed specialists and against a matched
+   generalist, showing when switching wins and when it does not.
+4. A diagnosis, with measurement, of why the specialists are weak: an interaction between
+   two training curricula that is invisible in reward and episode length, and whose removal
+   is worth more than everything else in the study.
 5. Two side results: a SARO-protocol replication with a small local vision-language model,
    and a two-rate perception architecture for person-following.
 
@@ -88,12 +86,14 @@ stepping-stone gaps. The actor observation is 234-dimensional and includes a 187
 scan over a 1.6 m × 1.0 m grid centred on the base, so it sees 0.8 m ahead. In training each
 ray carries uniform noise of ±0.1 m.
 
-### B. Specialists
+### B. Policies
 
-Three policies, each trained with PPO (RSL-RL) on one terrain class for 10,000 iterations at
-8,192 environments, sharing one observation space, reward and network shape so they can be
-swapped or blended inside one environment. A gaps specialist failed twice under its original
-design; a blended-terrain retrain finished but has not been evaluated and is not used here.
+Three specialists, each trained with PPO (RSL-RL) on one terrain class for 10,000 iterations
+at 8,192 environments, sharing one observation space, reward and network shape so they can be
+swapped or blended inside one environment. The **generalist** is the same in every respect
+except that it trains on the union of the four terrain classes. A gaps specialist failed
+twice under its original design; a blended-terrain retrain finished but has not been
+evaluated and is not used here.
 
 ### C. Follow task and course
 
@@ -105,7 +105,7 @@ behind. The course `multi` is a straight strip: flat 3 m, rough 3 m, flat 2 m, s
 rough-ground relief; L2 has 0.07 m and up to 0.08 m.
 
 A trial ends in **success** (base 1.5 m past the last stair), **fall**, or **lost** (leader
-more than 6 m away). A fall is one of the specialists' own training terminations: bad
+more than 6 m away). A fall is one of the policies' own training terminations: bad
 orientation, or any non-foot body touching the ground with more than 10 N. SARO's definition
 (orientation only) is used as a robustness check.
 
@@ -142,11 +142,12 @@ that the height scan carries enough information to tell terrain classes apart (a
 on labelled scans with no policy in the loop).
 
 **Pre-registration.** Hypotheses, arms, metrics and decision rules for the switching
-experiment were committed before any timing data existed, and an addendum for the classifier
-arm before any classifier data existed. Stage 1 (seeds 400, 401; 512 trials per arm) swept
-seven hard leads and eight soft schedules and selected the best arm in each cell of the 2×2.
-Stage 2 (fresh seeds 500, 501, 502; 768 trials per arm) evaluated only the selected arms and
-the baselines.
+experiment were committed before any timing data existed. Stage 1 (seeds 400, 401; 512 trials
+per arm) swept seven hard leads and eight soft schedules and selected the best arm in each
+cell of the 2×2. Stage 2 (fresh seeds 500, 501, 502; 768 trials per arm) evaluated only the
+selected arms and the baselines. Three addenda, each committed before its data existed, cover
+the scan-classifier arm, the generalist arm (with a replication on seeds 503 to 505 once its
+two noise conditions disagreed), and a re-run with a better stairs checkpoint.
 
 **Metrics.** Course success with Wilson intervals; differences of proportions with Newcombe
 intervals. Boundary smoothness is action rate and actuator-force rate inside ±0.5 m of base
@@ -154,34 +155,41 @@ travel around each terrain-class boundary, relative to the same arm's whole-roll
 is tied to the terrain layout and never to the arm's own switch events, since a blend has
 none.
 
-**Hypotheses.** H1: reactive hard switching beats the best fixed specialist. H2: blending
-improves boundary smoothness without losing success. H3: schedules that need the long horizon
-beat those that do not. H4 (addendum): a scan-driven switch is within 5 points of the
-label-timed one.
+**Two sensing conditions.** The evaluation environment was built on a configuration that turns
+observation noise off, so the experiment as pre-registered ran without the noise the policies
+were trained with. Every main comparison was therefore repeated with the training noise on.
+Both are reported; "noise on" is the more deployment-like condition.
 
 ## V. Results
 
 ### A. Specialists differ by terrain
 
-Falls per 100 m travelled at pinned difficulty 0.5, with training noise on:
+Falls per 100 m travelled at pinned difficulty 0.5, with training noise on (the generalist row
+was measured on 2026-10-04 with the same settings):
 
 | policy \ terrain | flat | rough | stairs |
 |---|---|---|---|
 | Flat specialist | 0.00 | 14.41 | 10.42 |
 | Rough specialist | 0.00 | **5.36** | 11.14 |
 | Stairs specialist | 0.00 | 13.02 | **7.60** |
+| Generalist | 0.00 | 4.70 | 8.33 |
 
-The best policy changes with the terrain, which is the condition switching needs. The rough
-margin is solid (2.4× the runner-up under three different fall metrics); the stairs margin is
-1.4× on a single seed. The stairs specialist is weak in absolute terms: on its own training
-terrain it survives 65%, 44% and 32% of 24-second episodes at difficulty 0.5, 0.7 and 0.9
-(6.1, 12.6 and 16.9 falls per 100 m), nearly all from non-foot contact with a step edge.
+Among the specialists the best policy changes with the terrain, which is the condition
+switching needs. The rough margin is solid (2.4× the runner-up under three different fall
+metrics); the stairs margin is 1.4× on a single seed. The generalist is close to the best
+specialist in each column (each cell is 128 robots for 24 s, so differences of this size
+between the generalist and the column's best specialist are within sampling noise). The stairs
+specialist is weak in absolute terms: on its own training terrain it falls 6.1, 12.6 and 16.9
+times per 100 m at difficulty 0.5, 0.7 and 0.9, nearly all from non-foot contact with a step
+edge.
 
-### B. Switching beats every single specialist
+### B. Switching against single policies
 
 ![Course success by arm](figures/switch_confirm.png)
 
-| arm (confirmation seeds, 768 trials) | success (95% CI) | per seed |
+Pre-registered confirmation (seeds 500 to 502, 768 trials per arm, noise off):
+
+| arm | success (95% CI) | per seed |
 |---|---|---|
 | hard switch, 0.3 m ahead | **91.5%** (89.4-93.3) | 91.0 / 92.2 / 91.4 |
 | cross-fade over the last 0.3 m | 90.8% (88.5-92.6) | 89.1 / 92.6 / 90.6 |
@@ -191,16 +199,31 @@ terrain it survives 65%, 44% and 32% of 24-second episodes at difficulty 0.5, 0.
 | rough specialist only | 37.4% (34.0-40.8) | 34.4 / 38.3 / 39.5 |
 | flat specialist only | 25.7% (22.7-28.9) | 25.4 / 25.4 / 26.2 |
 
-**H1 is supported**: +15.0 points over the best fixed specialist (95% CI +11.4 to +18.6). On
-the project's earlier single-obstacle courses one well-chosen fixed specialist always matched
-perfect switching; a course on which the best specialist changes mid-run is what makes
-switching pay.
+**Against the best fixed specialist, H1 is supported**: +15.0 points (95% CI +11.4 to +18.6).
+Pooled over every run of the two arms (2,304 trials each): +14.6 points with noise off
+(90.0% vs 75.4%) and +7.3 with noise on (89.7% vs 82.4%, CI +5.3 to +9.3).
 
-### C. Switch timing: the optimum is at the boundary
+**Against the matched generalist, switching wins only with sensor noise on.**
+
+![Generalist against switching](figures/switch_generalist.png)
+
+| sensing (1,536 trials per arm) | generalist alone | hard switch 0.3 | difference (95% CI) | by run |
+|---|---|---|---|---|
+| noise off | **90.5%** | 89.3% | −1.2 (−3.4 to +0.9) | −0.7, −1.8 |
+| training noise on | 82.5% | **90.9%** | +8.4 (+6.0 to +10.8) | +9.2, +7.6 |
+
+Two independent runs on different seeds agree. The generalist is walking, not bracing: it
+never loses the leader, and its tracking error and traverse time equal the switching arm's.
+With noise on it loses trials at the lip of the down-stairs (0.7% → 5.4%) and on the stairs
+(8.3% → 11.2%), while every specialist does better with noise on than off. One reading is that
+the generalist must rely on the scan to know what terrain it is on, so scan noise costs it;
+that was not tested.
+
+### C. Switch timing: not late, and no benefit from early
 
 ![Success against switch lead](figures/switch_lead_sweep.png)
 
-Calibration sweep of the hard-switch lead (512 trials each):
+Calibration sweep of the hard-switch lead with the specialists as trained (512 trials each):
 
 | lead (m) | −0.6 | −0.3 | 0.0 | 0.3 | 0.8 | 1.5 | 2.5 |
 |---|---|---|---|---|---|---|---|
@@ -210,10 +233,10 @@ Success peaks with the switch 0 to 0.3 m before the boundary. Later than that it
 because the flat specialist is still in control on the up-stairs and cannot climb. Earlier
 than that it drops to the level of the stairs specialist alone and stays there out to 2.5 m.
 
-**H3 is not supported, and the effect has the opposite sign.** On the confirmation seeds a
-hard switch 1.5 m ahead is 16.9 points worse than one 0.3 m ahead (CI −20.6 to −13.3), and a
-cross-fade starting 1.5 m ahead is 14.5 points worse than one starting 0.3 m ahead (CI −18.1
-to −10.8). Neither differs from never switching (−2.0, CI −6.2 to +2.3).
+**H3 is not supported.** On the confirmation seeds a hard switch 1.5 m ahead is 16.9 points
+worse than one 0.3 m ahead (CI −20.6 to −13.3), and a cross-fade starting 1.5 m ahead is 14.5
+points worse than one starting 0.3 m ahead (CI −18.1 to −10.8). Neither differs from never
+switching (−2.0, CI −6.2 to +2.3).
 
 The cost of switching early is located in one place:
 
@@ -224,15 +247,13 @@ The cost of switching early is located in one place:
 | cross-fade from 1.5 m | **13.5%** | 9.2% |
 | stairs specialist only | **12.9%** | 9.4% |
 
-A stairs specialist that has been walking the flat approach touches a knee or calf to the
-edge in 13 to 15% of trials as it steps off. The flat specialist walking the same approach
-and handing over 0.3 m before the edge never does. Each specialist is worse than its neighbour
-on the approach to its own terrain, so the earlier it takes over, the more is lost, and this
-holds for any controller that hands over early, not only for these schedules.
-
-A controller with a long preview horizon is free to switch at 0.3 m, and the data say that is
-what it should do. The gain from extending the horizon beyond what the scan already covers is
-therefore zero.
+The as-trained stairs specialist, having walked the flat approach, touches a knee or calf to
+the edge in 13 to 15% of trials as it steps off. The flat specialist walking the same approach
+and handing over 0.3 m before the edge never does. Section V.G shows this is a defect of that
+particular stairs policy: with an undamaged one the early side of the curve is flat. In
+neither case is early *better*. A controller with a long preview horizon is free to switch at
+0.3 m, and the data say it loses nothing by doing so. The gain from extending the horizon
+beyond what the scan already covers is zero.
 
 ### D. Blending adds nothing
 
@@ -257,33 +278,30 @@ on-time switch that Section C shows to be necessary can be delivered by onboard 
 the leader's path is not needed as a source of labels either.
 
 This is the easy case for a classifier: the test course uses the same straight 0.05 m stairs
-it trained on. An earlier measurement on the training terrain generator, pooled over
-difficulty, found rough and stairs much harder to separate, though that measurement was later
-shown to be inflated by near-flat samples labelled as rough or stairs.
+it trained on, and it was tested with the as-trained specialists at L1 only. An earlier
+measurement on the training terrain generator, pooled over difficulty, found rough and stairs
+much harder to separate, though that measurement was later shown to be inflated by near-flat
+samples labelled as rough or stairs.
 
-### F. Robustness
+### F. Robustness of the timing result
 
-Differences in points of course success, with 95% intervals.
+Differences in points of course success, with 95% intervals, specialists as trained.
 
 | condition | stairs only | hard 0.3 | switching value | 1.5 m early vs 0.3 m | cross-fade vs hard |
 |---|---|---|---|---|---|
 | **L1, as pre-registered** (n = 768) | 76.6% | 91.5% | +15.0 (+11.4, +18.6) | −16.9 (−20.6, −13.3) | −0.8 (−3.6, +2.1) |
-| L1, observation noise on (n = 768) | 83.2% | 87.4% | +4.2 (+0.6, +7.7) | −6.9 (−10.6, −3.2) | +0.7 (−2.6, +4.0) |
+| L1, observation noise on (n = 768) | 83.2% | 87.4% | +4.2 (+0.6, +7.7); +7.3 pooled over three runs | −6.9 (−10.6, −3.2) | +0.7 (−2.6, +4.0) |
 | L1, orientation-only falls (n = 768) | 99.2% | 98.4% | none: −1.6 vs rough only at 100% | +0.5 (−0.7, +1.8) | +1.2 (+0.2, +2.3) |
 | L2, training falls (n = 512) | 33.4% | 51.0% | +17.6 (+11.6, +23.4) | −16.2 (−22.1, −10.2) | −6.4 (−12.5, −0.3) |
 | L2, orientation-only falls (n = 512) | 79.1% | 89.6% | +10.5 (+6.1, +15.0) | −2.3 (−6.3, +1.6) | −14.1 (−18.6, −9.5) |
 
-Three things change the *size* of the switching advantage. First, the experiment as
-pre-registered ran without the observation noise the specialists were trained with, because
-the evaluation environment was built on a configuration that turns it off. With the noise
-back on every fixed specialist does better and the advantage falls to +4.2 points. Second, all
-the L1 failures are knee or calf contacts; if only tipping over counts as a fall, nothing
-fails at L1. Third, with harder stairs the advantage returns under either definition.
+All the L1 failures are knee or calf contacts; if only tipping over counts as a fall, nothing
+fails at L1 and the course cannot separate the arms. With harder stairs the switching
+advantage returns under either definition. Nothing changes the direction of the timing
+result: switching early is never better than switching at the boundary, and switching late is
+always much worse.
 
-Nothing changes the *direction* of the timing result: switching early is never better than
-switching at the boundary, and switching late is always much worse.
-
-### G. Why the specialists are weak
+### G. Why the specialists are weak, and what an undamaged one does
 
 The training logs of the stairs and rough specialists show the same event:
 
@@ -298,12 +316,41 @@ when it covers enough ground and to easier terrain when it covers less than half
 command asked for. When the command range doubles, the policies are demoted to the easiest
 terrain rows and never climb back. Terrain level runs from 0 to 9 and a stair riser is about
 1 cm per level, so the stairs specialist spent its last 4,700 iterations on risers of about
-1 cm and never practised much above 2 to 3 cm. Mean reward and episode length are flat across
-the collapse, so it is invisible unless terrain level is plotted.
+1 cm. Mean reward and episode length are flat across the collapse, so it is invisible unless
+terrain level is plotted.
 
-This explains the stairs specialist's failures at 5 cm, and it means a better stairs
-specialist needs a configuration change (hold the command range where the follow task uses
-it), not more training iterations.
+The stairs run saved a checkpoint at iteration 4800, before the collapse. On pinned pyramid
+stairs it falls 1.6, 4.1 and 5.1 times per 100 m at difficulty 0.5, 0.7 and 0.9, against 4.1,
+12.0 and 18.1 for the final checkpoint at the same speed: the second half of training made
+the stairs specialist about three times worse at stairs.
+
+Putting that checkpoint in the stairs slot, with nothing else changed, and re-running the
+course (pre-registered before it was run):
+
+![Lead sweep with two stairs checkpoints](figures/switch_lead_two_checkpoints.png)
+
+| | L1, noise off (n = 768) | L1, noise on (n = 768) | L2, noise off (n = 512) |
+|---|---|---|---|
+| stairs policy alone | **97.7%** | **94.9%** | **82.8%** |
+| hard switch 0.3 m late | 75.4% | 81.8% | 21.3% |
+| hard switch at the boundary | 97.9% | 90.8% | 39.8% |
+| hard switch 0.3 m ahead | 96.6% | 94.9% | 86.5% |
+| hard switch 1.5 m ahead | 97.3% | 95.7% | 87.5% |
+| early minus on-time (1.5 − 0.3) | +0.7 (−1.1, +2.4) | +0.8 (−1.4, +2.9) | +1.0 (−3.2, +5.1) |
+| switch 0.3 minus stairs alone | −1.0 (−2.8, +0.7) | 0.0 (−2.2, +2.2) | +3.7 (−0.7, +8.1) |
+| same arms, as-trained stairs specialist: alone / switch 0.3 | 76.6% / 91.5% | 83.2% / 87.4% | 33.4% / 51.0% |
+
+- **The early-switching penalty disappears.** The failures at the lip of the down-stairs go
+  from 13-15% to zero. Early switching becomes free. It does not become better than on-time,
+  so the conclusion about preview no longer rests on a defective specialist.
+- **Switching stops beating the best single policy.** At L1 the iteration-4800 stairs policy
+  alone matches every switching arm; at L2 switching is 3.7 points ahead with an interval that
+  includes zero. The 15-point advantage of Section B was the size of the damage.
+- **One well-trained policy beats every system built from the as-trained ones**: 97.7% and
+  94.9% (noise off and on), against 90.0% and 89.7% for switching between the as-trained
+  specialists and 90.5% and 82.5% for the generalist.
+- **Lateness gets more expensive on harder stairs**: at L2 a switch at the boundary instead
+  of 0.3 m ahead of it falls from 86.5% to 39.8%.
 
 ### H. Side results
 
@@ -341,64 +388,74 @@ The hypothesis was that a followed person extends the robot's terrain preview an
 extension improves policy switching. The experiment separates two ways that could be true and
 finds neither.
 
-*Horizon.* The best moment to switch is within 0.3 m of the boundary. The robot's own scan
-reaches 0.8 m. Extra horizon can only be spent on switching earlier, and switching earlier
-puts a specialist in control on ground where its neighbour is better. With these specialists
-that costs between 7 and 17 points; with better ones it might cost nothing; there is no
-mechanism in the data by which it would help. Nor is there a transition transient that a
-longer, gentler hand-over could smooth, since the hard switch barely registers in action rate.
+*Horizon.* The switch must happen by about 0.3 m before the boundary. The robot's own scan
+reaches 0.8 m. Extra horizon can only be spent on switching earlier, and switching earlier is
+either harmful (when the incoming specialist is poor on the approach to its own terrain) or
+neutral (when it is not). Nor is there a transition transient that a longer, gentler hand-over
+could smooth, since a hard switch barely registers in action rate.
 
-*Labels.* What the timing curve does show is that being late is expensive, so a reliable,
-prompt terrain label matters a great deal. The leader's path could have been valuable as such
-a label. But a 33,000-parameter classifier on the robot's own noisy scan already delivers the
-switch 0.2 m before the boundary and matches ground truth.
+*Labels.* Being late is expensive, so a prompt, reliable terrain label matters. The leader's
+path could have been valuable as such a label. But a 33,000-parameter classifier on the
+robot's own noisy scan already delivers the switch 0.2 m before the boundary and matches
+ground truth.
 
-The positive finding is narrower than the one hoped for but is real: on a course where the
-best specialist changes, switching wins, and its value is governed almost entirely by
-timeliness. How large that value is depends on details that are easy to leave implicit, such
-as sensor noise in the evaluation environment and what counts as a fall. The pre-registered
-headline of +15 points and the more deployment-like +4 points are the same experiment under
-two settings of one flag.
+On whether to switch at all, the answer the project set out to give ("specialists plus a
+switch beat a generalist") turned out to depend on things the design treated as fixed.
+With the policies exactly as trained and sensor noise on, switching beats the matched
+generalist by 8 points. With sensor noise off it does not. And once the stairs policy is
+replaced by its own earlier checkpoint, a single policy beats all of them. The most valuable
+hour of the project was the one spent reading a terrain-level curve; no choice of switching
+rule, blend or preview horizon moved course success by as much as removing one curriculum
+interaction did.
+
+Two methodological points recur. Outcomes depended on settings that are easy to leave
+implicit: observation noise in the evaluation environment, what counts as a fall, and which
+controller issues the commands. And repeat runs of one arm on the same seeds differed by up
+to 3.5 points with noise on, so the first noise-on estimate of the switching advantage (+4.2)
+was at the low end of a spread whose pooled value is +7.3.
 
 ## VII. Limitations
 
-- **No generalist.** The matched generalist policy was never trained, so the comparison that
-  matters most for the specialist approach as a whole, switching against one policy trained
-  on everything, is missing. All "switching value" numbers are against the best fixed
-  *specialist*.
-- **Weak, single-seed specialists.** Both non-flat specialists finished training on near-flat
-  ground (Section V.G). The early-switching penalty comes from a stairs specialist that is
-  poor on the approach to stairs; a properly trained one might not show it.
+- **Single-seed policies.** Every policy is one training run. The generalist trained under
+  the same collapsing curriculum as the specialists; a generalist trained with the command
+  range held might match the iteration-4800 stairs policy, and was not tested.
+- **The better stairs policy is an earlier checkpoint, not a retrain.** It was chosen before
+  it was evaluated, as the last checkpoint before iteration 5000, but it is still one
+  checkpoint of one run. A retrain with the command range held (stairs v2) was submitted and
+  is not evaluated here.
 - **Parametric blending, not a learned gate.** The soft arms are linear cross-fades. A
   trained gating network could in principle find a state-dependent blend these schedules
   cannot express. The results give no reason to expect that, but do not rule it out.
 - **One course family, one leader speed, a ground-truth leader**, and simulation only.
-- **The classifier's test is in-distribution** for stair geometry.
-- **Run-to-run spread** from simulator nondeterminism is about 1 point: the same arm on the
-  same seeds scored 91.5% and 90.6% in two runs.
+- **The classifier's test is in-distribution** for stair geometry, at L1, with the as-trained
+  specialists.
+- **Run-to-run spread**: about 2 points with noise off and up to 3.5 with noise on for one
+  arm on the same seeds.
 
 ## VIII. What remains
 
-1. **Train the generalist** (one job, about 12 GPU-hours) and add it as a fixed arm. The
-   harness accepts it with one flag. This is the only planned arm not run.
-2. **Retrain the stairs specialist with the command range held** at the follow task's range,
-   then repeat the lead sweep to see whether the early-switching penalty survives a competent
-   specialist.
-3. Evaluate the existing gaps checkpoint and add a gaps segment to the course.
+1. Evaluate **stairs v2** (job 12490) when it finishes, and re-run the lead sweep and the
+   generalist comparison with it. If it behaves like the iteration-4800 checkpoint, the
+   natural next question is a generalist trained the same way.
+2. Test the scan classifier at L2 and with the better stairs policy, where its 0.2 m lead
+   sits in the steep part of the timing curve.
+3. Evaluate the existing gaps checkpoint and add a gaps segment to the course: stepping
+   stones are the one terrain where no policy here is competent, so it is where a specialist
+   is most likely to be needed.
 4. Vary leader speed and course layout; test the classifier on unseen stair geometry.
 
 ## Appendix: where each number comes from
 
 | Section | Source |
 |---|---|
-| V.A | `coordination/results/gate1-cross-terrain-matrix-analysis.md`; `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md` |
+| V.A | `coordination/results/gate1-cross-terrain-matrix-analysis.md`; `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md`; generalist row: `unitree_rl_mjlab/eval_results/matrix_generalist/` |
 | V.B-F | `coordination/results/switch-follow-results.md`; raw `unitree_rl_mjlab/eval_results/switch_follow/`; rules `coordination/results/switch-follow-preregistration.md` |
-| V.G | `coordination/results/2026-10-03-stairs-training-curve.md`; `findings.md`, "Why the specialists are weak" |
+| V.G | `coordination/results/2026-10-03-stairs-training-curve.md`; `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`; `switch-follow-results.md`, Addendum 2B; `findings.md`, "Why the specialists are weak" |
 | V.H | `findings.md` (PAS, VLM navigation, person-following, SARO protocol sections); `coordination/results/vlm-nav-*.md` |
 | Gate 2 remark in V.E | `coordination/results/gate2a-height-scan-discriminability-analysis.md`; `findings.md` bug #16 |
 
-To reproduce Section V.B-F from `unitree_rl_mjlab/` (conda env `unitree_rl_mjlab`,
-`PYTHONPATH=$PWD MUJOCO_GL=egl`, specialist checkpoints under `--ckpt-root`):
+To reproduce Sections V.B-G from `unitree_rl_mjlab/` (conda env `unitree_rl_mjlab`,
+`PYTHONPATH=$PWD MUJOCO_GL=egl`, checkpoints under `--ckpt-root`):
 
 ```
 python scripts/switch_follow.py --arm-set calib --seed 400 --ckpt-root <ckpts> --json-out eval_results/switch_follow/calib_s400.json
@@ -406,7 +463,9 @@ python scripts/switch_follow_analyze.py calib eval_results/switch_follow/calib_s
 python scripts/switch_follow.py --seed 500 --arms fixed:flat fixed:rough fixed:stairs hard:0.3:label soft:0.3:0.0:label hard:1.5:label soft:1.5:0.3:label --ckpt-root <ckpts> --json-out eval_results/switch_follow/confirm_s500.json
 python scripts/switch_follow_analyze.py confirm eval_results/switch_follow/confirm_s50*.json --pairs "hard:0.3:label>fixed:stairs"
 bash scripts/switch_follow_clf_pipeline.sh        # scan classifier: collect, train, calibrate
+bash scripts/switch_follow_generalist.sh          # generalist arm, noise off and on
 ```
 
 Add `--obs-noise`, `--terminations saro` or `--level L2` for the robustness rows, and
-`--extra-policy generalist=<ckpt> --arms fixed:generalist` once the generalist exists.
+`--extra-policy stairs=<ckpts>/go2_spec_stairs_it4800/model_4800.pt` to put the pre-collapse
+checkpoint in the stairs slot.

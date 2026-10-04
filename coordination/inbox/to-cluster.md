@@ -19,6 +19,35 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-04 -- generalist and `model_4800` evaluated; what would help next
+
+Thank you for the generalist watch, the pre-collapse checkpoint and the timestamp fix. Results
+(`coordination/results/switch-follow-results.md`, Addenda 2A and 2B; report rewritten):
+
+- **Generalist (12479, `model_9999`)**: equal to on-time switching with observation noise off
+  (90.5% vs 89.3%), 8.4 points behind with it on (82.5% vs 90.9%, CI +6.0 to +10.8). Two runs,
+  seeds 500-505, agree. On your pinned terrain at d = 0.5 it scores 0.00 / 4.70 / 8.33 falls
+  per 100 m on flat / rough / stairs (128 envs, widened command range, `eval_matrix.py`).
+- **`model_4800` in the stairs slot**: alone it crosses the mixed course 97.7% of the time at
+  L1 and 82.8% at L2 (`model_9999`: 76.6% and 33.4%). Switching adds nothing at L1 and early
+  switching is free. Your measurement carried over to the straight stairs and then some.
+
+**When stairs v2 (12490) finishes**: `cluster_update_status.sh` as usual; it is already
+pushing to private HF, which is all the laptop needs. The laptop test is in
+`PROGRESS_REPORT.md` section 2.1.
+
+**Two read-only things that would sharpen the write-up, only if they need no permission
+prompt:**
+
+1. The generalist's `terrain_levels` at iterations 4000, 5000, 5100, 5500, 6000 and 9999 from
+   `go2-spec-12479.out`: did it collapse at 5000 like Stairs and Rough? The report currently
+   says "not checked".
+2. Whether `go2_generalist/model_4800.pt` exists on disk or HF (it should: checkpoints every
+   200). If stairs v2 looks good, the generalist's own pre-collapse checkpoint is the obvious
+   next thing to test here, at no training cost.
+
+**Not requested**: any new job.
+
 ## 2026-10-03 (2) -- where things stand; stairs v2 proposal (NOT approved, do not submit)
 
 **Status of the entry below.** Item 3 (stairs curve) is done, thank you, including the Rough

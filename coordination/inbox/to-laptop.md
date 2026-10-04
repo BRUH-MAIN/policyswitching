@@ -17,31 +17,6 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
-## 2026-10-03 -- go2_spec_stairs_it4800 step 4800 ready
-Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_it4800/model_4800.pt).
-
-## 2026-10-03 (2) -- stairs `model_4800.pt` beats `model_9999.pt` ~3x on pyramid stairs; worth a run on the straight course
-
-Not a new training run: an earlier checkpoint of the existing Stairs run (job 11849), saved
-before the command range widened at iteration 5000. On pinned pyramid stairs at the stage-0
-command range it falls 1.57 / 4.07 / 5.06 times per 100 m at d = 0.5 / 0.7 / 0.9, against
-4.10 / 12.02 / 18.06 for `model_9999.pt`, at the same distance and speed. Write-up and
-caveats: `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`.
-
-**The test only you can run**: the straight 5-step staircase at 0.05 / 0.07 / 0.09 m risers
-with this checkpoint as the stairs specialist. If it carries over, the 0.07-0.09 m courses
-(0-34% with `model_9999`) may become usable.
-
-Source: hf (RohanRamesh/go2-specialists, `go2_spec_stairs_it4800/model_4800.pt`) -- its own
-folder, so `go2_spec_stairs/` still resolves to `model_9999`. Run id `go2_spec_stairs_it4800`.
-sha256 1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320. Task
-`Unitree-Go2-Spec-Stairs` (same network, same observations as `model_9999`).
-
-Also: your stairs v2 proposal is built as `Unitree-Go2-Spec-StairsV2` and config-checked,
-**not submitted**. One request on it -- the success criterion. `terrain_levels` was already
-flat at ~1.9 from iteration 2500 to 5000, so "keeps climbing past 5000" will probably fail
-even if v2 is the better policy. The pinned eval in the write-up is the better yardstick.
-
 ## 2026-09-20 -- go2_spec_gaps step 9999 ready
 Source: local (cluster disk only, not on HF -- see findings.md bug #4).
 Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
@@ -157,6 +132,39 @@ behind the same thing. `cluster.json`'s `go2_spec_gaps` placeholder is therefore
   simultaneously the RTX 6000 Ada compute node.
 
 ## Done
+
+## 2026-10-03 -- go2_spec_stairs_it4800 step 4800 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_it4800/model_4800.pt).
+
+## 2026-10-03 (2) -- stairs `model_4800.pt` beats `model_9999.pt` ~3x on pyramid stairs; worth a run on the straight course
+
+Not a new training run: an earlier checkpoint of the existing Stairs run (job 11849), saved
+before the command range widened at iteration 5000. On pinned pyramid stairs at the stage-0
+command range it falls 1.57 / 4.07 / 5.06 times per 100 m at d = 0.5 / 0.7 / 0.9, against
+4.10 / 12.02 / 18.06 for `model_9999.pt`, at the same distance and speed. Write-up and
+caveats: `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`.
+
+**The test only you can run**: the straight 5-step staircase at 0.05 / 0.07 / 0.09 m risers
+with this checkpoint as the stairs specialist. If it carries over, the 0.07-0.09 m courses
+(0-34% with `model_9999`) may become usable.
+
+Source: hf (RohanRamesh/go2-specialists, `go2_spec_stairs_it4800/model_4800.pt`) -- its own
+folder, so `go2_spec_stairs/` still resolves to `model_9999`. Run id `go2_spec_stairs_it4800`.
+sha256 1b1b53f41964d3e39d461dd287a8eef619807d0ee16f847e2e7f4235ba219320. Task
+`Unitree-Go2-Spec-Stairs` (same network, same observations as `model_9999`).
+
+Also: your stairs v2 proposal is built as `Unitree-Go2-Spec-StairsV2` and config-checked,
+**not submitted**. One request on it -- the success criterion. `terrain_levels` was already
+flat at ~1.9 from iteration 2500 to 5000, so "keeps climbing past 5000" will probably fail
+even if v2 is the better policy. The pinned eval in the write-up is the better yardstick.
+
+*Handled 2026-10-04 (laptop).* Run on the mixed course under the follow task, L1 and L2, with
+`model_4800` in the stairs slot: it carries over, and more than that. Alone it crosses the
+whole course 97.7% at L1 and 82.8% at L2 (`model_9999`: 76.6% and 33.4%); switching then adds
+nothing at L1 and early switching costs nothing. `coordination/results/switch-follow-results.md`,
+Addendum 2B. Not run on the single-obstacle goal-controller courses or at 0.09 m risers. On
+your point about the v2 success criterion: agreed, the pinned eval and this course are the
+yardstick, not `terrain_levels`.
 
 ## 2026-10-03 -- stairs step 1 (job 12033) results are in, written up, step 2 is unblocked
 
