@@ -17,6 +17,10 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-10-04 -- go2_spec_stairs_v2 step 9999 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_v2/model_9999.pt).
+SLURM job 12490.
+
 ## 2026-10-04 -- go2_generalist step 9999 ready
 Source: hf (RohanRamesh/go2-specialists, go2_generalist/model_9999.pt).
 SLURM job 12479.

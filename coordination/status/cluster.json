@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-04T04:34:56Z",
+  "last_updated_utc": "2026-10-04T10:20:15Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -114,9 +114,9 @@
       "hf_repo": "RohanRamesh/go2-specialists",
       "hf_stage": "go2_spec_stairs_v2",
       "path_on_cluster": null,
-      "iteration": null,
+      "iteration": 9999,
       "sha256": null,
-      "status": "in_progress",
+      "status": "complete",
       "slurm_job_id": "12490",
       "notes": "RUNNING since 2026-10-04 02:42 IST on asaicomputemaster (RTX 6000 Ada, the GPU the generalist freed), 3.11 s/iteration. Iteration 8241 of 10000 at 10:04 IST, so it should finish around 11:35 IST. No errors in .out/.err; checkpoints through model_8200.pt on HF. terrain_levels did NOT collapse at 5000: 1.87 (4800), 1.93 (5000), 1.99 (6000), 2.15 (7000), 2.13 (8000). Not yet evaluated -- the pinned pyramid eval at the stage-0 command range is the test (jobs.stairs_precollapse_eval)."
     }
