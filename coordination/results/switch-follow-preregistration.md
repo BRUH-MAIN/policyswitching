@@ -195,3 +195,15 @@ exists (job 12479 saved every 200 iterations) and has not been run on anything.
 - No selection; whatever comes out is reported. Whether the generalist's terrain curriculum
   collapsed at iteration 5000 has not been checked (asked of the cluster session); this run
   does not depend on the answer.
+
+## Addendum 4, 2026-10-04: stairs v2 (written before its checkpoint exists)
+
+Stairs v2 (`Unitree-Go2-Spec-StairsV2`, cluster job 12490) is the Stairs task retrained from
+scratch with the command range held at stage 0. At the time of writing it is at about
+iteration 8,300 of 10,000 and its terrain curriculum has not collapsed. When
+`go2_spec_stairs_v2/model_9999.pt` exists it goes into the stairs slot and the Addendum 2B run
+is repeated unchanged (`scripts/switch_follow_stairs_ckpt.sh`): L1 seeds 500-502 with noise off
+and on, L2 seeds 600-601, the same eight arms, everything reported. Same two questions, H5a
+(early minus on-time) and H5b (switch minus stairs alone), plus one comparison across
+checkpoints: stairs v2 alone against `model_4800` alone, which says whether the retrain did as
+well as, better than, or worse than stopping the original run early.

@@ -267,9 +267,9 @@ Per seed, generalist: 89.5 / 89.8 / 91.4 / 89.8 / 92.2 / 90.2 with noise off; 82
   direct test.
 - With noise on the generalist is no better than the stairs specialist alone (82.5% vs 82.0%,
   +0.5, CI -2.2 to +3.2). With noise off it is 15.7 points better.
-- The generalist shares the specialists' handicap: it trained under the curriculum that
-  collapsed at iteration 5000 for both of them. Whether its own terrain level collapsed was
-  not checked.
+- The generalist shares the specialists' handicap: its terrain level went from 1.52 at
+  iteration 5000 to 0.39-0.50 from iteration 6000 on (cluster, `cluster.json`), the same
+  collapse. Addendum 3 tests its own iteration-4800 checkpoint.
 
 ## Addendum 2B: a stairs policy from before the curriculum collapse (pre-registered before it was run)
 

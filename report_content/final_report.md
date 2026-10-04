@@ -434,9 +434,9 @@ was at the low end of a spread whose pooled value is +7.3.
 
 ## VII. Limitations
 
-- **Single-seed policies.** Every policy is one training run. The generalist trained under
-  the same collapsing curriculum as the specialists; a generalist trained with the command
-  range held might match the iteration-4800 stairs policy, and was not tested.
+- **Single-seed policies.** Every policy is one training run. The generalist's terrain
+  curriculum collapsed at iteration 5000 exactly as the specialists' did (level 1.52 to
+  0.39-0.50), so the generalist in Section V.B is a damaged one too.
 - **The better stairs policy is an earlier checkpoint, not a retrain.** It was chosen before
   it was evaluated, as the last checkpoint before iteration 5000, but it is still one
   checkpoint of one run. A retrain with the command range held (stairs v2) was submitted and
