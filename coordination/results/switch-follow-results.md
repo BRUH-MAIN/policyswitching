@@ -1,41 +1,49 @@
 # Switching while following: results
 
-**Date**: 2026-10-03 · **Machine**: `romen` · **Branch**: `vlm-pipeline` ·
+**Date**: 2026-10-03, extended 2026-10-04 (generalist, better stairs checkpoint) · **Machine**: `romen` ·
 **Pre-registration**: `switch-follow-preregistration.md` (committed `6916211`, before any of
 this data) · **Raw**: `unitree_rl_mjlab/eval_results/switch_follow/*.json` ·
 **Code**: `scripts/switch_follow.py`, `src/vlm_nav/schedule.py`, `scripts/switch_follow_analyze.py`
 
 ## Headline
 
-1. **Switching specialists by terrain beats every single specialist** on the mixed course:
-   91.5% of trials cross it against 76.6% for the best fixed specialist (+15.0 points, 95% CI
-   +11.4 to +18.6; 768 trials per arm, fresh seeds). This is the first course in the project
-   where that holds; on single-obstacle courses one good fixed choice was always enough.
-2. **The switch has to happen at the boundary.** Success peaks with the switch 0 to 0.3 m
-   before a terrain boundary. Switching 0.3 m late costs about 30 points (16 with observation
-   noise on). Switching 0.8 m or more early costs about 17 points (7 with noise on) and leaves
-   the robot no better off than never switching.
-3. **So the leader's preview has nothing to add to switch timing.** The best moment to switch
-   is well inside the 0.8 m the robot's own height scan already covers. Using a longer horizon
-   to switch earlier is worse in every condition tested, never better. This is the project's
-   central hypothesis and it is **not supported**.
+Read in this order; items 7 and 8, added on 2026-10-04, change how items 1 and 3 should be read.
+
+1. **With the specialists as trained, switching by terrain beats every single specialist** on
+   the mixed course: 91.5% of trials cross it against 76.6% for the best fixed specialist
+   (+15.0 points, 95% CI +11.4 to +18.6; 768 trials per arm, fresh seeds, as pre-registered).
+   Pooled over every run of the two arms: +14.6 points with sensor noise off, +7.3 with the
+   training sensor noise on (2,304 trials per arm each).
+2. **The switch must not be late.** 0.3 m late costs 13 to 33 points at the easy level and
+   43 to 65 at the harder one, depending on the stairs policy and the noise condition.
+3. **Switching early is never better than switching at the boundary.** With the stairs
+   specialist as trained it costs 7 to 17 points and leaves the robot no better off than never
+   switching. With an undamaged stairs policy (item 8) it costs nothing and gains nothing.
+   Either way, a preview beyond the 0.8 m the robot's own scan covers has nothing to add. The
+   project's central hypothesis is **not supported**.
 4. **Blending the two specialists' actions buys nothing** over a hard switch at the easy level
    and is worse at the harder one.
-5. **How big effect 1 is depends on conditions the pre-registration did not vary.** With the
-   training observation noise switched back on it shrinks to +4.2 points (CI +0.6 to +7.7).
-   If only tipping over counts as a fall, every arm but the flat specialist is at 98-100% on
-   this course and there is nothing to win; at the harder level the advantage reappears
-   (+10.5 points). Findings 2-4 hold in every one of these conditions.
-
+5. **Which condition a number comes from matters.** The experiment as pre-registered ran with
+   observation noise off (inherited from the evaluation environment); the specialists were
+   trained with it on. If only tipping over counts as a fall, every arm but the flat specialist
+   is at 98-100% at the easy level.
 6. **The robot's own height scan is enough to time the switch.** A small classifier on the
    187-ray scan, driving the same hard switch, matches the ground-truth-label switch: 87.5% vs
-   88.3% with the training observation noise on (difference -0.8 points, CI -4.1 to +2.5) and
-   90.0% vs 90.6% with it off (-0.7, CI -3.6 to +2.3). It switches a median 0.17-0.28 m before
-   each boundary and never after it. So on this course the leader adds neither horizon nor
-   labels.
-
-The sensing-matched generalist (arm 1) is not in any table: its training job has not run
-(cluster submission blocked on a permission prompt, 2026-10-03).
+   88.3% with the training observation noise on (-0.8 points, CI -4.1 to +2.5) and 90.0% vs
+   90.6% with it off (-0.7, CI -3.6 to +2.3). It switches a median 0.17-0.28 m before each
+   boundary and never after it.
+7. **Against the matched generalist, switching wins only under sensor noise.** The generalist
+   (same observations, rewards, budget and curriculum as a specialist, trained on all terrain)
+   crosses the course 90.5% of the time with noise off, the same as switching (89.3%;
+   difference -1.2, CI -3.4 to +0.9), and 82.5% with noise on, where switching holds at 90.9%
+   (+8.4, CI +6.0 to +10.8). 1,536 trials per arm per condition, two independent runs that agree.
+8. **The largest effect in the study is how the stairs policy was trained, not how policies are
+   switched.** Put the stairs run's own checkpoint from before its curriculum collapsed
+   (iteration 4800 instead of 9999) in the stairs slot and that one policy, used alone, crosses
+   the whole course 97.7% of the time (94.9% with noise on). Switching adds nothing to it
+   (-1.0 points, CI -2.8 to +0.7), early switching costs nothing (+0.7, CI -1.1 to +2.4), and it
+   beats both the switching system built on the as-trained specialists and the generalist. At
+   the harder level it lifts stairs-only from 33.4% to 82.8% and switching from 51.0% to 86.5%.
 
 ## Setup, as run
 
@@ -146,10 +154,15 @@ of the row.
 Reading it:
 
 - **Observation noise on.** Every fixed specialist does *better* with the noise it was trained
-  with (stairs-only 76.6 → 83.2, rough-only 37.4 → 54.0), and the on-time switch slightly worse,
-  so the switching advantage falls to +4.2 points with an interval that only just excludes 0.
-  Early switching still costs 6.9 points; late switching (0.3 m) still costs 15.6.
-  This is the more deployment-like condition and the more conservative number.
+  with (stairs-only 76.6 -> 83.2, rough-only 37.4 -> 54.0), and the on-time switch slightly worse,
+  so in this run the switching advantage falls to +4.2 points with an interval that only just
+  excludes 0. Early switching still costs 6.9 points; late switching (0.3 m) still costs 15.6.
+  *Added 2026-10-04:* the same two arms were run twice more with noise on (as controls in the
+  generalist runs, seeds 500-502 again and 503-505). On-time switching scored 87.4, 90.9 and
+  90.9%, stairs-only 83.2, 82.9 and 81.1%. Pooled over all three runs (2,304 trials per arm):
+  **89.7% vs 82.4%, +7.3 points (CI +5.3 to +9.3)**. The +4.2 above was the low end of that
+  run-to-run spread; with noise on, repeat runs of one arm on the same seeds differ by up to
+  3.5 points, because the noise draws differ. The pooled figure is the one to quote.
 - **Orientation-only falls at L1.** All the L1 failures above are knee or calf contacts with a
   step edge. If those do not count, every arm but flat-only crosses 98-100% of the time and the
   course cannot separate anything. The +15 points is a statement about knee contacts, not about
@@ -164,17 +177,17 @@ Reading it:
 ## What this means for the project's claim
 
 `objective.md` asks whether terrain preview beyond the onboard horizon improves switching, and
-says the deliverable is gain as a function of horizon. Measured: the gain is zero from 0.3 m
-outward and switching earlier than that is harmful, under ground-truth labels and exact
-boundary positions, which is the best case for preview. The mechanism is not specific to the
-schedule: these specialists are worse than their neighbours on the approach to their own
-terrain, so handing over early costs more than any transient it could avoid, and there is no
-measurable transient to avoid.
+says the deliverable is gain as a function of horizon. Measured, under ground-truth labels and
+exact boundary positions, which is the best case for preview: with the specialists as trained
+the gain is zero from 0.3 m outward and switching earlier than that is harmful; with an
+undamaged stairs policy (Addendum 2B) it is zero everywhere from 0.3 m outward and early
+switching is merely harmless. In neither case is there anything for a longer horizon to buy,
+and there is no measurable boundary transient for an earlier, gentler hand-over to smooth.
 
-What the sweep does show is that **timeliness is everything**: 0.3 m late costs 16-30 points
-depending on condition, 0.6 m late costs over 50. Whether the robot's own scan can deliver a
-label that promptly is a separate question, tested next. That, not horizon, is where a followed
-person could still have been worth something.
+What the sweep does show is that **lateness is what costs**: 0.3 m late loses 13-33 points at
+L1 and 43-65 at L2. Whether the robot's own scan can deliver a label that promptly is a
+separate question, tested next. That, not horizon, is where a followed person could still have
+been worth something.
 
 ## Addendum: a real reactive arm (pre-registered in the addendum, before any classifier data)
 
@@ -220,15 +233,103 @@ difficulty-pooled measurement was much less favourable.
 (Same seeds, same arm, different runs: hard 0.3 scored 91.5% and 90.6% with noise off, 87.4%
 and 88.3% with noise on. Run-to-run spread from simulator nondeterminism is about 1 point.)
 
+## Addendum 2A: the matched generalist (pre-registered before it was run)
+
+`go2_generalist/model_9999.pt`, cluster job 12479: stock PPO on the union of the four terrain
+classes, otherwise identical to a specialist (observations, rewards, 10k iterations, seed 42,
+and the same two-stage command curriculum). Run as a fixed policy next to the on-time switch
+and the stairs specialist. First run on seeds 500-502; because the two noise conditions
+disagreed, a replication on fresh seeds 503-505 was registered before it was run. Both runs
+are reported and pooled; they agree.
+
+| sensing | generalist | hard switch 0.3 | stairs only | switch − generalist (95% CI) | by run |
+|---|---|---|---|---|---|
+| noise off (n = 1,536) | **90.5%** (88.9-91.9) | 89.3% (87.6-90.7) | 74.8% | **−1.2 (−3.4 to +0.9)** | −0.7, −1.8 |
+| training noise on (n = 1,536) | **82.5%** (80.5-84.3) | 90.9% (89.3-92.2) | 82.0% | **+8.4 (+6.0 to +10.8)** | +9.2, +7.6 |
+
+Per seed, generalist: 89.5 / 89.8 / 91.4 / 89.8 / 92.2 / 90.2 with noise off; 82.0 / 81.6 /
+81.2 / 79.7 / 83.2 / 87.1 with noise on. Figure: `report_content/figures/switch_generalist.png`.
+
+- **It is walking, not bracing** (bugs #1, #14): it never loses the leader (lost 0.0% in both
+  conditions), its per-step velocity-tracking error is 0.170 m/s against 0.169 for the switching
+  arm, and successful trials take the same 27.3 s over the same 13.6 m.
+- **Pre-registered claim, "switching beats the matched generalist": holds with sensor noise on,
+  not with it off.** The addendum said that if the conditions disagreed, that would be the
+  result. It is.
+- **Where the generalist loses with noise on**: at the lip of the down-stairs (0.7% of trials
+  with noise off, 5.4% with it on) and on the down-stairs themselves (8.3% -> 11.2%). The
+  specialists move the other way: every one of them does better with the noise on. A natural
+  reading is that the generalist has to read the scan to know what terrain it is on, so scan
+  noise costs it, while a specialist can afford to lean on it less. That is an inference from
+  the failure locations, not something tested here.
+- With noise on the generalist is no better than the stairs specialist alone (82.5% vs 82.0%,
+  +0.5, CI -2.2 to +3.2). With noise off it is 15.7 points better.
+- The generalist shares the specialists' handicap: it trained under the curriculum that
+  collapsed at iteration 5000 for both of them. Whether its own terrain level collapsed was
+  not checked.
+
+## Addendum 2B: a stairs policy from before the curriculum collapse (pre-registered before it was run)
+
+`go2_spec_stairs_it4800/model_4800.pt` is the Stairs training run's own checkpoint at
+iteration 4800, the last one saved before the command range widened and the terrain
+curriculum collapsed (findings.md, "Why the specialists are weak"). The cluster measured it at
+2.6-3.6x fewer falls per 100 m than `model_9999` on pyramid stairs
+(`2026-10-03-stairs-precollapse-checkpoint-eval.md`). Here it replaces `model_9999` in the
+stairs slot of the bank; nothing else changes. Same course, task and seeds as the main
+experiment. Every arm run is reported.
+
+Success %, 95% CI in brackets for the comparisons:
+
+| | L1, noise off (n = 768) | L1, noise on (n = 768) | L2, noise off (n = 512) |
+|---|---|---|---|
+| stairs policy alone | **97.7** | **94.9** | **82.8** |
+| hard switch, 0.3 m late | 75.4 | 81.8 | 21.3 |
+| hard switch at the boundary (0.0) | 97.9 | 90.8 | 39.8 |
+| hard switch 0.3 m ahead | 96.6 | 94.9 | 86.5 |
+| hard switch 0.8 m ahead | 97.7 | 95.3 | 84.8 |
+| hard switch 1.5 m ahead | 97.3 | 95.7 | 87.5 |
+| rough only / flat only | 36.7 / 30.1 | 48.7 / 40.5 | 0.0 / 0.6 |
+| **H5a** early − on-time (1.5 − 0.3) | +0.7 (−1.1, +2.4) | +0.8 (−1.4, +2.9) | +1.0 (−3.2, +5.1) |
+| **H5b** switch 0.3 − stairs alone | −1.0 (−2.8, +0.7) | 0.0 (−2.2, +2.2) | +3.7 (−0.7, +8.1) |
+| same arms with `model_9999`: stairs alone / switch 0.3 | 76.6 / 91.5 (pooled 75.4 / 90.0) | 83.2 / 87.4 (pooled 82.4 / 89.7) | 33.4 / 51.0 |
+
+Figure: `report_content/figures/switch_lead_two_checkpoints.png`.
+
+- **H5a: the early-switch penalty does not survive a competent stairs policy.** It was the
+  lip of the down-stairs: 13-15% of trials lost there with `model_9999` walking the approach,
+  0.0% with `model_4800` walking it (stairs-alone and every switch at or ahead of the boundary;
+  L1, noise off). Early switching is now free. It is still not *better*
+  than on-time, so the conclusion about preview stands on firmer ground than before: the
+  earlier result could be blamed on a bad specialist, this one cannot.
+- **H5b: switching no longer beats the best single policy at L1**, and at L2 the +3.7 points
+  has an interval that includes 0. The stairs policy from iteration 4800 crosses rough ground
+  and both staircases by itself. The 15-point switching advantage of the main experiment was the
+  size of the damage the curriculum did to the stairs specialist.
+- **One policy beats every system built from the as-trained ones**: stairs-alone with
+  `model_4800` at 97.7% / 94.9% (noise off / on) against 90.0% / 89.7% for switching between
+  the as-trained specialists (pooled) and 90.5% / 82.5% for the generalist.
+- **Lateness got more expensive, not less, at L2**: a switch at the boundary instead of 0.3 m
+  ahead of it drops from 86.5% to 39.8%, and 0.3 m late to 21.3%. The flat specialist cannot
+  put a foot on a 7 cm riser. So when a switch is used at all, the safe side is early, and
+  with this stairs policy early is free.
+- Not tested: the scan classifier with `model_4800`, and at L2, where its 0.2 m lead would sit
+  in the steep part of the curve.
+- `model_4800` is one earlier checkpoint of one single-seed run, chosen before it was
+  evaluated as "the last checkpoint before iteration 5000". It is not a retrained specialist;
+  that is stairs v2 (cluster job 12490).
+
 ## Limits
 
-- Single-seed specialists, and weak ones: both the stairs and rough specialists finished
-  training on near-flat terrain (findings.md, "Why the specialists are weak"). A properly
-  trained stairs specialist might not have the lip problem, which would flatten the early side
-  of the curve; it would not make early switching *better* than on-time.
-- One course family, one leader speed (0.5 m/s), one robot.
-- The generalist comparison (the claim `objective.md` says the project rests on) is missing.
+- Single-seed policies throughout. The as-trained stairs and rough specialists finished
+  training on near-flat terrain (findings.md, "Why the specialists are weak"), and Addendum 2B
+  shows how much of the main experiment's switching advantage that explains.
+- One course family, one leader speed (0.5 m/s), one robot, simulation only.
+- The generalist was trained under the same collapsing curriculum. A generalist trained with
+  the command range held might do what the iteration-4800 stairs policy does.
 - Stage 1 selected the "anticipatory" arms as the best of a bad set; stage 2 confirms they are
   worse than on-time, which is the conclusion, but "best lead above 0.8 m" is not a tuned
   anticipatory controller. A controller with the long horizon is free to switch at 0.3 m; the
   result says that is what it should do.
+- With observation noise on, repeat runs of one arm on the same seeds differ by up to 3.5
+  points (the noise draws differ); with noise off, by about 2. Differences of that size
+  between single runs should not be read.
