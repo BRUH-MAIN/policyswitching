@@ -137,3 +137,36 @@ is as a label source, and the lead sweep says how much that is worth.
 - Known limit, stated now: the stairs in `multi` are the same straight 0.05 m stairs the
   classifier trains on, so this is the easy case for a classifier. A failure here is strong; a
   success does not show it would generalise to unseen stair geometry.
+
+## Addendum 2, 2026-10-04: generalist arm, and a better stairs specialist (written before either is run)
+
+Both checkpoints are downloaded; neither has been run on any course. (The generalist's
+iteration-0 checkpoint was run once on 16 trials as a code check of the loading path.)
+
+**A. Generalist (arm 1).** `go2_generalist/model_9999.pt` (job 12479, seed 42, 10k iterations,
+same curriculum as the specialists) as a fixed policy on `multi` L1, seeds 500-502, 768 trials,
+next to hard:0.3 and stairs-only, with observation noise off and on
+(`scripts/switch_follow_generalist.sh`). Claim: **switching vs the matched generalist**,
+hard:0.3 minus generalist, "supported" if the 95% interval excludes 0 in the same direction in
+both noise conditions; if the two conditions disagree, that is the result. Before reading
+success, check the generalist is walking: lost % and tracking error (bugs #1, #14).
+
+**B. Pre-collapse stairs specialist.** `go2_spec_stairs_it4800/model_4800.pt` is the Stairs
+run's checkpoint from before the command range widened; on pyramid stairs it falls 2.6-3.6x
+less often than `model_9999` (cluster, `2026-10-03-stairs-precollapse-checkpoint-eval.md`).
+The early-switching penalty in the main result was traced to the stairs specialist clipping
+the lip of the down-stairs when it walks the approach. So:
+
+- Same course, task and seeds as the main experiment, with only the stairs slot of the bank
+  replaced: L1 on seeds 500-502 (noise off and on), L2 on seeds 600-601 (noise off).
+- Arms: fixed flat / rough / stairs, hard switch at leads -0.3, 0.0, 0.3, 0.8, 1.5.
+- **H5a, does the early-switch penalty survive a competent stairs specialist?** hard:1.5 minus
+  hard:0.3. Predicted: smaller than with `model_9999`. The anticipation conclusion changes only
+  if early is *better* than on-time with an interval excluding 0; a difference whose interval
+  includes 0 means "no cost, no gain", which still leaves nothing for a longer horizon to add.
+- **H5b, does switching still beat the best fixed policy?** hard:0.3 minus the best fixed arm.
+  A stairs specialist that is good on flat and rough ground too could make switching
+  unnecessary; that would be reported as such.
+- No selection: every arm above is reported, on the seeds named.
+- Limit: `model_4800` is one earlier checkpoint of the same single-seed run, not a retrained
+  specialist. Stairs v2 (job 12490) is the retrain; this is what can be tested today.
