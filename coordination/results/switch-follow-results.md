@@ -321,6 +321,36 @@ Figure: `report_content/figures/switch_lead_two_checkpoints.png`.
   evaluated as "the last checkpoint before iteration 5000". It is not a retrained specialist;
   that is stairs v2 (cluster job 12490).
 
+## Addendum 3: the generalist's own iteration-4800 checkpoint (pre-registered before it was run)
+
+Bank: flat and rough as trained, stairs = `model_4800`. Seeds 500-505, 1,536 trials per arm
+per condition. All four arms reported.
+
+| arm | noise off | noise on |
+|---|---|---|
+| generalist, iteration 4800, alone | 73.2% (70.9-75.3) | 75.3% (73.0-77.4) |
+| generalist, iteration 9999, alone | 90.6% (89.0-91.9) | 83.7% (81.7-85.4) |
+| stairs policy, iteration 4800, alone | **97.7%** (96.8-98.4) | **95.2%** (94.0-96.1) |
+| hard switch 0.3 m ahead (stairs = iteration 4800) | 97.3% (96.3-98.0) | 95.7% (94.6-96.6) |
+| generalist 4800 − generalist 9999 | −17.4 (−20.0, −14.7) | −8.4 (−11.2, −5.5) |
+| stairs alone − generalist 9999 | +7.2 (+5.5, +8.9) | +11.5 (+9.4, +13.7) |
+| switch − generalist 9999 | +6.7 (+5.0, +8.4) | +12.0 (+9.9, +14.2) |
+| switch − stairs alone | −0.5 (−1.6, +0.7) | +0.5 (−1.0, +2.0) |
+
+- **Stopping early does not help the generalist.** Its iteration-4800 checkpoint is 8 to 17
+  points *worse* than its final one on this course, although its terrain curriculum collapsed
+  at iteration 5000 just as the specialists' did. With four terrain classes to learn it was
+  not done at 4,800 iterations, and what it gained afterwards outweighed what the collapse
+  cost. "The pre-collapse checkpoint is the better policy" is a fact about the stairs
+  specialist, not a general rule.
+- **The best generalist available is the final one, and the iteration-4800 stairs policy
+  beats it** by 7 points with noise off and 12 with noise on, alone, with no switching.
+- **Switching (with that stairs policy in the bank) and that stairs policy alone are the
+  same** to within a point in both conditions, on six seeds.
+- So the comparison `objective.md` calls the one the project rests on comes out as:
+  specialists beat the matched generalist on this course by 7 to 12 points, and the switch
+  contributes none of it. One specialist does.
+
 ## Limits
 
 - Single-seed policies throughout. The as-trained stairs and rough specialists finished
