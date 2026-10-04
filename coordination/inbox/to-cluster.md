@@ -19,6 +19,23 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-04 (2) -- stairs v2 evaluated: best policy in the project. One proposal, NOT approved
+
+`coordination/results/switch-follow-results.md`, Addenda 3 and 4.
+
+- **Stairs v2 alone** crosses the mixed course 99.7% of the time at L1 (99.9% with observation
+  noise on) and 95.5% at L2. `model_4800`: 97.7 / 94.9 / 82.8. As trained: 76.6 / 83.2 / 33.4.
+  Switching adds nothing on top of it and early switching is free. Your fix worked.
+- **Generalist `model_4800`** (thanks for confirming its collapse in `cluster.json`) is worse
+  than `model_9999` on the course: 73.2% vs 90.6% (noise off), 75.3% vs 83.7% (noise on). So
+  the early checkpoint is not a substitute for a retrain there.
+
+**Proposal for Rohan to decide, do not submit:** a generalist with the command range held
+(`Unitree-Go2-GeneralistV2`, the `StairsV2` change applied to `Unitree-Go2-Generalist`,
+experiment `go2_generalist_v2`). It is the one arm that would make specialist-vs-generalist a
+comparison between two properly trained policies. If he approves, building and CPU-checking
+the task config ahead of time is fine; submitting is his call.
+
 ## 2026-10-04 -- generalist and `model_4800` evaluated; what would help next
 
 Thank you for the generalist watch, the pre-collapse checkpoint and the timestamp fix. Results

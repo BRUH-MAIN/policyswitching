@@ -18,9 +18,10 @@ beats a single policy depends on the conditions: with the policies as trained it
 best specialist by 15 points (7 with sensor noise on), and it beats the matched generalist by
 8 points with sensor noise on and not at all without. Third, and largest, the policies'
 training mattered more than any switching. A curriculum interaction demoted both non-flat
-specialists to near-flat terrain halfway through training; the stairs run's own checkpoint
-from before that point, used alone, crosses the whole course 98% of the time (95% with sensor
-noise on), better than every switching system and better than the generalist. We also report a replication of the
+specialists to near-flat terrain halfway through training. A stairs policy retrained without
+it, used alone, crosses the whole course over 99% of the time, better than every switching
+system built from the original policies and better than the generalist, and switching on top
+of it adds nothing. We also report a replication of the
 SARO vision-language pipeline in which a 4B local model fails to perceive simulated stairs,
 and a two-rate perception design that makes camera-based person-following run in real time.
 
@@ -145,9 +146,10 @@ on labelled scans with no policy in the loop).
 experiment were committed before any timing data existed. Stage 1 (seeds 400, 401; 512 trials
 per arm) swept seven hard leads and eight soft schedules and selected the best arm in each
 cell of the 2×2. Stage 2 (fresh seeds 500, 501, 502; 768 trials per arm) evaluated only the
-selected arms and the baselines. Three addenda, each committed before its data existed, cover
-the scan-classifier arm, the generalist arm (with a replication on seeds 503 to 505 once its
-two noise conditions disagreed), and a re-run with a better stairs checkpoint.
+selected arms and the baselines. Addenda, each committed before its data existed, cover the
+scan-classifier arm, the generalist arm (with a replication on seeds 503 to 505 once its two
+noise conditions disagreed), re-runs with two better stairs policies, and the generalist's
+earlier checkpoint.
 
 **Metrics.** Course success with Wilson intervals; differences of proportions with Newcombe
 intervals. Boundary smoothness is action rate and actuator-force rate inside ±0.5 m of base
@@ -337,38 +339,52 @@ terrain rows and never climb back. Terrain level runs from 0 to 9 and a stair ri
 1 cm. Mean reward and episode length are flat across the collapse, so it is invisible unless
 terrain level is plotted.
 
-The stairs run saved a checkpoint at iteration 4800, before the collapse. On pinned pyramid
-stairs it falls 1.6, 4.1 and 5.1 times per 100 m at difficulty 0.5, 0.7 and 0.9, against 4.1,
-12.0 and 18.1 for the final checkpoint at the same speed: the second half of training made
-the stairs specialist about three times worse at stairs.
+Two undamaged stairs policies were then obtained. The first is free: the stairs run saved a
+checkpoint at iteration 4800, before the collapse. On pinned pyramid stairs it falls 1.6, 4.1
+and 5.1 times per 100 m at difficulty 0.5, 0.7 and 0.9, against 4.1, 12.0 and 18.1 for the
+final checkpoint at the same speed: the second half of training made the stairs specialist
+about three times worse at stairs. The second is a retrain, **stairs v2**: the same task from
+scratch with the command range held where the follow task uses it. Its terrain level kept
+rising through iteration 5000 instead of collapsing.
 
-Putting that checkpoint in the stairs slot, with nothing else changed, and re-running the
-course (pre-registered before it was run):
+Each was put in the stairs slot, with nothing else changed, and the course re-run
+(pre-registered before either was run):
 
-![Lead sweep with two stairs checkpoints](figures/switch_lead_two_checkpoints.png)
+![Lead sweep, stairs specialist as trained and retrained](figures/switch_lead_two_checkpoints.png)
+
+Stairs v2 in the stairs slot:
 
 | | L1, noise off (n = 768) | L1, noise on (n = 768) | L2, noise off (n = 512) |
 |---|---|---|---|
-| stairs policy alone | **97.7%** | **94.9%** | **82.8%** |
-| hard switch 0.3 m late | 75.4% | 81.8% | 21.3% |
-| hard switch at the boundary | 97.9% | 90.8% | 39.8% |
-| hard switch 0.3 m ahead | 96.6% | 94.9% | 86.5% |
-| hard switch 1.5 m ahead | 97.3% | 95.7% | 87.5% |
-| early minus on-time (1.5 − 0.3) | +0.7 (−1.1, +2.4) | +0.8 (−1.4, +2.9) | +1.0 (−3.2, +5.1) |
-| switch 0.3 minus stairs alone | −1.0 (−2.8, +0.7) | 0.0 (−2.2, +2.2) | +3.7 (−0.7, +8.1) |
-| same arms, as-trained stairs specialist: alone / switch 0.3 | 76.6% / 91.5% | 83.2% / 87.4% | 33.4% / 51.0% |
+| stairs policy alone | **99.7%** | **99.9%** | **95.5%** |
+| hard switch 0.3 m late | 70.8% | 83.2% | 30.1% |
+| hard switch at the boundary | 99.6% | 96.7% | 49.8% |
+| hard switch 0.3 m ahead | 100.0% | 99.9% | 96.3% |
+| hard switch 1.5 m ahead | 99.9% | 99.9% | 97.7% |
+| early minus on-time (1.5 − 0.3) | −0.1 (−0.7, +0.4) | 0.0 (−0.6, +0.6) | +1.4 (−0.8, +3.6) |
+| switch 0.3 minus stairs alone | +0.3 (−0.3, +0.9) | 0.0 (−0.6, +0.6) | +0.8 (−1.7, +3.3) |
+| stairs alone, iteration-4800 checkpoint | 97.7% | 94.9% | 82.8% |
+| stairs alone, as trained | 76.6% | 83.2% | 33.4% |
 
 - **The early-switching penalty disappears.** The failures at the lip of the down-stairs go
   from 13-15% to zero. Early switching becomes free. It does not become better than on-time,
   so the conclusion about preview no longer rests on a defective specialist.
-- **Switching stops beating the best single policy.** At L1 the iteration-4800 stairs policy
-  alone matches every switching arm; at L2 switching is 3.7 points ahead with an interval that
-  includes zero. The 15-point advantage of Section B was the size of the damage.
-- **One well-trained policy beats every system built from the as-trained ones**: 97.7% and
-  94.9% (noise off and on), against 90.0% and 89.7% for switching between the as-trained
+- **Switching stops beating the best single policy.** With either undamaged stairs policy,
+  that policy alone matches every switching arm at both levels. The 15-point advantage of
+  Section B was the size of the damage.
+- **One well-trained policy beats every system built from the as-trained ones**: 99.7% and
+  99.9% (noise off and on), against 90.0% and 89.7% for switching between the as-trained
   specialists and 90.5% and 82.5% for the generalist.
+- **Specialists do beat the generalist, but the switch is not what does it.** With the
+  iteration-4800 stairs policy in the bank and six seeds per condition, that stairs policy
+  alone beats the final generalist by 7.2 points with noise off (CI +5.5 to +8.9) and 11.5
+  with noise on (CI +9.4 to +13.7); switching on top of it is within half a point of it.
+- **There is no better generalist to hand.** The generalist's curriculum collapsed at
+  iteration 5000 too, but its own iteration-4800 checkpoint is worse than its final one
+  (73.2% vs 90.6% with noise off, 75.3% vs 83.7% with noise on): with four terrain classes to
+  learn it was not done by then. An undamaged generalist needs a retrain.
 - **Lateness gets more expensive on harder stairs**: at L2 a switch at the boundary instead
-  of 0.3 m ahead of it falls from 86.5% to 39.8%.
+  of 0.3 m ahead of it falls from 96.3% to 49.8%.
 
 ### H. Side results
 
@@ -421,10 +437,17 @@ On whether to switch at all, the answer the project set out to give ("specialist
 switch beat a generalist") turned out to depend on things the design treated as fixed.
 With the policies exactly as trained and sensor noise on, switching beats the matched
 generalist by 8 points. With sensor noise off it does not. And once the stairs policy is
-replaced by its own earlier checkpoint, a single policy beats all of them. The most valuable
-hour of the project was the one spent reading a terrain-level curve; no choice of switching
-rule, blend or preview horizon moved course success by as much as removing one curriculum
-interaction did.
+trained without the curriculum interaction, that single policy beats all of them and the
+switch contributes nothing. So specialisation helped here, in the sense that a policy trained
+on stairs alone outperformed one trained on everything, but selecting among specialists at
+run time did not. The most valuable hour of the project was the one spent reading a
+terrain-level curve; no choice of switching rule, blend or preview horizon moved course
+success by as much as removing one curriculum interaction did.
+
+This also says something about the course. Rough ground at these levels and 5 to 7 cm stairs
+are all within reach of one good stairs policy, so the course does not actually require more
+than one specialist. Terrain that it cannot cross, such as stepping-stone gaps, is where a
+switch would have to earn its place.
 
 Two methodological points recur. Outcomes depended on settings that are easy to leave
 implicit: observation noise in the evaluation environment, what counts as a fall, and which
@@ -434,13 +457,11 @@ was at the low end of a spread whose pooled value is +7.3.
 
 ## VII. Limitations
 
-- **Single-seed policies.** Every policy is one training run. The generalist's terrain
-  curriculum collapsed at iteration 5000 exactly as the specialists' did (level 1.52 to
-  0.39-0.50), so the generalist in Section V.B is a damaged one too.
-- **The better stairs policy is an earlier checkpoint, not a retrain.** It was chosen before
-  it was evaluated, as the last checkpoint before iteration 5000, but it is still one
-  checkpoint of one run. A retrain with the command range held (stairs v2) was submitted and
-  is not evaluated here.
+- **Single-seed policies.** Every policy is one training run, stairs v2 included.
+- **No undamaged generalist.** The generalist's terrain curriculum collapsed at iteration
+  5000 exactly as the specialists' did (level 1.52 to 0.39-0.50), and its earlier checkpoint
+  is worse, so the comparison in Section V.G is an undamaged specialist against a damaged
+  generalist. A generalist retrained the way stairs v2 was might close the gap.
 - **Parametric blending, not a learned gate.** The soft arms are linear cross-fades. A
   trained gating network could in principle find a state-dependent blend these schedules
   cannot express. The results give no reason to expect that, but do not rule it out.
@@ -452,14 +473,14 @@ was at the low end of a spread whose pooled value is +7.3.
 
 ## VIII. What remains
 
-1. Evaluate **stairs v2** (job 12490) when it finishes, and re-run the lead sweep and the
-   generalist comparison with it. If it behaves like the iteration-4800 checkpoint, the
-   natural next question is a generalist trained the same way.
-2. Test the scan classifier at L2 and with the better stairs policy, where its 0.2 m lead
-   sits in the steep part of the timing curve.
-3. Evaluate the existing gaps checkpoint and add a gaps segment to the course: stepping
-   stones are the one terrain where no policy here is competent, so it is where a specialist
-   is most likely to be needed.
+1. **Retrain the generalist with the command range held**, as stairs v2 was, and repeat the
+   comparison. This is the one arm that would make "specialist against generalist" a
+   comparison between two properly trained policies.
+2. **Add a gaps segment to the course** and evaluate the existing gaps checkpoint: stepping
+   stones are the terrain no specialist here can cross, so it is where switching is most
+   likely to be needed.
+3. Test the scan classifier at L2 and with stairs v2, where its 0.2 m lead sits in the steep
+   part of the timing curve.
 4. Vary leader speed and course layout; test the classifier on unseen stair geometry.
 
 ## Appendix: where each number comes from
@@ -468,7 +489,7 @@ was at the low end of a spread whose pooled value is +7.3.
 |---|---|
 | V.A | `coordination/results/gate1-cross-terrain-matrix-analysis.md` (specialist rows and their ablation); `coordination/results/2026-10-03-stairs-step1-pyramid-eval-results.md`; generalist row and ablation: `unitree_rl_mjlab/eval_results/matrix_generalist/` |
 | V.B-F | `coordination/results/switch-follow-results.md`; raw `unitree_rl_mjlab/eval_results/switch_follow/`; rules `coordination/results/switch-follow-preregistration.md` |
-| V.G | `coordination/results/2026-10-03-stairs-training-curve.md`; `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`; `switch-follow-results.md`, Addendum 2B; `findings.md`, "Why the specialists are weak" |
+| V.G | `coordination/results/2026-10-03-stairs-training-curve.md`; `coordination/results/2026-10-03-stairs-precollapse-checkpoint-eval.md`; `switch-follow-results.md`, Addenda 2B, 3 and 4; `findings.md`, "Why the specialists are weak" |
 | V.H | `findings.md` (PAS, VLM navigation, person-following, SARO protocol sections); `coordination/results/vlm-nav-*.md` |
 | Gate 2 remark in V.E | `coordination/results/gate2a-height-scan-discriminability-analysis.md`; `findings.md` bug #16 |
 
@@ -485,5 +506,5 @@ bash scripts/switch_follow_generalist.sh          # generalist arm, noise off an
 ```
 
 Add `--obs-noise`, `--terminations saro` or `--level L2` for the robustness rows, and
-`--extra-policy stairs=<ckpts>/go2_spec_stairs_it4800/model_4800.pt` to put the pre-collapse
-checkpoint in the stairs slot.
+`TAG=<name> STAIRS_CKPT=<checkpoint> bash scripts/switch_follow_stairs_ckpt.sh` to re-run the
+sweep with another checkpoint (the iteration-4800 one, or stairs v2) in the stairs slot.

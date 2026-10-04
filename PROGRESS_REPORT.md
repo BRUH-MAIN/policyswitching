@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-04, late morning · **Written for**: a fresh session (human or Claude) with
+**As of**: 2026-10-04, afternoon · **Written for**: a fresh session (human or Claude) with
 no memory of how this state was reached. Where something needs more detail than fits here, a
 file is named; read it rather than re-deriving it.
 
@@ -27,37 +27,29 @@ Every arm the project planned has now been run. The answer is in
   best single specialist by 14.6 points (7.3 with sensor noise on) and beats the matched
   generalist by 8.4 points with sensor noise on, not at all with it off.
 - **Blending** the specialists' actions instead of switching hard changes nothing.
-- **The biggest effect is in training, not switching.** A curriculum interaction demoted both
-  non-flat specialists to near-flat terrain at iteration 5000. The stairs run's own checkpoint
-  from iteration 4800, used *alone*, crosses the whole course 97.7% of the time (94.9% with
-  noise), better than any switching between the as-trained policies and better than the
-  generalist. With it in the bank, switching adds nothing at the easy level and early
-  switching costs nothing.
+- **The biggest effect is in training, not switching.** A curriculum interaction demoted the
+  specialists and the generalist to near-flat terrain at iteration 5000. Stairs v2, retrained
+  without it, crosses the whole course *alone* 99.7% of the time (99.9% with noise, 95.5% at
+  the harder level). With it in the bank, switching adds nothing and early switching costs
+  nothing.
+- **Specialist vs generalist:** an undamaged stairs policy alone beats the best generalist by
+  7-12 points; the switch contributes none of it. No undamaged generalist exists yet.
 
 Everything else (gate 1, gate 2, the PAS replication, the VLM/SARO pipeline, person-following
 and its two-rate perception) is unchanged and summarised in the final report, Section V.H.
 
 ## 2. What is still open
 
-### 2.1 Stairs v2 (job 12490) is submitted; evaluate it when it finishes
+### 2.1 Retrain the generalist the way stairs v2 was (your call)
 
-You told the cluster session to go ahead on 2026-10-03. `Unitree-Go2-Spec-StairsV2` is the
-Stairs task with the command range held at stage 0. It was PENDING at 20:08 IST on 10-03,
-waiting for a GPU; checkpoints will appear on private HF under `go2_spec_stairs_v2/`. When
-`model_9999.pt` is there, the laptop test is the same one run for the iteration-4800
-checkpoint (from `unitree_rl_mjlab/`):
-
-```
-python scripts/switch_follow.py --seed 500 --level L1 --ckpt-root eval_ckpts \
-    --extra-policy stairs=eval_ckpts/go2_spec_stairs_v2/model_9999.pt \
-    --arms fixed:flat fixed:rough fixed:stairs hard:-0.3:label hard:0.0:label hard:0.3:label hard:0.8:label hard:1.5:label \
-    --json-out eval_results/switch_follow/stairsv2_L1_clean_s500.json
-```
-
-for seeds 500-502 (L1, with and without `--obs-noise`) and 600-601 (`--level L2`), then
-`switch_follow_analyze.py confirm`. Question it answers: does a properly trained stairs policy
-do what the iteration-4800 checkpoint does (final report, Section V.G)? If yes, the natural
-follow-up is a generalist trained the same way.
+Stairs v2 finished and was evaluated on 2026-10-04; it is the best policy in the project. The
+one comparison still lopsided is specialist against generalist: the generalist (job 12479)
+trained through the curriculum collapse and its earlier checkpoint is worse, so there is no
+undamaged generalist. A generalist with the command range held needs a new task config on the
+cluster (the `StairsV2` change applied to `Unitree-Go2-Generalist`) and about 10 GPU-hours.
+The laptop side is one command once its checkpoint is on HF:
+`ITER=9999 HF_REPO=... scripts/switch_follow_generalist.sh` after pointing it at the new
+experiment name. Not submitted; nothing in the report claims its result.
 
 ### 2.2 Gaps checkpoint: still on the cluster only
 
@@ -80,10 +72,11 @@ experiment pre-registered, calibrated (seeds 400/401) and confirmed (seeds 500-5
 robustness runs and a scan-classifier reactive arm. `vlm-pipeline` fast-forwarded into `main`.
 You submitted the generalist (job 12479) by hand after the cluster session was refused.
 
-**2026-10-04.** Generalist evaluated (two runs, seeds 500-505, noise off and on). Pre-collapse
-stairs checkpoint tested in the stairs slot at L1 and L2. Generalist run on pinned terrain
-classes (`eval_results/matrix_generalist/`). Results, findings, objective and the final report
-rewritten around these.
+**2026-10-04.** Generalist evaluated (two runs, seeds 500-505, noise off and on), plus its
+pinned-terrain matrix and height-scan ablation (`eval_results/matrix_generalist/`) and its
+iteration-4800 checkpoint. Pre-collapse stairs checkpoint and then stairs v2 tested in the
+stairs slot at L1 and L2. Results, findings, objective and the final report rewritten around
+these.
 
 ## 4. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 

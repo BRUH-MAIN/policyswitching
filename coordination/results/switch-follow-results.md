@@ -7,7 +7,7 @@ this data) · **Raw**: `unitree_rl_mjlab/eval_results/switch_follow/*.json` ·
 
 ## Headline
 
-Read in this order; items 7 and 8, added on 2026-10-04, change how items 1 and 3 should be read.
+Read in this order; items 7 to 9, added on 2026-10-04, change how items 1 and 3 should be read.
 
 1. **With the specialists as trained, switching by terrain beats every single specialist** on
    the mixed course: 91.5% of trials cross it against 76.6% for the best fixed specialist
@@ -38,12 +38,18 @@ Read in this order; items 7 and 8, added on 2026-10-04, change how items 1 and 3
    difference -1.2, CI -3.4 to +0.9), and 82.5% with noise on, where switching holds at 90.9%
    (+8.4, CI +6.0 to +10.8). 1,536 trials per arm per condition, two independent runs that agree.
 8. **The largest effect in the study is how the stairs policy was trained, not how policies are
-   switched.** Put the stairs run's own checkpoint from before its curriculum collapsed
-   (iteration 4800 instead of 9999) in the stairs slot and that one policy, used alone, crosses
-   the whole course 97.7% of the time (94.9% with noise on). Switching adds nothing to it
-   (-1.0 points, CI -2.8 to +0.7), early switching costs nothing (+0.7, CI -1.1 to +2.4), and it
-   beats both the switching system built on the as-trained specialists and the generalist. At
-   the harder level it lifts stairs-only from 33.4% to 82.8% and switching from 51.0% to 86.5%.
+   switched.** A curriculum interaction demoted the stairs specialist to near-flat terrain at
+   iteration 5000. Retrained with that interaction removed (stairs v2), the stairs policy
+   *alone* crosses the whole course 99.7% of the time (99.9% with noise on) and 95.5% at the
+   harder level, where the as-trained one managed 76.6%, 83.2% and 33.4%. The original run's
+   own iteration-4800 checkpoint gets most of the way there (97.7%, 94.9%, 82.8%). With either
+   in the bank, switching adds nothing (differences within 1 point at L1) and early switching
+   costs nothing.
+9. **Specialists do beat the matched generalist, but the switch is not what does it.** The
+   undamaged stairs policy alone beats the best generalist available by 7 to 12 points
+   (iteration-4800 checkpoint, six seeds), and switching on top of it changes nothing. The
+   generalist's own iteration-4800 checkpoint is worse than its final one, so there is no
+   better generalist to compare against without a retrain.
 
 ## Setup, as run
 
@@ -351,14 +357,48 @@ per condition. All four arms reported.
   specialists beat the matched generalist on this course by 7 to 12 points, and the switch
   contributes none of it. One specialist does.
 
+## Addendum 4: stairs v2, the retrain (pre-registered before its checkpoint existed)
+
+`go2_spec_stairs_v2/model_9999.pt`, cluster job 12490: the Stairs task trained from scratch
+with the command range held at stage 0. Its terrain level did not collapse (1.93 at iteration
+5000, 2.13 at 8000; cluster log). Same run as Addendum 2B with this checkpoint in the stairs
+slot (`scripts/switch_follow_stairs_ckpt.sh`). Every arm reported.
+
+| | L1, noise off (n = 768) | L1, noise on (n = 768) | L2, noise off (n = 512) |
+|---|---|---|---|
+| stairs v2 alone | **99.7** | **99.9** | **95.5** |
+| hard switch, 0.3 m late | 70.8 | 83.2 | 30.1 |
+| hard switch at the boundary (0.0) | 99.6 | 96.7 | 49.8 |
+| hard switch 0.3 m ahead | 100.0 | 99.9 | 96.3 |
+| hard switch 0.8 m ahead | 100.0 | 99.6 | 97.5 |
+| hard switch 1.5 m ahead | 99.9 | 99.9 | 97.7 |
+| rough only / flat only | 35.2 / 31.1 | 49.9 / 42.1 | 0.4 / 0.2 |
+| **H5a** early − on-time (1.5 − 0.3) | −0.1 (−0.7, +0.4) | 0.0 (−0.6, +0.6) | +1.4 (−0.8, +3.6) |
+| **H5b** switch 0.3 − stairs alone | +0.3 (−0.3, +0.9) | 0.0 (−0.6, +0.6) | +0.8 (−1.7, +3.3) |
+| stairs alone, `model_4800` / as trained | 97.7 / 76.6 | 94.9 / 83.2 | 82.8 / 33.4 |
+
+Figure: `report_content/figures/switch_lead_two_checkpoints.png` (as trained vs v2, noise on).
+
+- **The retrain did better than stopping the original run early**: alone, 99.7% vs 97.7% at
+  L1, 99.9% vs 94.9% with noise on, and 95.5% vs 82.8% at L2.
+- **H5a and H5b repeat exactly.** Early switching is free and not better; switching is not
+  better than the stairs policy alone, at either level, with tight intervals at L1.
+- **Lateness is unchanged**: 0.3 m late costs 17-29 points at L1 and 66 at L2; at L2 even a
+  switch at the boundary instead of 0.3 m ahead costs 46.5.
+- On this course a single policy trained on stairs alone, with one curriculum bug removed,
+  is at or near ceiling. Rough ground at these levels is not a problem for it. A course that
+  needs more than one specialist would have to include terrain this policy cannot cross
+  (gaps are the obvious candidate).
+
 ## Limits
 
 - Single-seed policies throughout. The as-trained stairs and rough specialists finished
   training on near-flat terrain (findings.md, "Why the specialists are weak"), and Addendum 2B
   shows how much of the main experiment's switching advantage that explains.
 - One course family, one leader speed (0.5 m/s), one robot, simulation only.
-- The generalist was trained under the same collapsing curriculum. A generalist trained with
-  the command range held might do what the iteration-4800 stairs policy does.
+- The generalist was trained under the same collapsing curriculum, and its iteration-4800
+  checkpoint is worse than its final one, so no undamaged generalist exists to compare with. A
+  generalist retrained with the command range held, as stairs v2 was, is the missing arm.
 - Stage 1 selected the "anticipatory" arms as the best of a bad set; stage 2 confirms they are
   worse than on-time, which is the conclusion, but "best lead above 0.8 m" is not a tuned
   anticipatory controller. A controller with the long horizon is free to switch at 0.3 m; the
