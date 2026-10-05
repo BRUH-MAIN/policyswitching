@@ -342,6 +342,9 @@ def main() -> None:
   ap.add_argument("--extra-approach", type=float, default=0.0,
                   help="Lengthen the course's first flat segment by this many metres (diagnostic: "
                        "how far the robot has walked before the first obstacle).")
+  ap.add_argument("--step-height", type=float, default=None,
+                  help="Override the riser height (m) of every stair segment of the course, e.g. 0.17 "
+                       "for a real building stair. The level's own riser is used if omitted.")
   ap.add_argument("--resume", action="store_true")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
@@ -352,6 +355,13 @@ def main() -> None:
   configure_torch_backends()
   device = "cuda:0"
   course = saro_courses(visual="plain", level=args.level)[args.course]
+  if args.step_height is not None:
+    course = replace(
+      course,
+      segments=tuple(replace(g, step_height=args.step_height) if g.kind.startswith("stairs") else g
+                     for g in course.segments),
+      base_height=5 * args.step_height if course.base_height > 0 else 0.0,
+    )
   layout = None
   if args.random_layout is not None:
     course, layout = random_course(args.random_layout)

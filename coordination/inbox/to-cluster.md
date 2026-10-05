@@ -19,7 +19,52 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
-## 2026-10-05 (2) -- randomised layouts done; a blind stairs policy for the real Go2 (PROPOSAL, not approved, do not submit)
+## 2026-10-05 (3) -- stairs v3: a policy for REAL stair heights (please build now; submit on Rohan's word)
+
+**This replaces the blind-policy proposal below.** Rohan has said the robot carries a Livox
+Mid-360 and that he wants it to climb real stairs. So the policy keeps its height scan, and
+the gap to close is step height. Full plan: `report_content/go2_real_stairs_plan.md`.
+
+**Why**: stairs v2 on the laptop's straight flights (128 trials, noise on), success going up /
+down: 9 cm 84% / 100%, 12 cm 0% / 69%, 15 cm 0% / 8%, 17 cm 0% / 1%. It stalls on the way up
+at 12 cm and above. Building stairs are 15-18 cm.
+
+**Task `Unitree-Go2-Spec-StairsV3`, experiment `go2_spec_stairs_v3`.** Start from
+`Unitree-Go2-Spec-StairsV2` and change only:
+
+1. **Risers 5-20 cm**: `step_height_range=(0.05, 0.20)` on `pyramid_stairs` and
+   `pyramid_stairs_inv`. Add a second pair with `step_width=0.26` at equal weight if the
+   generator takes it without fuss (real treads are 25-30 cm); if not, keep 0.30 and say so.
+2. **Warm start from stairs v2** (`INIT_FROM=.../go2_spec_stairs_v2/.../model_9999.pt`,
+   `a100/warm_start_ckpt.py`, normalizer reset as it does by default: the scan statistics
+   change with riser height).
+3. **Make sure it actually trains on tall steps.** In every run so far `terrain_levels` has
+   sat at 1-2 of 10 even for policies that handle far harder rows in evaluation (stairs v2:
+   2.1, yet fine at d = 0.7). With a 5-20 cm range that would mean training at about 8 cm.
+   I think the cause is the promotion rule: it needs 4 m of net displacement from the origin
+   in one episode, and commands are resampled and include turning and standing, so a capable
+   robot is often not promoted. That is a hypothesis; please check it rather than take it.
+   Whatever the cause, v3 needs robots on rows 4-9 for most of training. Acceptable ways, your
+   judgement: keep robots spread uniformly over rows for the whole run (no terrain curriculum,
+   re-drawn at reset), or fix the promotion and demotion rule, or raise the initial level and
+   stop demotion. Please say which you chose and why.
+4. Command range held at stage 0, as v2. Seed 42. Budget: start with 10k iterations; if
+   rows 6-9 are still improving at the end, resubmit to extend (the absolute budget tracking
+   handles that).
+
+Unchanged: observations (234, scan included), rewards, terminations, runner, 8192 envs,
+HF_TOKEN so checkpoints reach `go2_spec_stairs_v3/` on private HF.
+
+**Report**: `terrain_levels` and the spread of robots over rows every 1,000 iterations; and
+your pinned pyramid eval of the final checkpoint at risers 9 / 12 / 15 / 17 cm at the stage-0
+command range, next to stairs v2 on the same cells. If the first run does not get to tall
+steps, say so plainly and propose the next change; more than one run is expected.
+
+**Building and CPU-checking the config: please go ahead now. Submitting: when Rohan tells
+your session.** If one RTX 6000 is free it is about 10 hours.
+
+## 2026-10-05 (2) -- SUPERSEDED by (3) above: a blind stairs policy for the real Go2
+
 
 **Results** (`coordination/results/switch-follow-results.md`, Addendum 7; thanks for the v2
 curves, they are in Addendum 5): over 20 randomised course layouts stairs v2 alone crosses

@@ -33,20 +33,23 @@ Across 20 randomised course layouts:
 
 ## 2. What is still open
 
-### 2.1 Getting a policy onto the Go2 (the next real step; needs a decision)
+### 2.1 Real stairs on the Go2 (the active work)
 
-- The repo's Go2 deploy stack (`unitree_rl_mjlab/deploy/robots/go2`) feeds the policy 47
-  proprioceptive numbers and has **no height-scan input**. Stairs v2 expects 234 (47 + a
-  187-point scan) and fails without the scan.
-- **Option A, blind policy**: train the stairs v2 task with the scan removed from the actor
-  observation (so it matches `deploy.yaml` exactly), about 10 GPU-hours, then run it through
-  `scripts/switch_follow_random_layouts.sh`-style evaluation before it goes on the robot.
-  Proposal is in `coordination/inbox/to-cluster.md`, **not approved**.
-- **Option B, give the robot a scan**: elevation map from LiDAR or depth, plus a height-scan
-  observation in the C++ deploy code. More work, keeps the policy that is already validated.
-- Either way: every staircase in this project has 5-7 cm risers. None of these policies has
-  been trained or tested on real stair heights (15-18 cm).
-- Person-following on the robot: reuse the two-rate perception design (final report, V.I).
+Decided 2026-10-05: the robot has a Livox Mid-360, so the policy keeps its height scan, and
+the target is real stairs. Plan: `report_content/go2_real_stairs_plan.md`.
+
+- **Stairs v2 cannot climb real stairs** (sim): going up, 84% at 9 cm risers and 0% at 12,
+  15 and 17 cm. It was trained on at most 10 cm.
+- **Stairs v3** (risers 5-20 cm, warm-started from v2) is specified in
+  `coordination/inbox/to-cluster.md`. The cluster builds it; **it is submitted when you tell
+  the cluster session**. Expect more than one run.
+- **You, on the robot, read-only**: check whether the firmware publishes a height map
+  (commands in the plan, section 2.2). The Mid-360 by itself does not see the ground within
+  about a metre of the robot, so this decides how the scan is produced.
+- **Laptop, next**: evaluate v3 at 12 / 15 / 17 cm with `switch_follow.py --step-height`;
+  add scan delay, holes and bias to the harness; numpy export of the policy for the Jetson
+  (no torch or onnxruntime there).
+- Robot workspace with hardware notes: `/run/media/rohan/New Volume/RL/temp`.
 
 ### 2.2 Optional
 
