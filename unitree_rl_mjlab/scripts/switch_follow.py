@@ -372,6 +372,9 @@ def main() -> None:
   ap.add_argument("--step-height", type=float, default=None,
                   help="Override the riser height (m) of every stair segment of the course, e.g. 0.17 "
                        "for a real building stair. The level's own riser is used if omitted.")
+  ap.add_argument("--stair-steps", type=int, default=None,
+                  help="Override the number of steps in every stair segment (0.3 m tread each); the "
+                       "built-in courses have 5.")
   ap.add_argument("--resume", action="store_true")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
@@ -382,13 +385,20 @@ def main() -> None:
   configure_torch_backends()
   device = "cuda:0"
   course = saro_courses(visual="plain", level=args.level)[args.course]
-  if args.step_height is not None:
-    course = replace(
-      course,
-      segments=tuple(replace(g, step_height=args.step_height) if g.kind.startswith("stairs") else g
-                     for g in course.segments),
-      base_height=5 * args.step_height if course.base_height > 0 else 0.0,
-    )
+  if args.step_height is not None or args.stair_steps is not None:
+    def resized(g):
+      if not g.kind.startswith("stairs"):
+        return g
+      return replace(g, step_height=args.step_height if args.step_height is not None else g.step_height,
+                     length=0.3 * args.stair_steps if args.stair_steps is not None else g.length)
+    segments = tuple(resized(g) for g in course.segments)
+    # Start high enough that the lowest point of the course is at floor level.
+    z, lowest = 0.0, 0.0
+    for g in segments:
+      steps = int(round(g.length / 0.3)) if g.kind.startswith("stairs") else 0
+      z += steps * g.step_height * (1 if g.kind == "stairs_up" else -1 if g.kind == "stairs_down" else 0)
+      lowest = min(lowest, z)
+    course = replace(course, segments=segments, base_height=-lowest)
   layout = None
   if args.random_layout is not None:
     course, layout = random_course(args.random_layout)
