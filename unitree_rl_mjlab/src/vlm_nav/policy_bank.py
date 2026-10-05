@@ -76,6 +76,14 @@ class PolicyBank:
     stacked = torch.stack([self.policies[n](obs) for n in self.names], dim=0)
     return torch.einsum("nk,kna->na", weights, stacked)
 
+  def normalizer_mean(self, name: str) -> torch.Tensor:
+    """The actor observation normalizer's mean for one policy, shape (obs_dim,)."""
+    for module in self.policies[name].modules():
+      mean = getattr(module, "_mean", None)
+      if isinstance(mean, torch.Tensor):
+        return mean.reshape(-1)
+    raise AttributeError(f"policy {name!r} has no observation normalizer")
+
   @property
   def names(self) -> list[str]:
     return list(self.policies)

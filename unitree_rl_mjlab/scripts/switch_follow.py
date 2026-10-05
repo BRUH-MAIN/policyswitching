@@ -8,6 +8,8 @@ of the course (`src/vlm_nav/schedule.py`):
   fixed:<policy>               one policy for the whole run
   hard:<lead>:<mapping>        hard switch <lead> m before each non-flat segment
   soft:<start>:<end>:<mapping> linear cross-fade from <start> to <end> m before it
+  blind:<policy>               one policy, its height scan replaced by a constant (its own
+                               normalizer mean): does it need the scan at all?
   clf:<weights>:<alpha>:<hold> hard switch driven by a classifier on the robot's own
                                height scan (src/vlm_nav/scan_classifier.py) -- the
                                only arm that does not read the segment layout
@@ -53,7 +55,7 @@ from mjlab.utils.torch import configure_torch_backends  # noqa: E402
 from src.vlm_nav.controllers import FollowGains, follow_command  # noqa: E402
 from src.vlm_nav.course import saro_courses  # noqa: E402
 from src.vlm_nav.policy_bank import POLICY_NAMES, PolicyBank, default_checkpoints  # noqa: E402
-from src.vlm_nav.course import SEGMENT_CLASS  # noqa: E402
+from src.vlm_nav.course import SEGMENT_CLASS, random_course  # noqa: E402
 from src.vlm_nav.scan_classifier import CLASSES, SwitchFilter, load_classifier, scan_slice  # noqa: E402
 from src.vlm_nav.schedule import MAPPINGS, Schedule, class_boundaries, policy_weights, segment_spans  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, make_twin_env_cfg, set_velocity_command  # noqa: E402
@@ -102,7 +104,11 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   n, dt = u.num_envs, u.step_dt
   names = bank.names
   clf = filt = None
-  if spec.startswith("clf:"):
+  blind_fill = None
+  if spec.startswith("blind:"):
+    spec_policy = spec.split(":")[1]
+    fixed, schedule, mapping_name = spec_policy, None, None
+  elif spec.startswith("clf:"):
     _, weights_path, alpha, hold = spec.split(":")
     clf = load_classifier(weights_path, device)
     filt = SwitchFilter(n, float(alpha), int(hold), device, initial=CLASSES.index("flat"))
@@ -112,6 +118,8 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   if fixed is not None and fixed not in names:
     raise KeyError(f"{spec}: no policy {fixed!r} in the bank ({names})")
   scan_sl = scan_slice(env)
+  if spec.startswith("blind:"):
+    blind_fill = bank.normalizer_mean(fixed)[scan_sl]
   # What the footprint rule (hard switch 0.3 m ahead, label mapping) would have active:
   # the classifier's training target, and the reference its decisions are scored against.
   footprint = Schedule(0.3, 0.3)
@@ -185,7 +193,14 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
       weights[torch.arange(n, device=device), class_to_policy[sel]] = 1.0
     else:
       weights = policy_weights(x_course, course, names, schedule, MAPPINGS[mapping_name])
-    obs, _, dones, extras = env.step(bank.act_blend(obs, weights))
+    if blind_fill is not None:
+      blind_actor = obs["actor"].clone()
+      blind_actor[:, scan_sl] = blind_fill
+      policy_obs = obs.clone()
+      policy_obs["actor"] = blind_actor
+    else:
+      policy_obs = obs
+    obs, _, dones, extras = env.step(bank.act_blend(policy_obs, weights))
 
     done = dones.bool()
     timeouts = extras.get("time_outs", torch.zeros_like(done)).bool()
@@ -298,6 +313,9 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
 def main() -> None:
   ap = argparse.ArgumentParser()
   ap.add_argument("--course", default="multi")
+  ap.add_argument("--random-layout", type=int, default=None, metavar="SEED",
+                  help="Use course.random_course(SEED) instead of --course/--level; the draw (and a "
+                       "leader speed in 0.4-0.7 m/s drawn from the same seed) is recorded in the output.")
   ap.add_argument("--level", default="L1", help="Course difficulty level (course.DIFFICULTY_LEVELS).")
   ap.add_argument("--seed", type=int, required=True, help="Terrain + spawn seed.")
   ap.add_argument("--arms", nargs="+", default=None, help="Arm specs (see module docstring).")
@@ -334,6 +352,12 @@ def main() -> None:
   configure_torch_backends()
   device = "cuda:0"
   course = saro_courses(visual="plain", level=args.level)[args.course]
+  layout = None
+  if args.random_layout is not None:
+    course, layout = random_course(args.random_layout)
+    args.course, args.level = course.name, layout["level"]
+    args.leader_speed = round(float(np.random.default_rng(args.random_layout + 10_000).uniform(0.4, 0.7)), 3)
+    layout["leader_speed"] = args.leader_speed
   if args.extra_approach:
     first, *rest = course.segments
     course = replace(course, segments=(replace(first, length=first.length + args.extra_approach), *rest))
@@ -344,7 +368,7 @@ def main() -> None:
   conditions = {k: v for k, v in vars(args).items()
                 if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")}
   out_path = Path(args.json_out)
-  result = dict(conditions=conditions, course=asdict(course), arms={})
+  result = dict(conditions=conditions, course=asdict(course), layout=layout, arms={})
   if out_path.exists():
     if not args.resume:
       raise SystemExit(f"{out_path} exists; pass --resume to add arms to it, or choose another file")

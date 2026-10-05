@@ -356,3 +356,35 @@ def saro_courses(
       instruction=NEUTRAL_INSTRUCTION,
       **common),
   }
+
+
+def random_course(seed: int, visual: VisualScheme = "plain") -> tuple[CourseSpec, dict]:
+  """A course whose layout is drawn from `seed`, and the draw as a dict.
+
+  One of each obstacle (rough ground, stairs up, stairs down) in random order,
+  flat stretches of random length between them, a random difficulty level. The
+  point is that no result should rest on one layout: a weak policy's failure
+  rate at a stair lip depends on the course around it (findings.md #24).
+  """
+  rng = np.random.default_rng(seed)
+  level = str(rng.choice(["L1", "L2"]))
+  lv = DIFFICULTY_LEVELS[level]
+  order = [str(k) for k in rng.permutation(["rough", "stairs_up", "stairs_down"])]
+  segments: list[Segment] = [Segment("flat", float(rng.uniform(2.0, 5.0)))]
+  for i, kind in enumerate(order):
+    if kind == "rough":
+      segments.append(Segment("rough", float(rng.uniform(2.0, 4.0)), noise_range=lv["noise_range"]))
+    else:
+      segments.append(Segment(kind, 1.5, step_height=lv["step_height"]))
+    segments.append(Segment("flat", 4.0 if i == len(order) - 1 else float(rng.uniform(1.5, 5.0))))
+  # Start high enough that a down-staircase met before the up-staircase stays above the floor.
+  z, lowest = 0.0, 0.0
+  for seg in segments:
+    z += _segment_rise(seg)
+    lowest = min(lowest, z)
+  spec = CourseSpec(
+    name=f"random_{seed}", intermediation="mixed", instruction=NEUTRAL_INSTRUCTION,
+    segments=tuple(segments), visual=visual, base_height=-lowest, goal_marker=False,
+  )
+  return spec, dict(level=level, order=order, lengths=[round(seg.length, 2) for seg in segments])
+

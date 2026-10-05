@@ -241,3 +241,23 @@ straight down-staircase. Single-obstacle courses, follow task, each policy alone
 - Reported: the full grid of success rates, and where failed trials end. Read for which
   factor (direction, riser height, speed, noise) the gap between the two generalists follows.
   No conclusion is drawn from a single cell; a cell is 512 trials.
+
+## Addendum 7, 2026-10-05: randomised course layouts (written before any is run)
+
+Addendum 6 showed that weak policies' failures at a stair lip depend on the course around it,
+so results from the one `multi` layout need checking on many. Each layout draws, from its
+seed: the order of three obstacles (rough ground, stairs up, stairs down), flat stretches of
+1.5-5 m between them (first stretch 2-5 m, last 4 m), rough length 2-4 m, level L1 or L2,
+and a leader speed in 0.4-0.7 m/s. Follow task, training observation noise on (the
+deployment-like condition), 128 trials per layout, 20 layouts (seeds 900-919).
+
+- Run A, stairs slot = stairs v2: stairs v2 alone, first generalist alone, generalist v2
+  alone, hard switch at leads -0.3, 0.3 and 1.5 m, and stairs v2 alone with its height scan
+  replaced by a constant (its normalizer mean).
+- Run B, stairs slot = the as-trained stairs specialist: stairs alone, hard switch at 0.3
+  and 1.5 m.
+- Unit of analysis is the layout: mean success over layouts, and paired per-layout
+  differences with a bootstrap interval over layouts. Claims checked: (1) stairs v2 alone
+  against each generalist; (2) switch 0.3 against stairs v2 alone; (3) early against on-time,
+  with stairs v2 and with the as-trained specialist; (4) late against on-time; (5) stairs v2
+  with and without its scan. Everything is reported; nothing is selected.
