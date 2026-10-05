@@ -402,7 +402,7 @@ Stairs v2 in the stairs slot:
   straight down-staircase, and "worse" here means worse on this course, not worse at stairs.
   A diagnostic on single staircases (two directions, two riser heights, three leader speeds,
   noise off and on) then showed generalist v2 ahead of or level with the first generalist in
-  20 of 24 cells, and showed something more basic: the same generalist on the same 5 cm
+  21 of 24 cells, and showed something more basic: the same generalist on the same 5 cm
   down-staircase at the same commanded speed succeeds 6% of the time after a 3 m flat approach,
   50% after 11 m, and 92% on the mixed course. Both generalists are brittle at the top edge of
   a down-staircase in a way that depends on the course around it, for a reason not found.

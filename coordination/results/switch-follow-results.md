@@ -476,7 +476,7 @@ Success %, first generalist / generalist v2 / stairs v2:
 
 - **Stairs v2 is at 93% or above in all 24 cells.** Nothing below changes that.
 - **On single staircases generalist v2 is the better generalist**: ahead of or level with the
-  first generalist in 20 of 24 cells, behind only on down-stairs at the fastest leader. That
+  first generalist in 21 of 24 cells, behind only on down-stairs at the fastest leader. That
   agrees with the pinned pyramid-stairs eval and disagrees with the mixed course.
 - **The same policy on the same staircase at the same commanded speed gives very different
   results depending on the course around it.** First generalist, L1 down-stairs, noise off,
