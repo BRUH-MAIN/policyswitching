@@ -1,0 +1,83 @@
+{
+  "label": "stairs_v2_h9_w26",
+  "task": "Unitree-Go2-Spec-StairsV2",
+  "checkpoint": "/dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v2/2026-10-04_02-42-45/model_9999.pt",
+  "num_envs": 1024,
+  "steps": 1200,
+  "conditions": {
+    "keep_curricula": false,
+    "seed": 0,
+    "terrain": "stairs",
+    "difficulty": null,
+    "step_height": 0.09,
+    "step_width": 0.26,
+    "lin_vel_x": [
+      -0.5,
+      1.0
+    ],
+    "lin_vel_y": [
+      -0.5,
+      0.5
+    ],
+    "ang_vel_z": [
+      -1.0,
+      1.0
+    ]
+  },
+  "survival": {
+    "episodes": 1046,
+    "survival_pct": 82.69598470363289,
+    "fall_pct": 17.304015296367112,
+    "mean_ep_len": 932.9359464627152,
+    "mean_return": 41.88376850812887,
+    "terminations": {
+      "time_out": 865,
+      "fell_over": 16,
+      "illegal_contact": 168
+    }
+  },
+  "by_terrain": {
+    "pyramid_stairs": {
+      "envs": 513,
+      "episodes": 525,
+      "time_out": 425,
+      "terminations": {
+        "time_out": 425,
+        "fell_over": 7,
+        "illegal_contact": 94
+      },
+      "distance_m": 3604.192626953125,
+      "falls_per_100m": 2.774546489335032,
+      "survival_pct": 80.95238095238095
+    },
+    "pyramid_stairs_inv": {
+      "envs": 511,
+      "episodes": 521,
+      "time_out": 440,
+      "terminations": {
+        "time_out": 440,
+        "fell_over": 9,
+        "illegal_contact": 74
+      },
+      "distance_m": 3180.825439453125,
+      "falls_per_100m": 2.546508808541415,
+      "survival_pct": 84.45297504798465
+    }
+  },
+  "locomotion": {
+    "mean_cmd_speed": 0.4940732155434481,
+    "mean_actual_speed": 0.27801537349952354,
+    "achieved_pct_of_cmd": 56.27007592259882,
+    "lin_vel_error_per_step": 0.2743741587682691,
+    "ang_vel_error_per_step": 0.10004504642526311,
+    "distance_rate": 0.2763104944361228,
+    "stalled_pct": 3.8444022571740657,
+    "total_distance_m": 6784.826295718551,
+    "falls_per_100m": 2.66771752305902
+  },
+  "smoothness": {
+    "action_rate_l2": 1.0693630047594003,
+    "actuator_force_rate": 265.29135922591246,
+    "actuator_force_rate_p99": 729.4905341802984
+  }
+}

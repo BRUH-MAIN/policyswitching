@@ -448,10 +448,11 @@ def unitree_go2_spec_stairs_v3_env_cfg(play: bool = False) -> ManagerBasedRlEnvC
   2. No promote/demote terrain curriculum. Every env is re-drawn uniformly over all 10
      rows (and all 20 columns, i.e. the four sub-terrains) at every reset, so 60% of
      training is on rows 4-9 (11-20 cm) from the first iteration and the share never
-     moves. Why: terrain_levels_vel needs 4 m of net displacement to promote and demotes
-     anything under |command| * 10 m, so on an 8 m patch every episode that does not leave
-     the patch is demoted for commands above 0.4 m/s; measured on the stairs-v2 policy
-     the rule drives it to a mean row of ~1.3 whatever its skill
+     moves. Why: terrain_levels_vel needs 4 m of net displacement (the patch edge) to
+     promote and demotes anything under |command| * 10 m, so for commands above 0.4 m/s
+     every episode that does not leave the patch is demoted. Replayed on the stairs-v2
+     policy it is demoted ~48% and promoted ~42% of the time on rows 1-3, where it almost
+     never falls, and the rule's stationary mean row is ~2.4 (logged: 1.9-2.1)
      (coordination/results/2026-10-05-terrain-curriculum-diagnosis.md).
   3. Monitor terms `terrain_rows_*` log what fraction of envs sit on rows 0-1 ... 8-9, and
      `terrain_row_mean` the mean row (uniform draws: ~4.5), because a mean level that

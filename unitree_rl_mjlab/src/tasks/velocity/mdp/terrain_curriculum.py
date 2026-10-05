@@ -8,8 +8,9 @@ has never driven a training run. It is the prepared alternative if uniform rows 
 `terrain_levels_vel` (curriculums.py) promotes a robot that ends an episode more than half
 a patch (4 m) from its spawn and demotes one that ends below `|command| * T / 2` -- for
 every command above 0.4 m/s, anything that did not leave the patch. On an 8 m pyramid
-patch that sits a policy near row 2 of 10 however good it is
-(`scripts/diagnose_terrain_curriculum.py`, coordination/results/2026-10-05-terrain-curriculum-diagnosis.md).
+patch that holds a policy that never falls on rows 0-3 near row 2 of 10
+(`scripts/diagnose_terrain_curriculum.py`, coordination/results/2026-10-05-terrain-curriculum-diagnosis.md:
+stationary mean row ~2.4 for the stairs-v2 policy).
 
 `terrain_levels_survival` keys the move on how the episode ended instead:
 
