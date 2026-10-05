@@ -118,6 +118,14 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   if fixed is not None and fixed not in names:
     raise KeyError(f"{spec}: no policy {fixed!r} in the bank ({names})")
   scan_sl = scan_slice(env)
+  # Scan faults a real elevation map has and the simulator's per-ray noise does not:
+  # latency, cells with no fresh return, and a height bias. Applied to what every
+  # policy in this arm sees; the simulator's own scan is untouched.
+  scan_faults = args.scan_delay > 0 or args.scan_dropout > 0 or args.scan_bias > 0
+  scan_history: list[torch.Tensor] = []
+  scan_held = None
+  scan_scale = 1.0 / u.scene["terrain_scan"].cfg.max_distance
+  scan_bias = (torch.rand(n, 1, device=device) * 2 - 1) * args.scan_bias * scan_scale
   if spec.startswith("blind:"):
     blind_fill = bank.normalizer_mean(fixed)[scan_sl]
   # What the footprint rule (hard switch 0.3 m ahead, label mapping) would have active:
@@ -193,7 +201,20 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
       weights[torch.arange(n, device=device), class_to_policy[sel]] = 1.0
     else:
       weights = policy_weights(x_course, course, names, schedule, MAPPINGS[mapping_name])
-    if blind_fill is not None:
+    if scan_faults and blind_fill is None:
+      scan_history.append(obs["actor"][:, scan_sl].clone())
+      if len(scan_history) > args.scan_delay + 1:
+        scan_history.pop(0)
+      scan = scan_history[0] + scan_bias
+      if args.scan_dropout > 0 and scan_held is not None:
+        fresh = torch.rand_like(scan) >= args.scan_dropout
+        scan = torch.where(fresh, scan, scan_held)
+      scan_held = scan
+      faulty_actor = obs["actor"].clone()
+      faulty_actor[:, scan_sl] = scan
+      policy_obs = obs.clone()
+      policy_obs["actor"] = faulty_actor
+    elif blind_fill is not None:
       blind_actor = obs["actor"].clone()
       blind_actor[:, scan_sl] = blind_fill
       policy_obs = obs.clone()
@@ -342,6 +363,12 @@ def main() -> None:
   ap.add_argument("--extra-approach", type=float, default=0.0,
                   help="Lengthen the course's first flat segment by this many metres (diagnostic: "
                        "how far the robot has walked before the first obstacle).")
+  ap.add_argument("--scan-delay", type=int, default=0,
+                  help="Feed the policy the height scan from this many control steps ago (20 ms each).")
+  ap.add_argument("--scan-dropout", type=float, default=0.0,
+                  help="Each step, this fraction of scan cells gets no new value and keeps its last one.")
+  ap.add_argument("--scan-bias", type=float, default=0.0,
+                  help="Per-trial constant height error (m), uniform in +-this, added to the whole scan.")
   ap.add_argument("--step-height", type=float, default=None,
                   help="Override the riser height (m) of every stair segment of the course, e.g. 0.17 "
                        "for a real building stair. The level's own riser is used if omitted.")

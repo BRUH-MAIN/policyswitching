@@ -83,9 +83,29 @@ the robot, and not within roughly the first metre ahead. Two ways to get the sca
   on the first step after standing up. More work and more to go wrong than A.
 
 Either way the scan on the robot will be late, patchy and biased in ways the simulation's
-uniform ±10 cm per-ray noise does not model. Before the robot, add those to the simulation
-(a fixed delay of 2-5 control steps, dropped cells filled from neighbours, a slow height
-bias) and check the policy still clears the acceptance bar. Not yet built.
+uniform ±10 cm per-ray noise does not model. The harness can now inject those
+(`switch_follow.py --scan-delay / --scan-dropout / --scan-bias`,
+`scripts/switch_follow_scan_faults.sh`). **Baseline, stairs v2 alone, six randomised layouts
+with 7 cm risers, 128 trials each, mean success:**
+
+| scan fault | success | change from clean |
+|---|---|---|
+| none | 93.9% | |
+| 40 ms late | 95.2% | +1.3 |
+| 100 ms late | 93.9% | 0.0 |
+| 200 ms late | 93.4% | −0.5 |
+| 30% of cells stale each step | 92.2% | −1.7 |
+| 60% of cells stale each step | 91.9% | −2.0 |
+| whole scan off by up to ±3 cm (constant per trial) | 90.8% | −3.1 |
+| whole scan off by up to ±6 cm | 74.7% | −19.1 |
+| 100 ms late + 30% stale + ±3 cm | 90.9% | −3.0 |
+
+So on low steps the policy shrugs off latency and missing cells, and what it cannot take is a
+**height offset**: the robot's estimate of its own height above the ground has to be good to
+about 3 cm. That is the number to design the scan node around (base height from leg
+kinematics or from the map itself, not from drifting odometry). These are 7 cm risers and
+stairs v2; repeat on stairs v3 at real riser heights before trusting it, where a late or
+wrong scan has less margin.
 
 ### 2.3 Running the policy on the Jetson
 
