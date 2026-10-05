@@ -90,15 +90,18 @@ bias) and check the policy still clears the acceptance bar. Not yet built.
 ### 2.3 Running the policy on the Jetson
 
 - The policy is a small MLP plus an observation normaliser. With no torch or onnxruntime on
-  the robot, export weights to `.npz` on the laptop and run the forward pass in numpy (about
-  20 lines). Check it against the PyTorch output on recorded observations before it ever
-  drives a motor.
+  the robot, it runs in numpy. **Done on the laptop (2026-10-05)**:
+  `unitree_rl_mjlab/deploy_numpy/policy_numpy.py` is a numpy-only runner written for the
+  Jetson's Python 3.8, and `scripts/export_policy_numpy.py <checkpoint> --out <file>.npz`
+  exports a checkpoint and checks the numpy output against the PyTorch policy on simulator
+  observations. Stairs v2 exported and matched to 1.4e-6 over 200 steps × 16 robots. The
+  `.npz` holds weights and is not committed; re-export it. It has not been run on the robot.
 - Observation, in order: base angular velocity (3), projected gravity (3), velocity command
   (3), gait phase sin/cos with a 0.6 s period, zero when the command is under 0.1 (2), joint
   positions minus default (12), joint velocities (12), last action (12), height scan (187).
 - Action: joint position target = default pose + 0.25 × action, at 50 Hz, gains 20 / 20 / 40
-  N·m/rad and 1 / 1 / 2 N·m·s/rad (hip, thigh, calf); default pose (−0.1, 0.9, −1.8) and
-  (0.1, 0.9, −1.8) per leg. Clip actions to ±6 before scaling; training did.
+  N·m/rad and 1 / 1 / 2 N·m·s/rad (hip, thigh, calf); default pose hip / thigh / calf = (−0.1, 0.9, −1.8) for the
+  left legs and (0.1, 0.9, −1.8) for the right, in the simulator's joint order FL, FR, RL, RR. Clip actions to ±6 before scaling; training did.
 - Two known traps from the robot log: joint order on the robot is FR / FL / RR / RL (the
   deploy config's `joint_ids_map` is `[3,4,5,0,1,2,9,10,11,6,7,8]`), and the IMU quaternion is
   (w, x, y, z) and was observed with negative w.
