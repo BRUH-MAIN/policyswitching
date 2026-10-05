@@ -40,9 +40,19 @@ the target is real stairs. Plan: `report_content/go2_real_stairs_plan.md`.
 
 - **Stairs v2 cannot climb real stairs** (sim): going up, 84% at 9 cm risers and 0% at 12,
   15 and 17 cm. It was trained on at most 10 cm.
-- **Stairs v3** (risers 5-20 cm, warm-started from v2) is specified in
-  `coordination/inbox/to-cluster.md`. The cluster builds it; **it is submitted when you tell
-  the cluster session**. Expect more than one run.
+- **Stairs v3 is training**: job 12563 on `asaicomputemaster`, started 2026-10-05 21:55 IST,
+  about 8.6 h, checkpoints on private HF under `go2_spec_stairs_v3/`. Risers 5-20 cm at two
+  tread depths, warm-started from v2, robots spread uniformly over rows (the terrain
+  curriculum's promotion rule was shown to be broken:
+  `coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`). Expect more than one
+  run. When `model_9999.pt` lands: `scripts/switch_follow_real_stairs.sh` (also with
+  `STEPS=10`), `switch_follow_scan_faults.sh`, `switch_follow_stairs_ckpt.sh`. Bar: 90% up and
+  down at 17 cm.
+- **Scan requirement measured** (stairs v2, low steps): 200 ms of delay and 60% stale cells
+  cost under 2 points; a ±6 cm height offset costs 19. Height above ground must be good to
+  ~3 cm.
+- **Numpy runner for the Jetson** exists and matches PyTorch
+  (`deploy_numpy/policy_numpy.py`, `scripts/export_policy_numpy.py`).
 - **You, on the robot, read-only**: check whether the firmware publishes a height map
   (commands in the plan, section 2.2). The Mid-360 by itself does not see the ground within
   about a metre of the robot, so this decides how the scan is produced.
