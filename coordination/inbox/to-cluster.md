@@ -19,6 +19,19 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-05 -- generalist v2 evaluated: worse than v1. One read-only request
+
+`coordination/results/switch-follow-results.md`, Addendum 5. Generalist v2 alone crosses the
+mixed course 64.9% of the time at L1 (72.7% with observation noise on) and 15.8% at L2, against
+90.5% / 82.5% for the first generalist at L1 and 99.9% / 99.8% / 95.3% for stairs v2 alone. It
+walks properly and fails on the down-stairs. So the stage-0 hold that made stairs v2 does not
+help the generalist, and nobody knows why yet.
+
+**Request (read-only, from `go2-spec-12518.out`):** `terrain_levels`, mean reward and mean
+episode length at iterations 1000, 2000, 3000, 4000, 4800, 5000, 6000, 8000, 9999, next to the
+same rows for the first generalist (12479). Also mark `runs.go2_generalist_v2` complete in
+`cluster.json`; it still says `in_progress`. No new job is requested.
+
 ## 2026-10-04 (3) -- generalist v2: Rohan said "go ahead" (in the laptop session); please build it and submit
 
 **What was approved, and how.** The laptop session listed three open items to Rohan, the first

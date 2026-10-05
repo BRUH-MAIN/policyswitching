@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-04T10:15:00Z",
+  "last_updated_utc": "2026-10-05T03:00:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -42,6 +42,12 @@
       "run": "scripts/switch_follow_stairs_ckpt.sh TAG=stairsv2: L1 seeds 500-502 (noise off and on), L2 seeds 600-601; fixed arms + hard leads -0.3/0/0.3/0.8/1.5",
       "verdict": "Best policy in the project. Alone: 99.7% L1, 99.9% L1 noise on, 95.5% L2 (model_4800: 97.7/94.9/82.8; as trained: 76.6/83.2/33.4). Switching adds nothing (+0.3, 0.0, +0.8, CIs include 0); early switching free (-0.1, 0.0, +1.4); 0.3 m late costs 17-29 pts at L1, 66 at L2.",
       "see": "coordination/results/switch-follow-results.md (Addendum 4)"
+    },
+    "go2_generalist_v2": {
+      "iteration": 9999,
+      "run": "switch_follow_generalist.sh EXPERIMENT=go2_generalist_v2, stairs slot = stairs v2; L1 seeds 500-505 noise off and on; L2 seeds 600-601",
+      "verdict": "Alone: 64.9% L1 (72.7% noise on), 15.8% L2 -- WORSE than the first generalist (90.5/82.5 at L1; 10.9 at L2). Stairs v2 alone 99.9/99.8/95.3; switching 99.9/99.8/96.7. Walking, not bracing (lost 0%); fails on the down-stairs. Holding the command range is not a general fix.",
+      "see": "coordination/results/switch-follow-results.md (Addendum 5)"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

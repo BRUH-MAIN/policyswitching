@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-04, afternoon · **Written for**: a fresh session (human or Claude) with
+**As of**: 2026-10-05, morning · **Written for**: a fresh session (human or Claude) with
 no memory of how this state was reached. Where something needs more detail than fits here, a
 file is named; read it rather than re-deriving it.
 
@@ -32,35 +32,24 @@ Every arm the project planned has now been run. The answer is in
   without it, crosses the whole course *alone* 99.7% of the time (99.9% with noise, 95.5% at
   the harder level). With it in the bank, switching adds nothing and early switching costs
   nothing.
-- **Specialist vs generalist:** an undamaged stairs policy alone beats the best generalist by
-  7-12 points; the switch contributes none of it. No undamaged generalist exists yet.
+- **Specialist vs generalist:** stairs v2 alone beats the generalist retrained the same way
+  (generalist v2) by 27-35 points at the easy level and 80 at the harder one; the switch
+  contributes none of it. Generalist v2 turned out worse than the first generalist, which is
+  unexplained.
 
 Everything else (gate 1, gate 2, the PAS replication, the VLM/SARO pipeline, person-following
 and its two-rate perception) is unchanged and summarised in the final report, Section V.H.
 
 ## 2. What is still open
 
-### 2.1 Generalist v2 is training; evaluate it when it finishes
+### 2.1 Why is generalist v2 worse? (open, no job needed to start)
 
-You approved it on 2026-10-04 and pointed the cluster session at the request. Job **12518** on
-`asaicomputemaster` (RTX 6000 Ada), started 2026-10-04 15:50 IST: `Unitree-Go2-GeneralistV2`
-(the generalist with the `StairsV2` change), experiment `go2_generalist_v2`, seed 42, 10k
-iterations, checkpoints on private HF. Expected to finish around 01:15 IST on 10-05. The
-cluster session has no wake-up scheduled, so its plateau check (~1,500 iterations) and the
-terrain-level readings happen only when someone prompts it.
-
-About 10 GPU-hours. When `go2_generalist_v2/model_9999.pt` is on HF, the laptop run is
-pre-registered (Addendum 5) and is one command:
-
-```
-EXPERIMENT=go2_generalist_v2 TAG=generalistv2 SEEDS="500 501 502 503 504 505" \
-  STAIRS_CKPT=unitree_rl_mjlab/eval_ckpts/go2_spec_stairs_v2/model_9999.pt \
-  unitree_rl_mjlab/scripts/switch_follow_generalist.sh
-```
-
-plus the same three arms at `--level L2` on seeds 600-601 (the script runs L1 only). It answers
-whether a properly trained generalist matches a properly trained stairs specialist, which is
-the one comparison in the report still made against a damaged policy (Section VII).
+Generalist v2 (job 12518) finished and was evaluated on 2026-10-05
+(`switch-follow-results.md`, Addendum 5): 64.9% alone at L1 against 90.5% for the first
+generalist. The cluster has not yet recorded its `terrain_levels` (4800 / 5000 / 6000 / 8000 /
+9999) in `cluster.json`; that curve is the first thing to read. Ask the cluster session for
+it, it is read-only. Nothing in the report depends on the answer; the report says the cause
+is unexplained.
 
 ### 2.2 Gaps checkpoint: still on the cluster only
 
@@ -87,7 +76,10 @@ You submitted the generalist (job 12479) by hand after the cluster session was r
 pinned-terrain matrix and height-scan ablation (`eval_results/matrix_generalist/`) and its
 iteration-4800 checkpoint. Pre-collapse stairs checkpoint and then stairs v2 tested in the
 stairs slot at L1 and L2. Results, findings, objective and the final report rewritten around
-these.
+these. You approved a generalist retrain (generalist v2, job 12518).
+
+**2026-10-05.** Generalist v2 evaluated against stairs v2 (six seeds at L1, two at L2), plus a
+reference run of the first generalist at L2.
 
 ## 4. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 

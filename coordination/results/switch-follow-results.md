@@ -45,11 +45,12 @@ Read in this order; items 7 to 9, added on 2026-10-04, change how items 1 and 3 
    own iteration-4800 checkpoint gets most of the way there (97.7%, 94.9%, 82.8%). With either
    in the bank, switching adds nothing (differences within 1 point at L1) and early switching
    costs nothing.
-9. **Specialists do beat the matched generalist, but the switch is not what does it.** The
-   undamaged stairs policy alone beats the best generalist available by 7 to 12 points
-   (iteration-4800 checkpoint, six seeds), and switching on top of it changes nothing. The
-   generalist's own iteration-4800 checkpoint is worse than its final one, so there is no
-   better generalist to compare against without a retrain.
+9. **Specialists do beat the generalist, by a wide margin once both are trained the same
+   way, and the switch is not what does it.** Stairs v2 alone against generalist v2 (the
+   generalist retrained with the same fix): 99.9% vs 64.9% with noise off, 99.8% vs 72.7% with
+   noise on, 95.3% vs 15.8% at the harder level. Switching on top of stairs v2 changes
+   nothing. The fix that made the stairs policy did not help the generalist: generalist v2 is
+   worse on this course than the original generalist (90.5% / 82.5%).
 
 ## Setup, as run
 
@@ -390,15 +391,55 @@ Figure: `report_content/figures/switch_lead_two_checkpoints.png` (as trained vs 
   needs more than one specialist would have to include terrain this policy cannot cross
   (gaps are the obvious candidate).
 
+## Addendum 5: generalist v2 (pre-registered before it was trained)
+
+`go2_generalist_v2/model_9999.pt`, cluster job 12518: the generalist retrained from scratch
+with the command range held at stage 0, the change that produced stairs v2; nothing else
+differs from the first generalist (cluster session's config check). Bank: flat and rough as
+trained, stairs = stairs v2. L1 on seeds 500-505 (1,536 trials per arm per condition), L2 on
+seeds 600-601 (512).
+
+| | L1, noise off | L1, noise on | L2, noise off |
+|---|---|---|---|
+| generalist v2 alone | 64.9% (62.5-67.3) | 72.7% (70.4-74.8) | 15.8% (12.9-19.2) |
+| stairs v2 alone | **99.9%** | **99.8%** | **95.3%** |
+| hard switch 0.3 m ahead (stairs = v2) | 99.9% | 99.8% | 96.7% |
+| stairs alone − generalist v2 | +35.0 (+32.6, +37.4) | +27.1 (+24.9, +29.4) | +79.5 (+75.4, +82.8) |
+| switch − generalist v2 | +35.0 (+32.7, +37.4) | +27.1 (+24.9, +29.4) | +80.9 (+76.9, +84.0) |
+| switch − stairs alone | +0.1 (−0.3, +0.4) | 0.0 (−0.4, +0.4) | +1.4 (−1.1, +3.9) |
+| first generalist alone, for reference (other runs) | 90.5% | 82.5% | 10.9% (exploratory, same seeds) |
+
+Per seed, generalist v2 at L1: 65.6 / 64.1 / 66.0 / 62.5 / 64.8 / 66.4 with noise off,
+73.8 / 70.3 / 71.5 / 73.0 / 71.9 / 75.4 with noise on.
+
+- **Pre-registered reading: specialisation pays on this course.** Stairs v2 alone is ahead of
+  generalist v2 with intervals nowhere near 0, at both levels and in both noise conditions.
+  The switch adds nothing to stairs v2.
+- **Generalist v2 is walking** (lost 0.0% everywhere, tracking error 0.13-0.15 m/s, successes
+  take the same 27.3 s). It fails in one place: at L1 every failure with noise off is on the
+  down-stairs (35.1% of trials); at L2, 61% of trials end at the lip of the down-stairs and
+  16% on the up-stairs, all non-foot contacts.
+- **The fix that made stairs v2 did not make a better generalist.** Generalist v2 is 26 points
+  below the first generalist with noise off and 10 below with noise on (different runs; the
+  gap is far outside the 2-3.5 point run-to-run spread). It sits where the first generalist's
+  iteration-4800 checkpoint did (73.2% / 75.3%, Addendum 3): both saw only stage-0 commands.
+  For the generalist, the second half of the original training, wide commands and all, was
+  what made it better on this course. Why is not known; its terrain-level curve had not been
+  reported by the cluster when this was written.
+- **Neither generalist copes at L2** (15.8% and 10.9%), where stairs v2 is at 95%.
+- Net, across Addenda 2A, 3 and 5: the best generalist is the first one, and the best
+  specialist (stairs v2) beats it by 9 points with noise off and 17 with noise on at L1
+  (99.9 vs 90.5, 99.8 vs 82.5, different runs) and by 84 points at L2.
+
 ## Limits
 
 - Single-seed policies throughout. The as-trained stairs and rough specialists finished
   training on near-flat terrain (findings.md, "Why the specialists are weak"), and Addendum 2B
   shows how much of the main experiment's switching advantage that explains.
 - One course family, one leader speed (0.5 m/s), one robot, simulation only.
-- The generalist was trained under the same collapsing curriculum, and its iteration-4800
-  checkpoint is worse than its final one, so no undamaged generalist exists to compare with. A
-  generalist retrained with the command range held, as stairs v2 was, is the missing arm.
+- Two generalists, one seed each, trained two ways. Neither matches stairs v2, but two runs
+  do not show that no generalist could; more iterations, a different terrain mix or a
+  different command schedule were not tried.
 - Stage 1 selected the "anticipatory" arms as the best of a bad set; stage 2 confirms they are
   worse than on-time, which is the conclusion, but "best lead above 0.8 m" is not a tuned
   anticipatory controller. A controller with the long horizon is free to switch at 0.3 m; the

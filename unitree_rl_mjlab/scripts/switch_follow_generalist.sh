@@ -24,6 +24,7 @@ HF_REPO="${HF_REPO:-RohanRamesh/go2-specialists}"
 EXPERIMENT="${EXPERIMENT:-go2_generalist}"   # HF folder / eval_ckpts folder of the generalist
 STAIRS_CKPT="${STAIRS_CKPT:-}"               # optional: checkpoint for the stairs slot of the bank
 
+[ -n "$STAIRS_CKPT" ] && STAIRS_CKPT="$(realpath "$STAIRS_CKPT")"   # before the cd below: it may be relative
 W="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_ROOT="$(cd "$W/.." && pwd)"
 PY="${PY:-$HOME/miniconda3/envs/unitree_rl_mjlab/bin/python}"
@@ -49,7 +50,7 @@ fi
 cd "$W"
 export PYTHONPATH="$W" MUJOCO_GL=egl
 STAIRS_ARGS=()
-[ -n "$STAIRS_CKPT" ] && STAIRS_ARGS=(--extra-policy "stairs=$(realpath "$STAIRS_CKPT")")
+[ -n "$STAIRS_CKPT" ] && STAIRS_ARGS=(--extra-policy "stairs=$STAIRS_CKPT")
 ARMS="fixed:generalist hard:0.3:label fixed:stairs"
 for cond in clean noisy; do
   flag=""; [ "$cond" = noisy ] && flag="--obs-noise"
