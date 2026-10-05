@@ -42,14 +42,16 @@ and its two-rate perception) is unchanged and summarised in the final report, Se
 
 ## 2. What is still open
 
-### 2.1 Why is generalist v2 worse? (open, no job needed to start)
+### 2.1 Why is generalist v2 worse on the course? (open)
 
-Generalist v2 (job 12518) finished and was evaluated on 2026-10-05
-(`switch-follow-results.md`, Addendum 5): 64.9% alone at L1 against 90.5% for the first
-generalist. The cluster has not yet recorded its `terrain_levels` (4800 / 5000 / 6000 / 8000 /
-9999) in `cluster.json`; that curve is the first thing to read. Ask the cluster session for
-it, it is read-only. Nothing in the report depends on the answer; the report says the cause
-is unexplained.
+Generalist v2 (job 12518) scores 64.9% alone at L1 against 90.5% for the first generalist
+(`switch-follow-results.md`, Addendum 5). Checked on 2026-10-05, none of it explains the gap:
+its training curves are healthier (no curriculum collapse), the follow task stays inside the
+command range it trained on, and on pinned pyramid stairs it is the *better* of the two
+generalists. Its deficit is on the course's straight down-staircase. Next step if you want
+one: both generalists on single straight staircases (`vlm_nav_baseline.py`-style courses) at
+several riser heights and speeds, laptop only. The report states the cause as unexplained and
+does not depend on it.
 
 ### 2.2 Gaps checkpoint: still on the cluster only
 

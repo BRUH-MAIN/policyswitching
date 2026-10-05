@@ -424,9 +424,34 @@ Per seed, generalist v2 at L1: 65.6 / 64.1 / 66.0 / 62.5 / 64.8 / 66.4 with nois
   gap is far outside the 2-3.5 point run-to-run spread). It sits where the first generalist's
   iteration-4800 checkpoint did (73.2% / 75.3%, Addendum 3): both saw only stage-0 commands.
   For the generalist, the second half of the original training, wide commands and all, was
-  what made it better on this course. Why is not known; its terrain-level curve had not been
-  reported by the cluster when this was written.
+  what made it better on this course. Why is not known; see "Looking for the cause" below.
 - **Neither generalist copes at L2** (15.8% and 10.9%), where stairs v2 is at 95%.
+- **Looking for the cause (2026-10-05, exploratory).** Three things were checked and none
+  explains it.
+  1. *Training curves* (cluster, `go2-spec-12518.out` vs `12479`): generalist v2's terrain
+     level holds at 1.5-1.6 for the whole run where the first generalist's falls from 1.52 to
+     0.39-0.50 after iteration 5000; v2's mean reward is at or above the first generalist's in
+     the second half; episode length is the same. Before iteration 5000 the two curves agree
+     within noise. By its own logs v2 is the healthier run.
+  2. *Command range*: the follow controller never commands more than 1.0 m/s forward,
+     0.3 m/s sideways or 0.8 rad/s, all inside the stage-0 range v2 trained on.
+  3. *Pinned pyramid stairs at the stage-0 command range* (laptop, `eval_results/generalist_v1_v2/`,
+     256 robots for 24 s, training noise on), falls per 100 m:
+
+     | | stairs d = 0.5 | stairs d = 0.7 | rough d = 0.5 |
+     |---|---|---|---|
+     | first generalist | 7.11 | 20.80 | 3.22 |
+     | generalist v2 | **4.66** | **15.54** | 3.12 |
+
+     On the terrain both trained on, **generalist v2 is the better stairs policy**, at the same
+     speed (71-73% of commanded against 67-70%).
+
+  So generalist v2 is not a worse policy in general. Its deficit is specific to this course:
+  the straight down-staircase under the follow task, where 24-35% of its trials end. The two
+  ways of measuring rank the two generalists in opposite orders, and the course is one
+  geometry at one speed. The conclusion that stairs v2 beats both generalists does not depend
+  on which generalist is better; the statement "the fix made the generalist worse" does, and
+  should be read as "worse on this course".
 - Net, across Addenda 2A, 3 and 5: the best generalist is the first one, and the best
   specialist (stairs v2) beats it by 9 points with noise off and 17 with noise on at L1
   (99.9 vs 90.5, 99.8 vs 82.5, different runs) and by 84 points at L2.

@@ -394,8 +394,12 @@ Stairs v2 in the stairs slot:
   iteration-4800 checkpoint did (73.2% and 75.3%): both saw only the narrow command range. For
   the generalist, the second half of the original training was a net gain on this course even
   though its terrain curriculum collapsed. Both generalists walk properly and fail in the same
-  place, the down-stairs. Why the same change helps one policy and hurts the other is not
-  explained here.
+  place, the down-stairs. Three checks did not find the cause: generalist v2's training curves
+  are the healthier of the two (no curriculum collapse, equal or higher reward); the follow
+  task never commands outside the range it trained on; and on pinned pyramid stairs at that
+  command range generalist v2 is the *better* of the two (4.7 against 7.1 falls per 100 m at
+  difficulty 0.5, 15.5 against 20.8 at 0.7). So its deficit is specific to this course's
+  straight down-staircase, and "worse" here means worse on this course, not worse at stairs.
 - **Lateness gets more expensive on harder stairs**: at L2 a switch at the boundary instead
   of 0.3 m ahead of it falls from 96.3% to 49.8%.
 
@@ -475,7 +479,9 @@ was at the low end of a spread whose pooled value is +7.3.
 - **Two generalists, one seed each.** Neither matches stairs v2, and the one trained with the
   fix is the worse of the two. That does not show no generalist could match it: longer
   training, a different terrain mix or a different command schedule were not tried, and the
-  reason generalist v2 is worse is unexplained.
+  reason generalist v2 is worse on this course, while better on pinned pyramid stairs, is
+  unexplained. The course is one straight-stair geometry at one leader speed, so rankings on
+  it need not carry to other terrain.
 - **Parametric blending, not a learned gate.** The soft arms are linear cross-fades. A
   trained gating network could in principle find a state-dependent blend these schedules
   cannot express. The results give no reason to expect that, but do not rule it out.
@@ -487,9 +493,10 @@ was at the low end of a spread whose pooled value is +7.3.
 
 ## VIII. What remains
 
-1. **Explain the generalist.** Why does holding the command range make the stairs specialist
-   much better and the generalist worse? Its terrain-level curve, and a generalist trained
-   longer, are the first things to look at.
+1. **Explain the generalist.** Generalist v2 is better than the first generalist on pinned
+   pyramid stairs and worse on the course's straight down-staircase. Running both on single
+   straight staircases at several riser heights and speeds would show whether that is the
+   geometry, the speed, or the follow task.
 2. **Add a gaps segment to the course** and evaluate the existing gaps checkpoint: stepping
    stones are the terrain no specialist here can cross and the one where the generalist was
    clearly ahead on pinned terrain, so it is where switching, or a generalist, is most likely
