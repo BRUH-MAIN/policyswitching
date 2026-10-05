@@ -400,6 +400,13 @@ Stairs v2 in the stairs slot:
   command range generalist v2 is the *better* of the two (4.7 against 7.1 falls per 100 m at
   difficulty 0.5, 15.5 against 20.8 at 0.7). So its deficit is specific to this course's
   straight down-staircase, and "worse" here means worse on this course, not worse at stairs.
+  A diagnostic on single staircases (two directions, two riser heights, three leader speeds,
+  noise off and on) then showed generalist v2 ahead of or level with the first generalist in
+  20 of 24 cells, and showed something more basic: the same generalist on the same 5 cm
+  down-staircase at the same commanded speed succeeds 6% of the time after a 3 m flat approach,
+  50% after 11 m, and 92% on the mixed course. Both generalists are brittle at the top edge of
+  a down-staircase in a way that depends on the course around it, for a reason not found.
+  Stairs v2 stays at 93% or above in every one of those cells.
 - **Lateness gets more expensive on harder stairs**: at L2 a switch at the boundary instead
   of 0.3 m ahead of it falls from 96.3% to 49.8%.
 
@@ -485,7 +492,11 @@ was at the low end of a spread whose pooled value is +7.3.
 - **Parametric blending, not a learned gate.** The soft arms are linear cross-fades. A
   trained gating network could in principle find a state-dependent blend these schedules
   cannot express. The results give no reason to expect that, but do not rule it out.
-- **One course family, one leader speed, a ground-truth leader**, and simulation only.
+- **One course family, a ground-truth leader, and simulation only.** Weak policies' failure
+  rates at a stair lip change a great deal with course layout (Section V.G), so the *size* of
+  results built on them, such as the early-switching penalty with the as-trained stairs
+  specialist or either generalist's course success, is specific to this layout. Results that
+  involve stairs v2, which does not fail at the lip, are not exposed to this.
 - **The classifier's test is in-distribution** for stair geometry, at L1, with the as-trained
   specialists.
 - **Run-to-run spread**: about 2 points with noise off and up to 3.5 with noise on for one
@@ -493,10 +504,10 @@ was at the low end of a spread whose pooled value is +7.3.
 
 ## VIII. What remains
 
-1. **Explain the generalist.** Generalist v2 is better than the first generalist on pinned
-   pyramid stairs and worse on the course's straight down-staircase. Running both on single
-   straight staircases at several riser heights and speeds would show whether that is the
-   geometry, the speed, or the follow task.
+1. **Find what makes the generalists brittle at a stair lip.** Their success there varies
+   from 6% to 92% with course layout at fixed riser and commanded speed; commanded speed and
+   run-up distance are ruled out. Randomising course layout in evaluation, so that no result
+   rests on one layout, is the more useful fix.
 2. **Add a gaps segment to the course** and evaluate the existing gaps checkpoint: stepping
    stones are the terrain no specialist here can cross and the one where the generalist was
    clearly ahead on pinned terrain, so it is where switching, or a generalist, is most likely

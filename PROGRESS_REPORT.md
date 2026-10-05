@@ -42,16 +42,15 @@ and its two-rate perception) is unchanged and summarised in the final report, Se
 
 ## 2. What is still open
 
-### 2.1 Why is generalist v2 worse on the course? (open)
+### 2.1 Generalist brittleness at a stair lip (open, optional)
 
-Generalist v2 (job 12518) scores 64.9% alone at L1 against 90.5% for the first generalist
-(`switch-follow-results.md`, Addendum 5). Checked on 2026-10-05, none of it explains the gap:
-its training curves are healthier (no curriculum collapse), the follow task stays inside the
-command range it trained on, and on pinned pyramid stairs it is the *better* of the two
-generalists. Its deficit is on the course's straight down-staircase. Next step if you want
-one: both generalists on single straight staircases (`vlm_nav_baseline.py`-style courses) at
-several riser heights and speeds, laptop only. The report states the cause as unexplained and
-does not depend on it.
+"Why is generalist v2 worse than the first generalist" turned out to be the wrong question
+(`findings.md` #24, `switch-follow-results.md` Addendum 6): on single staircases v2 is the
+better one, and either generalist's success on a 5 cm down-staircase swings from 6% to 92%
+with the course around it, at the same commanded speed. Commanded speed and run-up distance
+are ruled out; the cause is not found. Stairs v2 is unaffected. If you want more here, the
+useful step is evaluation over randomised course layouts so no result rests on one layout;
+`switch_follow.py --extra-approach` is a start. The report states this as a limitation.
 
 ### 2.2 Gaps checkpoint: still on the cluster only
 
@@ -95,6 +94,8 @@ reference run of the first generalist at L2.
   oracle: 52-59% under the goal controller, 89% under the follow controller.
 - **What counts as a fall decides whether L1 separates anything.** All L1 failures are knee or
   calf contacts; under orientation-only falls every arm but flat-only is at 98-100%.
+- **#24: weak policies' lip failures depend on course layout.** Don't rank two weak policies,
+  or quote the size of an effect made of lip failures, from one layout.
 - **Don't edit `scripts/switch_follow.py` while a multi-seed loop is running**: each seed is a
   new process and re-reads the file.
 - **Background jobs here are killed after two hours**, counted from launch, including time

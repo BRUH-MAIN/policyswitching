@@ -37,7 +37,7 @@ import argparse
 import json
 import os
 import time
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from pathlib import Path
 
 import numpy as np
@@ -134,6 +134,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   fall_term: list[list[str] | None] = [None] * n
   path = torch.zeros(n, device=device)
   prev_xy = robot.data.root_link_pos_w[:, :2].clone()
+  start_x = (robot.data.root_link_pos_w[:, 0] + x_off).clone()  # spawn position along the course
   prev_force = robot.data.actuator_force.clone()
   tm = u.termination_manager
   am = u.action_manager
@@ -144,6 +145,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   log_force_rate = torch.full((max_steps, n), nan, device=device)
   log_track_err = torch.full((max_steps, n), nan, device=device)
   log_gap_err = torch.full((max_steps, n), nan, device=device)
+  log_cmd = torch.full((max_steps, n), nan, device=device)
   log_sel = torch.full((max_steps, n), -1, dtype=torch.int8, device=device) if clf is not None else None
 
   for step in range(max_steps):
@@ -209,6 +211,8 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
     log_x[step] = torch.where(valid, x_course, torch.full_like(x_course, nan))
     log_track_err[step] = torch.where(valid, track_err, torch.full_like(track_err, nan))
     log_gap_err[step] = torch.where(valid, rng - args.gap, torch.full_like(rng, nan))
+    cmd_speed = torch.linalg.norm(cmd[:, :2], dim=1)
+    log_cmd[step] = torch.where(valid, cmd_speed, torch.full_like(cmd_speed, nan))
     active &= ~new_fall
 
   still = active.nonzero().flatten().tolist()
@@ -263,11 +267,19 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
       x_first = log_x[first.clamp_min(0), torch.arange(n, device=device)]
       leads.append([None if first[i] < 0 else round(float(x0 - x_first[i]), 3) for i in range(n)])
     clf_cols["clf_leads"] = [list(v) for v in zip(*leads)]
+  # Commanded speed over the last 0.5 m before each non-flat segment: the follow command
+  # rises when the robot has fallen behind, so arms can reach an edge at different speeds.
+  approach = []
+  for x0, _, kind in spans:
+    if kind != "flat":
+      near = (log_x >= x0 - 0.5) & (log_x < x0)
+      approach.append(torch.nanmean(torch.where(near, log_cmd, torch.full_like(log_cmd, nan)), dim=0).tolist())
   trials = []
   for i in range(n):
     row = dict(outcome=outcome[i], time_s=float(t_end[i]), end_x=float(end_x[i]), path_m=float(path[i]),
-               fall_term=fall_term[i])
+               fall_term=fall_term[i], start_x=round(float(start_x[i]), 4))
     row.update({k: v[i] for k, v in clf_cols.items()})
+    row["cmd_approach"] = [None if a[i] != a[i] else round(a[i], 3) for a in approach]
     row.update({k: (None if v[i] != v[i] else round(v[i], 5)) for k, v in cols.items()})
     trials.append(row)
 
@@ -309,6 +321,9 @@ def main() -> None:
                   help="Save (height scan, footprint-rule class) pairs seen by the arms run, for "
                        "training the scan classifier.")
   ap.add_argument("--record-every", type=int, default=3)
+  ap.add_argument("--extra-approach", type=float, default=0.0,
+                  help="Lengthen the course's first flat segment by this many metres (diagnostic: "
+                       "how far the robot has walked before the first obstacle).")
   ap.add_argument("--resume", action="store_true")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
@@ -319,6 +334,9 @@ def main() -> None:
   configure_torch_backends()
   device = "cuda:0"
   course = saro_courses(visual="plain", level=args.level)[args.course]
+  if args.extra_approach:
+    first, *rest = course.segments
+    course = replace(course, segments=(replace(first, length=first.length + args.extra_approach), *rest))
   success_x = max(x1 for _, x1, kind in segment_spans(course) if kind != "flat") + args.success_margin
   if args.time_limit is None:
     args.time_limit = 2.0 * (success_x - course.start_x) / args.leader_speed + 10.0

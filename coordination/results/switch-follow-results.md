@@ -456,12 +456,65 @@ Per seed, generalist v2 at L1: 65.6 / 64.1 / 66.0 / 62.5 / 64.8 / 66.4 with nois
   specialist (stairs v2) beats it by 9 points with noise off and 17 with noise on at L1
   (99.9 vs 90.5, 99.8 vs 82.5, different runs) and by 84 points at L2.
 
+## Addendum 6: where the generalists lose (exploratory diagnostic, design written before it was run)
+
+Single-obstacle courses under the follow task, each policy alone, 512 trials per cell
+(seeds 800, 801). Raw: `eval_results/switch_follow/diag/`.
+
+Success %, first generalist / generalist v2 / stairs v2:
+
+| course, level, noise | leader 0.3 m/s | 0.5 m/s | 0.8 m/s |
+|---|---|---|---|
+| stairs down, L1, off | 28.5 / 42.2 / 97.3 | 6.1 / 43.4 / 100.0 | 76.2 / 42.6 / 99.2 |
+| stairs down, L1, on | 28.5 / 44.9 / 97.3 | 14.8 / 63.5 / 99.6 | 73.4 / 48.6 / 100.0 |
+| stairs down, L2, off | 0.0 / 7.8 / 96.9 | 0.0 / 57.2 / 99.6 | 40.2 / 35.0 / 99.0 |
+| stairs down, L2, on | 0.2 / 13.3 / 94.7 | 2.7 / 53.5 / 99.8 | 31.6 / 47.9 / 98.8 |
+| stairs up, L1, off | 91.2 / 100.0 / 100.0 | 100.0 / 100.0 / 99.6 | 94.1 / 98.2 / 95.5 |
+| stairs up, L1, on | 92.2 / 99.4 / 99.6 | 99.6 / 100.0 / 99.0 | 88.9 / 94.1 / 93.4 |
+| stairs up, L2, off | 34.0 / 83.2 / 98.8 | 37.5 / 82.0 / 95.1 | 14.1 / 42.0 / 94.1 |
+| stairs up, L2, on | 35.9 / 82.4 / 95.3 | 38.1 / 85.4 / 95.5 | 10.5 / 35.0 / 96.7 |
+
+- **Stairs v2 is at 93% or above in all 24 cells.** Nothing below changes that.
+- **On single staircases generalist v2 is the better generalist**: ahead of or level with the
+  first generalist in 20 of 24 cells, behind only on down-stairs at the fastest leader. That
+  agrees with the pinned pyramid-stairs eval and disagrees with the mixed course.
+- **The same policy on the same staircase at the same commanded speed gives very different
+  results depending on the course around it.** First generalist, L1 down-stairs, noise off,
+  leader 0.5 m/s, commanded speed over the last 0.5 m before the lip 0.63 m/s in every case:
+
+  | flat approach before the lip | first generalist | generalist v2 | stairs v2 |
+  |---|---|---|---|
+  | 3 m (the single-obstacle course) | 6.6% | 44.9% | 100.0% |
+  | 6 m | 5.9% | 45.7% | 100.0% |
+  | 11 m | 50.0% | 87.5% | 99.2% |
+  | mixed course (lip 11.5 m from the start, after rough ground and up-stairs) | 91.8% | 61.3% | 100.0% |
+
+  (256 trials per cell, one seed each.) Almost all the generalists' failures are at the lip.
+  Two things were ruled out: the commanded speed at the lip (identical across rows), and the
+  exact run-up distance (spreading the spawn point over 1.2 m, with no yaw offset, left the
+  first generalist at 5-19% and stairs v2 at 96-100% in every 0.1 m bin). What does drive it
+  was not found.
+- **So "generalist v2 is worse than the first generalist" is a fact about the mixed course's
+  layout, not about the two policies.** The robust statements are: both generalists are
+  brittle at the top edge of a down-staircase, in a way that depends on the course around it;
+  generalist v2 is the better of the two on single staircases and on pinned terrain; and
+  stairs v2 is not brittle anywhere it was tested.
+- **This applies to other numbers in this document too.** Any rate that is made mostly of
+  lip failures by a weak policy (the as-trained stairs specialist's 13-15% when walking the
+  approach, the generalists' course success) was measured on one layout and may not carry to
+  another. The results that involve stairs v2 or `model_4800`, which do not fail at the lip,
+  are not exposed to this.
+
 ## Limits
 
 - Single-seed policies throughout. The as-trained stairs and rough specialists finished
   training on near-flat terrain (findings.md, "Why the specialists are weak"), and Addendum 2B
   shows how much of the main experiment's switching advantage that explains.
-- One course family, one leader speed (0.5 m/s), one robot, simulation only.
+- One course family, one leader speed (0.5 m/s), one robot, simulation only. Addendum 6
+  shows that weak policies' failure rates at a stair lip change a great deal with course
+  layout, so the size of anything built on those rates (the early-switching penalty with the
+  as-trained stairs specialist, either generalist's course success) is specific to this
+  layout. Their direction was the same at both levels and both noise conditions.
 - Two generalists, one seed each, trained two ways. Neither matches stairs v2, but two runs
   do not show that no generalist could; more iterations, a different terrain mix or a
   different command schedule were not tried.
