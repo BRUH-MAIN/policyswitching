@@ -10,6 +10,10 @@
 # SPEC:
 #   Flat | Rough | Stairs | Gaps   -> Unitree-Go2-Spec-<SPEC>, experiment go2_spec_<spec>
 #   GapsWarm                       -> 100% stepping_stones, warm-started (see INIT_FROM)
+#   StairsV3                       -> Unitree-Go2-Spec-StairsV3, experiment go2_spec_stairs_v3:
+#                                     real stair heights (risers 5-20 cm, treads 0.30/0.26 m), rows
+#                                     spread uniformly all run, stage-0 command range. Warm-starts
+#                                     from StairsV2's final checkpoint (see INIT_FROM)
 #   StairsV2                       -> Unitree-Go2-Spec-StairsV2, experiment go2_spec_stairs_v2:
 #                                     Stairs with the command range held at stage 0. A
 #                                     separate experiment, so it never resumes or overwrites
@@ -25,7 +29,8 @@
 #   SEED       default 42 (mjlab's default, used by every run so far). Any other seed gets
 #              its own experiment dir (_s<SEED>) so resume never mixes seeds.
 #   INIT_FROM  checkpoint to warm-start from (a100/warm_start_ckpt.py). Defaults to the
-#              Rough specialist for GapsWarm; unset for everything else. Only applied when
+#              Rough specialist for GapsWarm and StairsV2's model_9999 for StairsV3; unset
+#              for everything else. Only applied when
 #              the experiment has no checkpoint yet.
 #   HF_TOKEN   if set, every checkpoint is also pushed to hf.co/$HF_CHECKPOINT_REPO
 #              (default RohanRamesh/go2-specialists, a PRIVATE repo -- NOT go2-pas-saro,
@@ -56,7 +61,7 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
@@ -66,6 +71,10 @@ case "$SPEC" in
     TASK="Unitree-Go2-Spec-StairsV2"
     EXPERIMENT_NAME="go2_spec_stairs_v2"
     ;;
+  StairsV3)
+    TASK="Unitree-Go2-Spec-StairsV3"
+    EXPERIMENT_NAME="go2_spec_stairs_v3"
+    ;;
   Generalist)
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
@@ -74,7 +83,7 @@ case "$SPEC" in
     TASK="Unitree-Go2-GeneralistV2"
     EXPERIMENT_NAME="go2_generalist_v2"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
@@ -88,6 +97,11 @@ fi
 
 if [ "$SPEC" = "GapsWarm" ] && [ -z "${INIT_FROM:-}" ]; then
   INIT_FROM="$MJLAB_DIR/logs/rsl_rl/go2_spec_rough/2026-09-06_12-07-49/model_9999.pt"
+fi
+
+if [ "$SPEC" = "StairsV3" ] && [ -z "${INIT_FROM:-}" ]; then
+  # Loud failure (set -e + no match) rather than a silent cold start on hard terrain.
+  INIT_FROM="$(ls "$MJLAB_DIR"/logs/rsl_rl/go2_spec_stairs_v2/*/model_9999.pt | head -1)"
 fi
 
 NUM_ENVS="${NUM_ENVS:-8192}"

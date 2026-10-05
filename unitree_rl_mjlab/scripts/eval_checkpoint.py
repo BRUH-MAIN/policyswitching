@@ -48,6 +48,7 @@ import math
 import os
 from dataclasses import asdict
 
+import numpy as np
 import torch
 
 os.environ.setdefault("MUJOCO_GL", "egl")
@@ -117,6 +118,19 @@ def main():
     help="Pin terrain difficulty to this value in [0, 1]. Omit to spread envs "
     "uniformly over all difficulty rows.",
   )
+  ap.add_argument(
+    "--step-height",
+    type=float,
+    default=None,
+    help="Pin every stairs sub-terrain's riser height (metres), e.g. 0.15, overriding the "
+    "class's 0-10 cm range. Independent of --difficulty. Needs a terrain with stairs.",
+  )
+  ap.add_argument(
+    "--step-width",
+    type=float,
+    default=None,
+    help="Pin every stairs sub-terrain's tread (metres); default keeps the task's (0.3).",
+  )
   ap.add_argument("--lin-vel-x", type=float, nargs=2, default=TRAIN_FINAL_LIN_VEL_X, metavar=("MIN", "MAX"))
   ap.add_argument("--lin-vel-y", type=float, nargs=2, default=TRAIN_FINAL_LIN_VEL_Y, metavar=("MIN", "MAX"))
   ap.add_argument("--ang-vel-z", type=float, nargs=2, default=TRAIN_FINAL_ANG_VEL_Z, metavar=("MIN", "MAX"))
@@ -184,7 +198,12 @@ def main():
     print("       these numbers are NOT comparable across policies.")
   else:
     apply_eval_conditions(
-      env_cfg, terrain=args.terrain, difficulty=args.difficulty, seed=args.seed
+      env_cfg,
+      terrain=args.terrain,
+      difficulty=args.difficulty,
+      seed=args.seed,
+      step_height=args.step_height,
+      step_width=args.step_width,
     )
     env_cfg.curriculum.pop("command_vel", None)
     ranges = env_cfg.commands[args.command_name].ranges
@@ -194,6 +213,8 @@ def main():
     conditions.update(
       terrain=args.terrain,
       difficulty=args.difficulty,
+      step_height=args.step_height,
+      step_width=args.step_width,
       lin_vel_x=list(args.lin_vel_x),
       lin_vel_y=list(args.lin_vel_y),
       ang_vel_z=list(args.ang_vel_z),
@@ -201,6 +222,7 @@ def main():
     print(
       f"[INFO] Eval conditions: terrain={args.terrain} "
       f"difficulty={'uniform over rows' if args.difficulty is None else args.difficulty} "
+      f"step_height={args.step_height} step_width={args.step_width} "
       f"lin_vel_x={tuple(args.lin_vel_x)} lin_vel_y={tuple(args.lin_vel_y)} "
       f"ang_vel_z={tuple(args.ang_vel_z)} seed={args.seed} (curricula off)"
     )
@@ -283,6 +305,32 @@ def main():
   # terms on one step, so these can sum to more than total_episodes).
   term_manager = unwrapped.termination_manager
   term_counts = {name: 0 for name in term_manager.active_terms}
+
+  # Breakdown by sub-terrain type (for stairs: pyramid_stairs spawns on the top platform
+  # and walks DOWN; pyramid_stairs_inv spawns in the pit and walks UP). Pooling the two
+  # hides the direction that fails: a policy that cannot climb 12 cm risers still
+  # descends them. Columns map to types by the generator's cumulative-proportion rule.
+  by_type = None
+  terrain_entity = unwrapped.scene.terrain
+  gen_cfg = env_cfg.scene.terrain.terrain_generator if env_cfg.scene.terrain else None
+  if gen_cfg is not None and getattr(terrain_entity, "terrain_types", None) is not None:
+    type_names = list(gen_cfg.sub_terrains)
+    props = np.array([s.proportion for s in gen_cfg.sub_terrains.values()], dtype=float)
+    props /= props.sum()
+    col_type = np.array(
+      [int(np.min(np.where(c / gen_cfg.num_cols + 0.001 < np.cumsum(props))[0]))
+       for c in range(gen_cfg.num_cols)]
+    )
+    env_type = torch.as_tensor(col_type, device=device)[terrain_entity.terrain_types]
+    n_types = len(type_names)
+    by_type = {
+      "names": type_names,
+      "episodes": torch.zeros(n_types, device=device),
+      "time_out": torch.zeros(n_types, device=device),
+      "distance": torch.zeros(n_types, device=device),
+      "terms": {name: torch.zeros(n_types, device=device) for name in term_counts},
+      "envs": torch.bincount(env_type, minlength=n_types).float(),
+    }
   sum_ep_len_at_end = 0.0
   sum_return_at_end = 0.0
 
@@ -348,6 +396,8 @@ def main():
         sum_lin_vel_error += float(lin_err[valid].sum())
         sum_ang_vel_error += float(ang_err[valid].sum())
         sum_distance += float(distance[valid].sum())
+        if by_type is not None:
+          by_type["distance"].index_add_(0, env_type[valid], distance[valid])
 
         commanded_to_move = valid & (cmd_speed > args.moving_command_threshold)
         moving_cmd_steps += int(commanded_to_move.sum().item())
@@ -384,6 +434,16 @@ def main():
 
       for name in term_counts:
         term_counts[name] += int((term_manager.get_term(name).bool() & done_mask).sum())
+      if by_type is not None:
+        done_types = env_type[done_mask]
+        to_types = env_type[done_mask & timeouts.bool()]
+        by_type["episodes"] += torch.bincount(done_types, minlength=len(by_type["names"])).float()
+        by_type["time_out"] += torch.bincount(to_types, minlength=len(by_type["names"])).float()
+        for name in term_counts:
+          hit = term_manager.get_term(name).bool() & done_mask
+          by_type["terms"][name] += torch.bincount(
+            env_type[hit], minlength=len(by_type["names"])
+          ).float()
       total_episodes += n_done
       total_timeouts += n_timeout
       total_fails += n_fail
@@ -431,6 +491,31 @@ def main():
   else:
     print("  No episodes completed in this window -- increase --steps.")
   result["survival"] = survival
+
+  if by_type is not None:
+    by_terrain: dict = {}
+    print("\n-- by sub-terrain type (distance in m, summed over envs) --")
+    for i, name in enumerate(by_type["names"]):
+      eps = float(by_type["episodes"][i])
+      if not by_type["envs"][i]:
+        continue
+      to = float(by_type["time_out"][i])
+      dist = float(by_type["distance"][i])
+      entry = {
+        "envs": int(by_type["envs"][i]),
+        "episodes": int(eps),
+        "time_out": int(to),
+        "terminations": {k: int(v[i]) for k, v in by_type["terms"].items()},
+        "distance_m": dist,
+        "falls_per_100m": 100 * (eps - to) / dist if dist > 1e-6 else None,
+        "survival_pct": 100 * to / eps if eps else None,
+      }
+      by_terrain[name] = entry
+      fpm = "n/a" if entry["falls_per_100m"] is None else f"{entry['falls_per_100m']:.2f}"
+      sv = "n/a" if entry["survival_pct"] is None else f"{entry['survival_pct']:.1f}"
+      print(f"  {name}: envs={entry['envs']} episodes={int(eps)} time_out={int(to)} "
+            f"{entry['terminations']} distance={dist:.0f} falls/100m={fpm} survival={sv}%")
+    result["by_terrain"] = by_terrain
 
   print("\n-- locomotion --")
   locomotion: dict = {}

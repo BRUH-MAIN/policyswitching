@@ -10,6 +10,7 @@ from mjlab.envs import ManagerBasedRlEnvCfg
 from mjlab.envs import mdp as envs_mdp
 from mjlab.envs.mdp.actions import JointPositionActionCfg
 from mjlab.managers import TerminationTermCfg
+from mjlab.managers.curriculum_manager import CurriculumTermCfg
 from mjlab.managers.event_manager import EventTermCfg
 from mjlab.managers.observation_manager import ObservationGroupCfg, ObservationTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
@@ -21,6 +22,7 @@ from mjlab.terrains.config import ALL_TERRAINS_CFG, ROUGH_TERRAINS_CFG
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 
 from src.tasks.velocity.mdp.pas import foot_friction
+from src.tasks.velocity.mdp.terrain_curriculum import terrain_row_fraction, terrain_row_mean
 from src.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
 TerrainType = Literal["rough", "obstacles"]
@@ -65,6 +67,8 @@ def apply_eval_conditions(
   terrain: str = "native",
   difficulty: float | None = None,
   seed: int | None = None,
+  step_height: float | None = None,
+  step_width: float | None = None,
 ) -> None:
   """Pin the terrain for cross-policy numeric eval (scripts/eval_checkpoint.py).
 
@@ -79,6 +83,11 @@ def apply_eval_conditions(
   - `difficulty`: None spreads envs uniformly over every difficulty row; a
     float in [0, 1] pins every row to exactly that difficulty (rows still
     exist -- see the bug note below for why collapsing them was wrong).
+  - `step_height` / `step_width` (metres): pin every stairs sub-terrain's riser
+    height and/or tread, overriding the class defaults (risers 0-10 cm, 0.3 m
+    tread) so a policy can be evaluated at real stair dimensions. Riser height
+    then no longer depends on `difficulty` or the row. Raises if the selected
+    terrain has no stairs.
   """
   if terrain not in EVAL_TERRAINS:
     raise ValueError(f"terrain must be one of {EVAL_TERRAINS}, got {terrain!r}")
@@ -94,6 +103,25 @@ def apply_eval_conditions(
       gen,
       sub_terrains={
         name: replace(available[name], proportion=p) for name, p in proportions.items()
+      },
+    )
+
+  if step_height is not None or step_width is not None:
+    stairs = {n: s for n, s in gen.sub_terrains.items() if hasattr(s, "step_height_range")}
+    if not stairs:
+      raise ValueError(
+        f"step_height/step_width given but terrain {terrain!r} has no stairs sub-terrain "
+        f"(sub-terrains: {sorted(gen.sub_terrains)})"
+      )
+    overrides: dict = {}
+    if step_height is not None:
+      overrides["step_height_range"] = (step_height, step_height)
+    if step_width is not None:
+      overrides["step_width"] = step_width
+    gen = replace(
+      gen,
+      sub_terrains={
+        n: (replace(s, **overrides) if n in stairs else s) for n, s in gen.sub_terrains.items()
       },
     )
 
@@ -131,6 +159,9 @@ def apply_eval_conditions(
   gen = replace(gen, curriculum=True, seed=seed if seed is not None else gen.seed)
   cfg.scene.terrain.terrain_generator = gen
   cfg.curriculum.pop("terrain_levels", None)
+  # Tasks that re-draw each env's row/column at reset (StairsV3) must not do so under a
+  # pinned eval: it would undo the pinned layout and the per-sub-terrain breakdown.
+  cfg.events.pop("randomize_terrain", None)
 
 
 def unitree_go2_rough_env_cfg(
@@ -395,6 +426,73 @@ def unitree_go2_spec_stairs_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvC
   return _hold_command_range_at_stage0(
     _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
   )
+
+
+# Stairs V3 geometry: risers across the range of real stairs (5 cm up to 20 cm; building
+# stairs are 15-18 cm) at two treads (real treads are 25-30 cm). Row r of the 10-row grid
+# is generated at difficulty ~(r + U[0,1)) / 10, so riser = 5 + 15 * d cm:
+#   row 0: 5-6.5   1: 6.5-8   2: 8-9.5   3: 9.5-11   4: 11-12.5
+#   row 5: 12.5-14 6: 14-15.5 7: 15.5-17 8: 17-18.5  9: 18.5-20 cm
+STAIRS_V3_STEP_HEIGHT_RANGE = (0.05, 0.20)
+STAIRS_V3_TREADS = (0.30, 0.26)
+
+
+def unitree_go2_spec_stairs_v3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs specialist v3: real stair heights, rows spread uniformly all run.
+
+  StairsV2 (stage-0 command range, same observations, rewards, terminations, runner)
+  with three changes:
+
+  1. Risers 5-20 cm (v2 was 0-10 cm) on pyramid_stairs and pyramid_stairs_inv, each at
+     two treads (0.30 m and 0.26 m), the four sub-terrains at equal weight.
+  2. No promote/demote terrain curriculum. Every env is re-drawn uniformly over all 10
+     rows (and all 20 columns, i.e. the four sub-terrains) at every reset, so 60% of
+     training is on rows 4-9 (11-20 cm) from the first iteration and the share never
+     moves. Why: terrain_levels_vel needs 4 m of net displacement to promote and demotes
+     anything under |command| * 10 m, so on an 8 m patch every episode that does not leave
+     the patch is demoted for commands above 0.4 m/s; measured on the stairs-v2 policy
+     the rule drives it to a mean row of ~1.3 whatever its skill
+     (coordination/results/2026-10-05-terrain-curriculum-diagnosis.md).
+  3. Monitor terms `terrain_rows_*` log what fraction of envs sit on rows 0-1 ... 8-9, and
+     `terrain_row_mean` the mean row (uniform draws: ~4.5), because a mean level that
+     looks fine can hide a run that never visits the tall rows.
+
+  Meant to be warm-started from v2's final checkpoint (a100/train_specialist_slurm.sh does
+  this by default for SPEC=StairsV3). Evaluate at `--lin-vel-x -0.5 1.0 --lin-vel-y -0.5
+  0.5` with `--step-height` (and `--step-width`) for pinned riser heights.
+  """
+  cfg = _hold_command_range_at_stage0(
+    _unitree_go2_specialist_env_cfg(TERRAIN_CLASSES["stairs"], play=play)
+  )
+  assert cfg.scene.terrain is not None and cfg.scene.terrain.terrain_generator is not None
+  gen = cfg.scene.terrain.terrain_generator
+  base = gen.sub_terrains
+  sub_terrains = {}
+  for tread in STAIRS_V3_TREADS:
+    suffix = "" if tread == 0.30 else f"_w{round(tread * 100)}"
+    for name in TERRAIN_CLASSES["stairs"]:
+      sub_terrains[name + suffix] = replace(
+        base[name],
+        proportion=1.0,
+        step_height_range=STAIRS_V3_STEP_HEIGHT_RANGE,
+        step_width=tread,
+      )
+  cfg.scene.terrain.terrain_generator = replace(gen, sub_terrains=sub_terrains)
+
+  if not play:  # play mode already re-draws terrain at reset and has no curriculum
+    cfg.scene.terrain.max_init_terrain_level = None
+    cfg.curriculum.pop("terrain_levels", None)
+    # Must run BEFORE the root-state reset, which places the robot at env_origins.
+    cfg.events = {
+      "randomize_terrain": EventTermCfg(func=envs_mdp.randomize_terrain, mode="reset"),
+      **cfg.events,
+    }
+    cfg.curriculum["terrain_row_mean"] = CurriculumTermCfg(func=terrain_row_mean)
+    for lo in range(0, 10, 2):
+      cfg.curriculum[f"terrain_rows_{lo}_{lo + 1}"] = CurriculumTermCfg(
+        func=terrain_row_fraction, params={"lo": lo, "hi": lo + 1}
+      )
+  return cfg
 
 
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
