@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-05T03:00:00Z",
+  "last_updated_utc": "2026-10-05T07:15:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -48,6 +48,11 @@
       "run": "switch_follow_generalist.sh EXPERIMENT=go2_generalist_v2, stairs slot = stairs v2; L1 seeds 500-505 noise off and on; L2 seeds 600-601",
       "verdict": "Alone: 64.9% L1 (72.7% noise on), 15.8% L2 -- WORSE than the first generalist (90.5/82.5 at L1; 10.9 at L2). Stairs v2 alone 99.9/99.8/95.3; switching 99.9/99.8/96.7. Walking, not bracing (lost 0%); fails on the down-stairs. Holding the command range is not a general fix.",
       "see": "coordination/results/switch-follow-results.md (Addendum 5)"
+    },
+    "randomised_layouts": {
+      "run": "scripts/switch_follow_random_layouts.sh 900 919: 20 random layouts (4 L1, 16 L2), noise on, 128 trials each; bank A stairs=v2, bank B stairs=as trained",
+      "verdict": "Mean over layouts: stairs v2 alone 92.7%, switch 0.3 92.1%, switch 1.5 93.9%, 0.3 m late 27.8%, stairs v2 without scan 9.2%, generalist v1 14.6%, v2 37.5%; as-trained stairs alone 35.2%, switch 0.3 35.4%, switch 1.5 36.3%. Stairs v2 ahead of each generalist and the as-trained specialist in 20/20 layouts. Switching adds nothing with either bank. The fixed-course +15 pt switching advantage and early-switch penalty do NOT hold across layouts.",
+      "see": "coordination/results/switch-follow-results.md (Addendum 7), findings.md #24/#25"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

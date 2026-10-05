@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-05, morning · **Written for**: a fresh session (human or Claude) with
+**As of**: 2026-10-05, afternoon · **Written for**: a fresh session (human or Claude) with
 no memory of how this state was reached. Where something needs more detail than fits here, a
 file is named; read it rather than re-deriving it.
 
@@ -14,56 +14,46 @@ file is named; read it rather than re-deriving it.
 
 ## 1. Where the project stands
 
-Every arm the project planned has now been run. The answer is in
-`report_content/final_report.md` (the full report) and
-`coordination/results/switch-follow-results.md` (numbers and intervals).
+The simulation study is finished. The answer is in `report_content/final_report.md` (Section
+V.H is the evidence to rely on; Section IX is for the robot) and
+`coordination/results/switch-follow-results.md`.
 
-- **The central hypothesis is not supported.** When following a leader over mixed terrain, the
-  switch between specialists must not be late (0.3 m late costs 13-33 points of course
-  success), but switching earlier, which is what the followed person's preview would allow, is
-  never better. A classifier on the robot's own height scan times the switch as well as
-  ground-truth labels. The leader adds neither useful horizon nor useful labels.
-- **Switching vs one policy depends on conditions.** With the policies as trained it beats the
-  best single specialist by 14.6 points (7.3 with sensor noise on) and beats the matched
-  generalist by 8.4 points with sensor noise on, not at all with it off.
-- **Blending** the specialists' actions instead of switching hard changes nothing.
-- **The biggest effect is in training, not switching.** A curriculum interaction demoted the
-  specialists and the generalist to near-flat terrain at iteration 5000. Stairs v2, retrained
-  without it, crosses the whole course *alone* 99.7% of the time (99.9% with noise, 95.5% at
-  the harder level). With it in the bank, switching adds nothing and early switching costs
-  nothing.
-- **Specialist vs generalist:** stairs v2 alone beats the generalist retrained the same way
-  (generalist v2) by 27-35 points at the easy level and 80 at the harder one; the switch
-  contributes none of it. Generalist v2 turned out worse than the first generalist, which is
-  unexplained.
+Across 20 randomised course layouts:
 
-Everything else (gate 1, gate 2, the PAS replication, the VLM/SARO pipeline, person-following
-and its two-rate perception) is unchanged and summarised in the final report, Section V.H.
+- **The central hypothesis is not supported.** Switching earlier than the terrain boundary,
+  which is what the followed person's preview would allow, gains 1-2 points at most. Being
+  0.3 m late loses 64.
+- **Switching between specialists adds nothing** over the best single policy.
+- **Training is what matters.** Stairs v2 (the stairs policy retrained without the curriculum
+  collapse) alone crosses 92.7% of courses; the original stairs specialist 35.2%; the two
+  generalists 14.6% and 37.5%.
+- **Stairs v2 needs its height scan**: 9.2% without it.
+- **Retracted**: the +15-point switching advantage and the early-switch penalty reported on
+  10-03/04 came from one course layout and do not hold across layouts (`findings.md` #25).
 
 ## 2. What is still open
 
-### 2.1 Generalist brittleness at a stair lip (open, optional)
+### 2.1 Getting a policy onto the Go2 (the next real step; needs a decision)
 
-"Why is generalist v2 worse than the first generalist" turned out to be the wrong question
-(`findings.md` #24, `switch-follow-results.md` Addendum 6): on single staircases v2 is the
-better one, and either generalist's success on a 5 cm down-staircase swings from 6% to 92%
-with the course around it, at the same commanded speed. Commanded speed and run-up distance
-are ruled out; the cause is not found. Stairs v2 is unaffected. If you want more here, the
-useful step is evaluation over randomised course layouts so no result rests on one layout;
-`switch_follow.py --extra-approach` is a start. The report states this as a limitation.
+- The repo's Go2 deploy stack (`unitree_rl_mjlab/deploy/robots/go2`) feeds the policy 47
+  proprioceptive numbers and has **no height-scan input**. Stairs v2 expects 234 (47 + a
+  187-point scan) and fails without the scan.
+- **Option A, blind policy**: train the stairs v2 task with the scan removed from the actor
+  observation (so it matches `deploy.yaml` exactly), about 10 GPU-hours, then run it through
+  `scripts/switch_follow_random_layouts.sh`-style evaluation before it goes on the robot.
+  Proposal is in `coordination/inbox/to-cluster.md`, **not approved**.
+- **Option B, give the robot a scan**: elevation map from LiDAR or depth, plus a height-scan
+  observation in the C++ deploy code. More work, keeps the policy that is already validated.
+- Either way: every staircase in this project has 5-7 cm risers. None of these policies has
+  been trained or tested on real stair heights (15-18 cm).
+- Person-following on the robot: reuse the two-rate perception design (final report, V.I).
 
-### 2.2 Gaps checkpoint: still on the cluster only
+### 2.2 Optional
 
-`go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt` has never been evaluated. The push to private
-HF was refused by the cluster session's permission classifier on 10-03; that session did push
-the stairs iteration-4800 checkpoint later the same day after you told it to, so asking it
-directly may now work. Nothing in the report depends on it.
-
-### 2.3 Report format
-
-`report_content/final_report.md` is a complete report in Markdown with four figures. If it has
-to be IEEE LaTeX or a specific template, say so. The related-work citations other than SARO
-have not been checked against the sources.
+- Gaps checkpoint: on the cluster only, never evaluated.
+- Scan classifier and blending were not re-tested on randomised layouts.
+- Report format: Markdown with four figures; say if it needs to be IEEE LaTeX. Related-work
+  citations other than SARO are unchecked.
 
 ## 3. What was done
 
@@ -79,8 +69,9 @@ iteration-4800 checkpoint. Pre-collapse stairs checkpoint and then stairs v2 tes
 stairs slot at L1 and L2. Results, findings, objective and the final report rewritten around
 these. You approved a generalist retrain (generalist v2, job 12518).
 
-**2026-10-05.** Generalist v2 evaluated against stairs v2 (six seeds at L1, two at L2), plus a
-reference run of the first generalist at L2.
+**2026-10-05.** Generalist v2 evaluated against stairs v2. A diagnostic on single staircases
+showed weak policies' results depend on course layout, so the main comparisons were re-run on
+20 randomised layouts, which confirmed stairs v2 and overturned two fixed-course results.
 
 ## 4. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
@@ -94,8 +85,9 @@ reference run of the first generalist at L2.
   oracle: 52-59% under the goal controller, 89% under the follow controller.
 - **What counts as a fall decides whether L1 separates anything.** All L1 failures are knee or
   calf contacts; under orientation-only falls every arm but flat-only is at 98-100%.
-- **#24: weak policies' lip failures depend on course layout.** Don't rank two weak policies,
-  or quote the size of an effect made of lip failures, from one layout.
+- **#24, #25: results from one course layout are results about that layout.** Two
+  pre-registered, seed-replicated findings disappeared over randomised layouts. Evaluate with
+  `switch_follow.py --random-layout` and analyse with `switch_follow_layouts.py`.
 - **Don't edit `scripts/switch_follow.py` while a multi-seed loop is running**: each seed is a
   new process and re-reads the file.
 - **Background jobs here are killed after two hours**, counted from launch, including time

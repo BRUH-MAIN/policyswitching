@@ -7,50 +7,57 @@ this data) · **Raw**: `unitree_rl_mjlab/eval_results/switch_follow/*.json` ·
 
 ## Headline
 
-Read in this order; items 7 to 9, added on 2026-10-04, change how items 1 and 3 should be read.
+**Read this first (2026-10-05).** The experiment was pre-registered on one course layout
+(`multi`). A later evaluation over 20 randomised layouts (Addendum 7) is the stronger evidence,
+and it does not reproduce two of the fixed-course results. What holds across layouts:
+
+1. **Preview beyond the onboard scan does not help.** With the as-trained specialists,
+   switching 1.5 m early against 0.3 m: +0.9 points (CI -3.5 to +5.4). With stairs v2: +1.7
+   (CI +0.5 to +2.9), a small edge for being early that a lead inside the scan's 0.8 m reach
+   also gets on the fixed course. The project's central hypothesis is **not supported**.
+2. **Being late is what costs**: 0.3 m late loses 64 points on average (all 20 layouts).
+3. **Switching adds nothing over the best single policy**, with either stairs policy in the
+   bank: -0.5 (CI -2.0 to +0.9) with stairs v2, +0.2 (CI -4.3 to +4.8) with the as-trained
+   specialists.
+4. **How the stairs policy was trained is the largest effect.** Stairs v2 alone: 92.7% mean
+   over layouts. As-trained stairs specialist alone: 35.2%. First generalist: 14.6%.
+   Generalist v2: 37.5%. Stairs v2 is ahead of each of them in 20 of 20 layouts.
+5. **Stairs v2 needs its height scan**: 9.2% with the scan replaced by a constant.
+
+What was found on the fixed `multi` course and did **not** carry over to random layouts:
+
+- *Switching beats the best fixed specialist* (+15.0 points as pre-registered, +7.3 with
+  noise on). On random layouts, with the same as-trained specialists: +0.2.
+- *Switching early costs 7-17 points with the as-trained stairs specialist.* On random
+  layouts: +0.9. That penalty was failures at the lip of one particular down-staircase.
+
+Still standing from the fixed course, not re-tested on random layouts: blending adds nothing;
+a scan classifier times the switch as well as ground-truth labels; all easy-level failures are
+knee or calf contacts, not falls.
+
+The numbered items below are the fixed-course findings in the order they were made, kept as
+the record.
 
 1. **With the specialists as trained, switching by terrain beats every single specialist** on
-   the mixed course: 91.5% of trials cross it against 76.6% for the best fixed specialist
-   (+15.0 points, 95% CI +11.4 to +18.6; 768 trials per arm, fresh seeds, as pre-registered).
-   Pooled over every run of the two arms: +14.6 points with sensor noise off, +7.3 with the
-   training sensor noise on (2,304 trials per arm each).
+   the `multi` course: 91.5% against 76.6% (+15.0 points, CI +11.4 to +18.6; pooled +14.6 with
+   noise off, +7.3 with noise on). *Did not carry over to random layouts.*
 2. **The switch must not be late.** 0.3 m late costs 13 to 33 points at the easy level and
-   43 to 65 at the harder one, depending on the stairs policy and the noise condition.
-3. **Switching early is never better than switching at the boundary.** With the stairs
-   specialist as trained it costs 7 to 17 points and leaves the robot no better off than never
-   switching. With an undamaged stairs policy (item 8) it costs nothing and gains nothing.
-   Either way, a preview beyond the 0.8 m the robot's own scan covers has nothing to add. The
-   project's central hypothesis is **not supported**.
-4. **Blending the two specialists' actions buys nothing** over a hard switch at the easy level
-   and is worse at the harder one.
-5. **Which condition a number comes from matters.** The experiment as pre-registered ran with
-   observation noise off (inherited from the evaluation environment); the specialists were
-   trained with it on. If only tipping over counts as a fall, every arm but the flat specialist
-   is at 98-100% at the easy level.
-6. **The robot's own height scan is enough to time the switch.** A small classifier on the
-   187-ray scan, driving the same hard switch, matches the ground-truth-label switch: 87.5% vs
-   88.3% with the training observation noise on (-0.8 points, CI -4.1 to +2.5) and 90.0% vs
-   90.6% with it off (-0.7, CI -3.6 to +2.3). It switches a median 0.17-0.28 m before each
-   boundary and never after it.
-7. **Against the matched generalist, switching wins only under sensor noise.** The generalist
-   (same observations, rewards, budget and curriculum as a specialist, trained on all terrain)
-   crosses the course 90.5% of the time with noise off, the same as switching (89.3%;
-   difference -1.2, CI -3.4 to +0.9), and 82.5% with noise on, where switching holds at 90.9%
-   (+8.4, CI +6.0 to +10.8). 1,536 trials per arm per condition, two independent runs that agree.
-8. **The largest effect in the study is how the stairs policy was trained, not how policies are
-   switched.** A curriculum interaction demoted the stairs specialist to near-flat terrain at
-   iteration 5000. Retrained with that interaction removed (stairs v2), the stairs policy
-   *alone* crosses the whole course 99.7% of the time (99.9% with noise on) and 95.5% at the
-   harder level, where the as-trained one managed 76.6%, 83.2% and 33.4%. The original run's
-   own iteration-4800 checkpoint gets most of the way there (97.7%, 94.9%, 82.8%). With either
-   in the bank, switching adds nothing (differences within 1 point at L1) and early switching
-   costs nothing.
-9. **Specialists do beat the generalist, by a wide margin once both are trained the same
-   way, and the switch is not what does it.** Stairs v2 alone against generalist v2 (the
-   generalist retrained with the same fix): 99.9% vs 64.9% with noise off, 99.8% vs 72.7% with
-   noise on, 95.3% vs 15.8% at the harder level. Switching on top of stairs v2 changes
-   nothing. The fix that made the stairs policy did not help the generalist: generalist v2 is
-   worse on this course than the original generalist (90.5% / 82.5%).
+   43 to 65 at the harder one.
+3. **Switching early is never better than at the boundary** on this course: -7 to -17 points
+   with the as-trained stairs specialist (*layout-specific, see above*), no difference with an
+   undamaged one.
+4. **Blending the two specialists' actions buys nothing** at the easy level and is worse at
+   the harder one.
+5. **Which condition a number comes from matters**: observation noise off or on, and what
+   counts as a fall.
+6. **The robot's own height scan is enough to time the switch**: a classifier on it matches
+   ground-truth labels (87.5% vs 88.3% with noise on, 90.0% vs 90.6% off) and is never late.
+7. **Against the matched generalist** (first generalist): equal with noise off (89.3% vs
+   90.5%), switching ahead by 8.4 points with noise on.
+8. **Stairs v2**, the stairs policy retrained without the curriculum collapse, alone: 99.7% /
+   99.9% / 95.5% (L1, L1 with noise, L2) where the as-trained one managed 76.6 / 83.2 / 33.4.
+9. **Stairs v2 alone beats generalist v2** by 27-35 points at L1 and 80 at L2; switching adds
+   nothing on top.
 
 ## Setup, as run
 
@@ -504,6 +511,61 @@ Success %, first generalist / generalist v2 / stairs v2:
   approach, the generalists' course success) was measured on one layout and may not carry to
   another. The results that involve stairs v2 or `model_4800`, which do not fail at the lip,
   are not exposed to this.
+
+## Addendum 7: randomised course layouts (pre-registered before any was run)
+
+20 layouts (seeds 900-919), each with rough ground, an up-staircase and a down-staircase in
+random order, random flat stretches between them, level L1 or L2, leader speed 0.40-0.70 m/s.
+Follow task, training observation noise on, 128 trials per layout. The random draw gave 4 L1
+layouts and 16 L2, so the means below are weighted towards the harder level. The layout is
+the unit: means over layouts, paired per-layout differences, bootstrap intervals over layouts
+(`scripts/switch_follow_layouts.py`, raw `eval_results/switch_follow/random/`).
+
+| bank | arm | mean success over layouts (95% CI) | worst / best layout | L1 mean | L2 mean |
+|---|---|---|---|---|---|
+| stairs v2 | stairs v2 alone | **92.7%** (89.6-95.3) | 75.0 / 100.0 | 99.2 | 91.0 |
+| stairs v2 | hard switch 0.3 m ahead | 92.1% (89.2-94.8) | 75.8 / 100.0 | 98.8 | 90.5 |
+| stairs v2 | hard switch 1.5 m ahead | 93.9% (91.4-96.0) | 77.3 / 100.0 | 99.2 | 92.5 |
+| stairs v2 | hard switch 0.3 m late | 27.8% (18.4-38.7) | 1.6 / 98.4 | 64.6 | 18.6 |
+| stairs v2 | stairs v2 alone, scan replaced by a constant | 9.2% (2.6-17.9) | 0.0 / 67.2 | 40.8 | 1.3 |
+| — | first generalist alone | 14.6% (6.3-25.4) | 1.6 / 85.9 | 51.6 | 5.4 |
+| — | generalist v2 alone | 37.5% (28.3-46.8) | 8.6 / 81.2 | 69.5 | 29.4 |
+| as trained | stairs specialist alone | 35.2% (25.1-46.8) | 7.0 / 87.5 | 83.4 | 23.1 |
+| as trained | hard switch 0.3 m ahead | 35.4% (24.8-47.3) | 4.7 / 90.6 | 83.0 | 23.5 |
+| as trained | hard switch 1.5 m ahead | 36.3% (25.6-48.4) | 3.1 / 86.7 | 85.4 | 24.0 |
+
+| comparison | mean per-layout difference (95% CI) | layouts ahead / behind / tied |
+|---|---|---|
+| stairs v2 alone − first generalist | **+78.0** (+68.2 to +85.6) | 20 / 0 / 0 |
+| stairs v2 alone − generalist v2 | **+55.2** (+46.3 to +64.3) | 20 / 0 / 0 |
+| stairs v2 alone − as-trained stairs alone | **+57.5** (+47.1 to +67.0) | 20 / 0 / 0 |
+| generalist v2 − first generalist | +22.9 (+15.9 to +29.9) | 18 / 2 / 0 |
+| switch 0.3 − stairs v2 alone | −0.5 (−2.0 to +0.9) | 8 / 10 / 2 |
+| switch 0.3 − as-trained stairs alone | +0.2 (−4.3 to +4.8) | 9 / 11 / 0 |
+| early 1.5 − on-time 0.3, stairs v2 | +1.7 (+0.5 to +2.9) | 13 / 4 / 3 |
+| early 1.5 − on-time 0.3, as-trained stairs | +0.9 (−3.5 to +5.4) | 11 / 9 / 0 |
+| late −0.3 − on-time 0.3, stairs v2 | **−64.4** (−72.1 to −55.1) | 0 / 20 / 0 |
+| stairs v2 without scan − with scan | **−83.5** (−89.6 to −76.1) | 0 / 20 / 0 |
+
+- **(1) Stairs v2 against the generalists: holds everywhere**, 20 layouts of 20, by 55 to 78
+  points. Generalist v2 is the better generalist here too (18 of 20), as on single staircases.
+- **(2) Switching against the best single policy: nothing, with either bank.** This
+  contradicts the pre-registered H1 result on the `multi` course (+15.0, and +7.3 pooled with
+  noise on) for the as-trained specialists. Per layout the difference ranges from -25 to +23:
+  on some layouts switching helps a lot and on others it hurts as much. `multi` was one that
+  helped.
+- **(3) Early against on-time.** With the as-trained specialists: no difference, from -21 to
+  +24 by layout. The 7-17 point penalty on `multi` was that layout. With stairs v2: +1.7
+  points for being early, interval just clear of 0, ahead in 13 layouts and behind in 4. It
+  is small, and stairs v2 alone (the limit of "early") is at 92.7%, between the two. On the
+  fixed course at L2 a 0.8 m lead, which the onboard scan can supply, did as well as 1.5 m
+  (97.5% and 97.7% against 96.3% at 0.3 m), so this does not need the leader; a 0.8 m lead
+  was not included in the random-layout runs.
+- **(4) Late against on-time: -64 points, every layout.** The one timing effect that is
+  large and layout-proof.
+- **(5) Stairs v2 depends on its height scan**: 9.2% without it, worse in every layout. At
+  L2 it is 1.3%.
+- Stairs v2 is not at ceiling on harder random layouts: 91.0% mean at L2, 75% on its worst.
 
 ## Limits
 

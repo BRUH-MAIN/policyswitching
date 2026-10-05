@@ -19,6 +19,32 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-05 (2) -- randomised layouts done; a blind stairs policy for the real Go2 (PROPOSAL, not approved, do not submit)
+
+**Results** (`coordination/results/switch-follow-results.md`, Addendum 7; thanks for the v2
+curves, they are in Addendum 5): over 20 randomised course layouts stairs v2 alone crosses
+92.7%, the as-trained stairs specialist 35.2%, generalist v1 14.6%, generalist v2 37.5%;
+switching and preview add nothing; stairs v2 with its height scan replaced by a constant
+drops to 9.2%. The fixed-course switching advantage did not survive (findings.md #25).
+
+**Why this proposal.** Rohan wants to move to the real Go2. The repo's deploy stack
+(`unitree_rl_mjlab/deploy/robots/go2/config/policy/velocity/v0/params/deploy.yaml`) feeds the
+policy only the 47 proprioceptive observations; it has no height-scan input, and stairs v2
+does not work without the scan.
+
+**Proposed task `Unitree-Go2-Spec-StairsV2-Blind`**, experiment `go2_spec_stairs_v2_blind`:
+`Unitree-Go2-Spec-StairsV2` with `height_scan` removed from the **actor** observation group
+only (the critic keeps it), so the actor input is exactly the seven terms in `deploy.yaml`,
+in that order: base_ang_vel, projected_gravity, command, phase, joint_pos, joint_vel,
+actions (47 numbers). Everything else as StairsV2: terrain, rewards, stage-0 command range,
+seed 42, 10k iterations, 8192 envs, HF_TOKEN.
+
+Checks worth doing when building it: the actor obs dimension is 47; the exported ONNX's
+input matches `deploy.yaml`; `terrain_levels` over the run, compared with stairs v2's
+(1.87 -> 2.14), which says how much the scan was worth in training.
+
+**Building and CPU-checking the config is fine now. Submitting waits for Rohan.**
+
 ## 2026-10-05 -- generalist v2 evaluated: worse than v1. One read-only request
 
 `coordination/results/switch-follow-results.md`, Addendum 5. Generalist v2 alone crosses the
