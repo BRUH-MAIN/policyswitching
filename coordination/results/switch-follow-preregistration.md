@@ -228,3 +228,16 @@ experiment `go2_generalist_v2`), the change that produced stairs v2. This is the
   off), where there is room to differ. Whatever comes out is reported.
 - Before reading success, check generalist v2 is walking (lost %, tracking error), and note
   its terrain level through iteration 5000 from the cluster log.
+
+## Addendum 6, 2026-10-05: where does generalist v2 lose? (diagnostic, written before it is run)
+
+Exploratory, to locate a cause, not to test a claim. Generalist v2 is better than the first
+generalist on pinned pyramid stairs and worse on the mixed course, where it fails on the
+straight down-staircase. Single-obstacle courses, follow task, each policy alone:
+
+- Courses `stairs_down` and `stairs_up`; levels L1 (0.05 m) and L2 (0.07 m); leader speed 0.3,
+  0.5 and 0.8 m/s; observation noise off and on; seeds 800 and 801, 256 trials each.
+- Arms: first generalist, generalist v2, stairs v2 (reference), all `model_9999`.
+- Reported: the full grid of success rates, and where failed trials end. Read for which
+  factor (direction, riser height, speed, noise) the gap between the two generalists follows.
+  No conclusion is drawn from a single cell; a cell is 512 trials.
