@@ -37,6 +37,18 @@
 #              Rough specialist for GapsWarm and StairsV2's model_9999 for StairsV3/V4a/V4b; unset
 #              for everything else. Only applied when
 #              the experiment has no checkpoint yet.
+#   KEEP_NORMALIZER  1 = warm start keeps the source's observation-normalizer statistics
+#              (warm_start_ckpt.py --keep-normalizer); 0 = reset them (its default). Default 1
+#              for StairsV3/V4a/V4b, 0 otherwise. Resetting zeroes the count, so the first
+#              rollout re-estimates mean/std from robots just placed at their spawn (previous
+#              action std 0.000 vs 0.77 trained, joint position 0.006 vs 0.14): inputs are
+#              amplified up to ~100x and a walking policy falls in ~13 steps (findings.md #27;
+#              stairs v3 and v4a both logged episode length 17 at iteration 0). Resetting is
+#              only right when the new terrain's scan is far out of distribution (stepping
+#              stones, 2 m drops).
+#   EXPERIMENT_SUFFIX  appended to the experiment name, e.g. _kn -> go2_spec_stairs_v4a_kn.
+#              warm_start_ckpt.py is a no-op when the experiment already has a checkpoint, so a
+#              rerun with different warm-start settings needs a fresh name.
 #   HF_TOKEN   if set, every checkpoint is also pushed to hf.co/$HF_CHECKPOINT_REPO
 #              (default RohanRamesh/go2-specialists, a PRIVATE repo -- NOT go2-pas-saro,
 #              which is public and the user explicitly declined publishing specialists to)
@@ -103,6 +115,13 @@ REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
 MJLAB_DIR="$REPO_DIR/unitree_rl_mjlab"
 A100_DIR="$REPO_DIR/a100"
 
+EXPERIMENT_NAME="${EXPERIMENT_NAME}${EXPERIMENT_SUFFIX:-}"
+
+case "$SPEC" in
+  StairsV3|StairsV4a|StairsV4b) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
+  *) KEEP_NORMALIZER="${KEEP_NORMALIZER:-0}" ;;
+esac
+
 SEED="${SEED:-42}"
 if [ "$SEED" != "42" ]; then
   EXPERIMENT_NAME="${EXPERIMENT_NAME}_s${SEED}"
@@ -157,10 +176,14 @@ nvidia-smi
 echo "[INFO] task=$TASK experiment=$EXPERIMENT_NAME seed=$SEED budget=$BUDGET envs=$NUM_ENVS"
 
 if [ -n "${INIT_FROM:-}" ]; then
+  KEEP_ARGS=()
+  [ "$KEEP_NORMALIZER" = "1" ] && KEEP_ARGS=(--keep-normalizer)
+  echo "[INFO] warm start from $INIT_FROM keep_normalizer=$KEEP_NORMALIZER"
   "$PY" "$A100_DIR/warm_start_ckpt.py" \
     --source "$INIT_FROM" \
     --experiment-name "$EXPERIMENT_NAME" \
-    --mjlab-dir "$MJLAB_DIR"
+    --mjlab-dir "$MJLAB_DIR" \
+    ${KEEP_ARGS[@]+"${KEEP_ARGS[@]}"}
 fi
 
 EXTRA_ARGS=$("$PY" "$A100_DIR/local_ckpt_resume.py" \

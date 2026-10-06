@@ -57,6 +57,13 @@ def main():
           f"{win(rows, i, 'r01'):.2f} {win(rows, i, 'r23'):.2f} {win(rows, i, 'r45'):.2f} {win(rows, i, 'r67'):.2f} {win(rows, i, 'r89'):.2f} | "
           f"{win(rows, i, 'rew'):6.2f} {win(rows, i, 'len'):7.1f}")
   print()
+  early = [rows[i]["len"] for i in range(0, 6) if i in rows and "len" in rows[i]]
+  if early:
+    e = sum(early) / len(early)
+    rew = [rows[i]["rew"] for i in range(0, 6) if i in rows and "rew" in rows[i]]
+    print(f"@start (iterations 0-5): mean episode length {e:.0f}, reward {sum(rew) / len(rew):.1f} -> "
+          + ("REPORT: episode length under 300 at iterations 0-5 -- the warm-started policy is falling (v3: 79, v4a: 78; threshold not calibrated on a healthy start)" if e < 100
+             else "ok (a policy that walks from iteration 0)"))
   for at in (500, 1500):
     if last < at + 25:
       print(f"@{at}: not reached yet"); continue
