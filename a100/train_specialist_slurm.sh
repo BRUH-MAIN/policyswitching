@@ -41,11 +41,12 @@
 #              (warm_start_ckpt.py --keep-normalizer); 0 = reset them (its default). Default 1
 #              for StairsV3/V4a/V4b, 0 otherwise. Resetting zeroes the count, so the first
 #              rollout re-estimates mean/std from robots just placed at their spawn (previous
-#              action std 0.000 vs 0.77 trained, joint position 0.006 vs 0.14): inputs are
-#              amplified up to ~100x and a walking policy falls in ~13 steps (findings.md #27;
-#              stairs v3 and v4a both logged episode length 17 at iteration 0). Resetting is
-#              only right when the new terrain's scan is far out of distribution (stepping
-#              stones, 2 m drops).
+#              action std 0.000 vs 0.77 trained, joint position 0.006 vs 0.14). Measured on
+#              stairs v4a: with the reset, achieved speed sat at 25-29% of commanded for 2,000
+#              iterations; kept, it was 43% by iteration 36. (The iteration-0 log line is
+#              identical either way, so do not read it as a signature.) Resetting is only right
+#              when the new terrain's scan is far out of distribution (stepping stones, 2 m
+#              drops).
 #   EXPERIMENT_SUFFIX  appended to the experiment name, e.g. _kn -> go2_spec_stairs_v4a_kn.
 #              warm_start_ckpt.py is a no-op when the experiment already has a checkpoint, so a
 #              rerun with different warm-start settings needs a fresh name.

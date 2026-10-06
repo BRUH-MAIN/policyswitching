@@ -57,13 +57,14 @@ def main():
           f"{win(rows, i, 'r01'):.2f} {win(rows, i, 'r23'):.2f} {win(rows, i, 'r45'):.2f} {win(rows, i, 'r67'):.2f} {win(rows, i, 'r89'):.2f} | "
           f"{win(rows, i, 'rew'):6.2f} {win(rows, i, 'len'):7.1f}")
   print()
+  # NOT a diagnostic. Iteration 0-5 mean episode length (~78) and reward (~1) are identical with
+  # the warm start's normalizer reset and with it kept (12581 vs 12586, same seed: 17.26 / 0.39 at
+  # iteration 0 in both), so they are not a failure signature. An earlier version of this
+  # script "REPORTed" on them and mis-flagged a healthy start. What did differ, early: achieved
+  # speed at iteration ~36 was 43% of commanded kept vs 28% reset (see the table above).
   early = [rows[i]["len"] for i in range(0, 6) if i in rows and "len" in rows[i]]
   if early:
-    e = sum(early) / len(early)
-    rew = [rows[i]["rew"] for i in range(0, 6) if i in rows and "rew" in rows[i]]
-    print(f"@start (iterations 0-5): mean episode length {e:.0f}, reward {sum(rew) / len(rew):.1f} -> "
-          + ("REPORT: episode length under 300 at iterations 0-5 -- the warm-started policy is falling (v3: 79, v4a: 78; threshold not calibrated on a healthy start)" if e < 100
-             else "ok (a policy that walks from iteration 0)"))
+    print(f"@start (iterations 0-5): mean episode length {sum(early) / len(early):.0f} (informational only; see comment)")
   for at in (500, 1500):
     if last < at + 25:
       print(f"@{at}: not reached yet"); continue

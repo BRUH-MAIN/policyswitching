@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T09:44:50Z",
+  "last_updated_utc": "2026-10-06T11:15:15Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -166,9 +166,9 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "in_progress",
+      "status": "cancelled",
       "slurm_job_id": "12581",
-      "notes": "See jobs.stairs_v4a_train. Judge by crossing, speed fraction and stalled fraction (coordination/scripts/stairs_run_status.py), not reward/length/falls."
+      "notes": "Cancelled 2026-10-06 after 12581 ran 2127 iterations with the normalizer reset (speed 25-29% of commanded, every robot on row 0 from iteration ~200). Superseded by go2_spec_stairs_v4a_kn."
     },
     "go2_spec_stairs_v4b": {
       "task": "Unitree-Go2-Spec-StairsV4b",
@@ -178,9 +178,33 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "pending",
+      "status": "cancelled",
       "slurm_job_id": "12582",
-      "notes": "See jobs.stairs_v4b_train. Judge by crossing, speed fraction and stalled fraction (coordination/scripts/stairs_run_status.py), not reward/length/falls."
+      "notes": "Cancelled 2026-10-06 after 12582 ran ~1500 iterations with the normalizer reset (speed 25-29% of commanded, every robot on row 0 from iteration ~200). Superseded by go2_spec_stairs_v4b_kn."
+    },
+    "go2_spec_stairs_v4a_kn": {
+      "task": "Unitree-Go2-Spec-StairsV4a",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v4a_kn",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "in_progress",
+      "slurm_job_id": "12586",
+      "notes": "See jobs.stairs_v4a_train."
+    },
+    "go2_spec_stairs_v4b_kn": {
+      "task": "Unitree-Go2-Spec-StairsV4b",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v4b_kn",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "in_progress",
+      "slurm_job_id": "12587",
+      "notes": "See jobs.stairs_v4b_train."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed three times more on 2026-10-03: stairs step-1 status check, the laptop's 'submit generalist / push gaps to HF / report stairs curve' request (2 of 3 blocked by this session's own permission layer -- see coordination/log/2026-10-03-cluster.md), then Rohan ran the generalist sbatch himself directly after the cluster session's attempt to even self-edit its own settings.local.json to allow it was *also* blocked (reason 'Self-Modification') -- job 12479 is now RUNNING (runs.go2_generalist). The gaps->HF push is still not done; still needs a human to run it directly (see runs.go2_spec_gaps notes) -- it was not re-attempted here. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist, go2_spec_gaps notes, jobs.*. TIMEZONE: fields ending in Z are UTC. squeue/sacct/scontrol print the cluster's local time (Asia/Kolkata, UTC+05:30) with no suffix -- convert before writing a Z timestamp. Two entries were mislabeled this way on 2026-10-03 and have been corrected (jobs.stairs_pyramid_eval, runs.go2_generalist). 2026-10-03 evening: jobs.stairs_precollapse_eval and jobs.stairs_v2_train hand-edited by session cluster-sess.",
@@ -265,24 +289,23 @@
     "stairs_v4a_train": {
       "status": "running",
       "task": "Unitree-Go2-Spec-StairsV4a",
-      "experiment": "go2_spec_stairs_v4a",
+      "experiment": "go2_spec_stairs_v4a_kn",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4a sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
-      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md",
-      "slurm_job_id": "12581",
+      "notes": "RERUN with the warm start's normalizer kept (KEEP_NORMALIZER=1, verified in the checkpoint: count 1.97e9, normalizer_reset False). Replaces cancelled 12581. First 36 iterations: achieved speed 43% of commanded (the reset run: 28%), stalled 4-5% (8%), mean row 1.2-1.3. Stop test at ~500/1500 iterations: coordination/scripts/stairs_run_status.py.",
+      "slurm_job_id": "12586",
       "node": "asaicomputemaster (RTX 6000 Ada)",
-      "started_ist": "2026-10-06 14:43:06",
-      "submitted_by": "cluster-sess, on Rohan's 'both'",
-      "progress": "REPORT at iteration ~525 (stop test): achieved speed 29% of commanded (threshold 30%), mean row 0.00 -- every robot demoted to row 0 by iteration ~200 and not rising. Not a v3 repeat (walks: tracking reward 0.55, ep length 997, stalled 10%), but weak: v2 tracking 0.78. Iteration-0 reward 0.39 / episode length 17 = the warm-started policy falls at once (same as v3), which points at the warm start's normalizer reset; unproven. Awaiting Rohan."
+      "started_ist": "2026-10-06 16:40:36",
+      "submitted_by": "Rohan, directly (scancel 12581 12582; EXPERIMENT_SUFFIX=_kn)"
     },
     "stairs_v4b_train": {
-      "status": "pending",
+      "status": "running",
       "task": "Unitree-Go2-Spec-StairsV4b",
-      "experiment": "go2_spec_stairs_v4b",
+      "experiment": "go2_spec_stairs_v4b_kn",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4b sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
-      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Thigh/calf contact is a -2.0/step penalty instead of a termination (task definition change: Rohan's decision). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md",
-      "slurm_job_id": "12582",
-      "submitted_by": "cluster-sess, on Rohan's 'both'",
-      "progress": "PENDING (Priority) at submission, no free GPU; scheduler projected a start ~15:16 IST 10-06 but that is a walltime-based estimate."
+      "notes": "RERUN with the warm start's normalizer kept (KEEP_NORMALIZER=1, verified in the checkpoint: count 1.97e9, normalizer_reset False). Replaces cancelled 12582. First 36 iterations: achieved speed 43% of commanded (the reset run: 28%), stalled 4-5% (8%), mean row 1.2-1.3. Stop test at ~500/1500 iterations: coordination/scripts/stairs_run_status.py.",
+      "slurm_job_id": "12587",
+      "submitted_by": "Rohan, directly (scancel 12581 12582; EXPERIMENT_SUFFIX=_kn)",
+      "started_ist": "2026-10-06 16:40:36"
     },
     "progress_rule_replay": {
       "slurm_job_ids": [
