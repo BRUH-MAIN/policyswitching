@@ -1,127 +1,196 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-05, afternoon · **Written for**: a fresh session (human or Claude) with
-no memory of how this state was reached. Where something needs more detail than fits here, a
-file is named; read it rather than re-deriving it.
+**As of**: 2026-10-06, afternoon · **Written for**: a fresh session (human or Claude) with no
+memory of how this state was reached. This file is the entry point; where it needs more
+detail it names a file. Read that file rather than re-deriving it.
 
 ---
 
 ## 0. How to resume
 
-1. `git pull --rebase`, then read `README.md` → `objective.md` → `findings.md` (per `CLAUDE.md`).
-2. On the laptop (`romen`) read `docs/CLAUDE.laptop.md`; on the cluster, `docs/CLAUDE.cluster.md`.
-3. Come back to §2 for what is still open. Nothing there blocks the report.
+1. `git pull --rebase` in `/home/rohan/rl/policyswitching` (branch `main`; everything is here).
+2. Read this file, then `report_content/go2_real_stairs_plan.md` (the active work), then
+   `findings.md` if you are about to trust or produce a number.
+3. On the laptop (`romen`) also read `docs/CLAUDE.laptop.md`; on the cluster,
+   `docs/CLAUDE.cluster.md`. `CLAUDE.md` has the repo-wide rules.
+4. Go to §2. It says what is waiting on whom.
 
-## 1. Where the project stands
+## 1. The two phases of this project
 
-The simulation study is finished. The answer is in `report_content/final_report.md` (Section
-V.H is the evidence to rely on; Section IX is for the robot) and
+### 1.1 The simulation study: finished
+
+Question: when a quadruped follows a person, does using that person as a preview of the
+terrain, to switch between terrain-specialist policies early, help? **No.** Full report:
+`report_content/final_report.md` (Section V.H is the evidence to rely on). Numbers:
 `coordination/results/switch-follow-results.md`.
 
 Across 20 randomised course layouts:
 
-- **The central hypothesis is not supported.** Switching earlier than the terrain boundary,
-  which is what the followed person's preview would allow, gains 1-2 points at most. Being
-  0.3 m late loses 64.
-- **Switching between specialists adds nothing** over the best single policy.
-- **Training is what matters.** Stairs v2 (the stairs policy retrained without the curriculum
-  collapse) alone crosses 92.7% of courses; the original stairs specialist 35.2%; the two
+- Switching earlier than the terrain boundary gains 1-2 points of course success at most.
+  Switching 0.3 m late loses 64.
+- Switching between specialists adds nothing over the best single policy.
+- Training is what matters: **stairs v2** (the stairs policy retrained after a curriculum bug
+  was found) alone crosses 92.7% of courses; the original stairs specialist 35.2%; two
   generalists 14.6% and 37.5%.
-- **Stairs v2 needs its height scan**: 9.2% without it.
-- **Retracted**: the +15-point switching advantage and the early-switch penalty reported on
-  10-03/04 came from one course layout and do not hold across layouts (`findings.md` #25).
+- Stairs v2 needs its height scan: 9.2% with the scan replaced by a constant.
+- Retracted: a +15-point switching advantage and an early-switch penalty reported on
+  10-03/04 came from one course layout (`findings.md` #24, #25).
 
-## 2. What is still open
+Consequence for everything after: **deploy one policy. No switching module, no leader
+preview.**
 
-### 2.1 Real stairs on the Go2 (the active work)
+### 1.2 The goal now: the real Go2 follows a person and climbs real stairs
 
-Decided 2026-10-05: the robot has a Livox Mid-360, so the policy keeps its height scan, and
-the target is real stairs. Plan: `report_content/go2_real_stairs_plan.md`.
+Stated by Rohan on 2026-10-05. The robot carries a Livox Mid-360. Plan and all detail:
+`report_content/go2_real_stairs_plan.md`. Robot workspace with hardware notes:
+`/run/media/rohan/New Volume/RL/temp` (its own `CLAUDE.md` forbids editing files on the
+robot; `robot_info.md` there holds credentials and should not be printed).
 
-- **Stairs v2 cannot climb real stairs** (sim): going up, 84% at 9 cm risers and 0% at 12,
-  15 and 17 cm. It was trained on at most 10 cm.
-- **Stairs v3 is training**: job 12563 on `asaicomputemaster`, started 2026-10-05 21:55 IST,
-  about 8.6 h, checkpoints on private HF under `go2_spec_stairs_v3/`. Risers 5-20 cm at two
-  tread depths, warm-started from v2, robots spread uniformly over rows (the terrain
-  curriculum's promotion rule was shown to be broken:
-  `coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`). Expect more than one
-  run. When `model_9999.pt` lands: `scripts/switch_follow_real_stairs.sh` (also with
-  `STEPS=10`), `switch_follow_scan_faults.sh`, `switch_follow_stairs_ckpt.sh`. Bar: 90% up and
-  down at 17 cm.
-- **Scan requirement measured** (stairs v2, low steps): 200 ms of delay and 60% stale cells
-  cost under 2 points; a ±6 cm height offset costs 19. Height above ground must be good to
-  ~3 cm.
-- **Numpy runner for the Jetson** exists and matches PyTorch
-  (`deploy_numpy/policy_numpy.py`, `scripts/export_policy_numpy.py`).
-- **You, on the robot, read-only**: check whether the firmware publishes a height map
-  (commands in the plan, section 2.2). The Mid-360 by itself does not see the ground within
-  about a metre of the robot, so this decides how the scan is produced.
-- **Laptop, next**: evaluate v3 at 12 / 15 / 17 cm with `switch_follow.py --step-height`;
-  add scan delay, holes and bias to the harness; numpy export of the policy for the Jetson
-  (no torch or onnxruntime there).
-- Robot workspace with hardware notes: `/run/media/rohan/New Volume/RL/temp`.
+**No policy for real stairs exists yet.**
 
-### 2.2 Optional
+| | |
+|---|---|
+| Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
+| Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
+| Run 2 (variants 4a and 4b) | **Proposed, not built, not submitted.** `coordination/inbox/to-cluster.md`, entry of 2026-10-06. |
+| Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
+| Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
+| How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
 
-- Gaps checkpoint: on the cluster only, never evaluated.
-- Scan classifier and blending were not re-tested on randomised layouts.
-- Report format: Markdown with four figures; say if it needs to be IEEE LaTeX. Related-work
-  citations other than SARO are unchecked.
+## 2. What is waiting on whom
 
-## 3. What was done
+### 2.1 Rohan
 
-**2026-10-03.** Status check with the cluster (job 12033 had finished on 09-21 and never been
-written up). Root cause of the weak specialists found from training logs. Switching
-experiment pre-registered, calibrated (seeds 400/401) and confirmed (seeds 500-502), with
-robustness runs and a scan-classifier reactive arm. `vlm-pipeline` fast-forwarded into `main`.
-You submitted the generalist (job 12479) by hand after the cluster session was refused.
+1. **Decide run 2 and tell the cluster session to submit it.** The proposal is two variants,
+   both warm-started from stairs v2 with risers 5-20 cm and a curriculum that promotes a robot
+   only when it actually crosses and demotes it when it falls or stalls:
+   - **4a**: nothing else changes.
+   - **4b**: also, a knee or shin touching a step is penalised and no longer ends the
+     episode. This is the laptop session's recommendation for the real robot; it changes the
+     task definition the finished comparison held fixed, so it is your call.
+   About 9 GPU-hours each. If two GPUs are free, running both saves a day. Jobs on the cluster
+   start only when you say so in that session; a relayed approval has not been enough.
+2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
+   ```
+   ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
+   ros2 topic hz /utlidar/cloud
+   ros2 topic echo --once /utlidar/height_map_array | head -30
+   ```
+3. Optional: report format (the final report is Markdown with four figures; related-work
+   citations other than SARO are unchecked).
 
-**2026-10-04.** Generalist evaluated (two runs, seeds 500-505, noise off and on), plus its
-pinned-terrain matrix and height-scan ablation (`eval_results/matrix_generalist/`) and its
-iteration-4800 checkpoint. Pre-collapse stairs checkpoint and then stairs v2 tested in the
-stairs slot at L1 and L2. Results, findings, objective and the final report rewritten around
-these. You approved a generalist retrain (generalist v2, job 12518).
+### 2.2 Cluster session
 
-**2026-10-05.** Generalist v2 evaluated against stairs v2. A diagnostic on single staircases
-showed weak policies' results depend on course layout, so the main comparisons were re-run on
-20 randomised layouts, which confirmed stairs v2 and overturned two fixed-course results.
+- Build 4a and 4b as registered tasks and CPU-check them (asked on 2026-10-06; building needs
+  no approval, submitting does).
+- After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
+  fraction next to falls**, and an early stop if speed is under ~30% of commanded by
+  iteration 1,500.
 
-## 4. Gotchas (full list: `findings.md`, "Bugs found and fixed")
+### 2.3 Laptop session
 
-- **#22: the twin env has observation noise and pushes off** (it is built on the play config).
-  Every `src/vlm_nav/` number was measured that way unless `--obs-noise` was passed. Results
-  differ materially between the two; say which condition a number is from.
-- **Repeat runs are not identical.** One arm on the same seeds differs by about 2 points with
-  noise off and up to 3.5 with noise on. The first noise-on estimate of the switching
-  advantage was +4.2; pooled over three runs it is +7.3. Pool before quoting.
-- **#23: the goal controller understates the stairs specialist.** Same course, seed and
-  oracle: 52-59% under the goal controller, 89% under the follow controller.
-- **What counts as a fall decides whether L1 separates anything.** All L1 failures are knee or
-  calf contacts; under orientation-only falls every arm but flat-only is at 98-100%.
-- **#24, #25: results from one course layout are results about that layout.** Two
-  pre-registered, seed-replicated findings disappeared over randomised layouts. Evaluate with
-  `switch_follow.py --random-layout` and analyse with `switch_follow_layouts.py`.
-- **Don't edit `scripts/switch_follow.py` while a multi-seed loop is running**: each seed is a
-  new process and re-reads the file.
-- **Background jobs here are killed after two hours**, counted from launch, including time
-  spent waiting on another job. Chain long runs in fresh jobs; `--resume` skips finished arms.
-- **The laptop GPU is shared** with other projects' sessions. Check
+When a run-2 checkpoint is on private HF (`RohanRamesh/go2-specialists`, folder named after
+the experiment), from `unitree_rl_mjlab/`:
+
+```
+# download (the token is in the repo's .env; scripts/switch_follow_generalist.sh shows the pattern)
+STAIRS_CKPT=eval_ckpts/<experiment>/model_9999.pt TAG=<name> scripts/switch_follow_real_stairs.sh
+STEPS=10 STAIRS_CKPT=... TAG=<name> scripts/switch_follow_real_stairs.sh
+STAIRS_CKPT=... TAG=<name>_h15 EXTRA_FLAGS="--step-height 0.15" scripts/switch_follow_scan_faults.sh 900 905
+STAIRS_CKPT=... TAG=<name> scripts/switch_follow_stairs_ckpt.sh        # still fine on easy ground?
+```
+
+**Acceptance**: at least 90% of flights crossed, up and down, at 17 cm, on 5- and 10-step
+flights. Judge by **crossed / fell / lost** separately. A policy that never falls and never
+crosses has failed (that was stairs v3).
+
+If it passes: `scripts/export_policy_numpy.py <ckpt> --out deploy_numpy/<name>.npz` (it checks
+parity with PyTorch), then the staged bring-up in the plan, section 3.
+
+Not started, and independent of training: the scan node for the robot (waits on §2.1 item 2),
+and scan faults at real riser heights (waits on a policy that climbs them).
+
+No scheduled checks are pending. A check set for 07:12 on 10-06 was lost when the session
+restarted; scheduled jobs live only inside one session.
+
+## 3. What exists
+
+**Policies** (private HF `RohanRamesh/go2-specialists`; copies under
+`unitree_rl_mjlab/eval_ckpts/` on the laptop, gitignored):
+
+| folder | what | use |
+|---|---|---|
+| `go2_spec_stairs_v2` | Stairs, command range held (job 12490) | **Best policy.** Risers up to ~9 cm. |
+| `go2_spec_stairs_it4800` | original stairs run at iteration 4800 | superseded by v2 |
+| `go2_spec_stairs` / `_rough` / `_flat` | the three original specialists | study only; stairs and rough were damaged by the curriculum collapse |
+| `go2_generalist`, `go2_generalist_v2` | two generalists (jobs 12479, 12518) | study only; both brittle at stair edges |
+| `go2_spec_stairs_v3` | first real-stairs attempt (job 12563) | **failed, do not use** |
+| `go2_spec_gaps` | blended gaps run | cluster disk only, never evaluated |
+
+**Harness** (`unitree_rl_mjlab/`): `scripts/switch_follow.py` is the runner (follow task;
+`--random-layout`, `--step-height`, `--stair-steps`, `--obs-noise`, `--terminations saro`,
+`--scan-delay/-dropout/-bias`, `--extra-policy name=ckpt`, arms `fixed:` / `hard:` / `soft:` /
+`blind:` / `clf:`). Batch scripts: `switch_follow_real_stairs.sh`, `switch_follow_scan_faults.sh`,
+`switch_follow_stairs_ckpt.sh`, `switch_follow_random_layouts.sh`, `switch_follow_generalist.sh`.
+Analysis: `switch_follow_analyze.py` (per seed), `switch_follow_layouts.py` (layout as unit).
+Robot side: `deploy_numpy/policy_numpy.py`, `scripts/export_policy_numpy.py`.
+
+**Policy interface** (plan, section 2.3): 234 inputs = 47 proprioceptive + a 187-point height
+scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above ground ÷ 5);
+12 outputs, joint target = default + 0.25 × action at 50 Hz. The repo's C++ Go2 deploy stack
+(`deploy/robots/go2`) supplies only the 47 and has no scan input.
+
+## 4. What was done, by day
+
+- **10-03**: cluster status check; root cause of weak specialists (curriculum collapse at
+  iteration 5000); switching experiment pre-registered, calibrated and confirmed on one
+  course; `vlm-pipeline` merged into `main`.
+- **10-04**: generalist, pre-collapse stairs checkpoint and stairs v2 evaluated; generalist
+  matrix and height-scan ablation; report rewritten.
+- **10-05**: generalist v2 evaluated; diagnostic showed results depend on course layout; 20
+  randomised layouts confirmed stairs v2 and overturned two fixed-course results; goal changed
+  to the real Go2; stairs v2 found unable to climb real risers; real-stairs plan, numpy
+  runner, scan-fault test; stairs v3 built by the cluster and submitted by Rohan.
+- **10-06**: stairs v3 finished and failed (stands still), confirmed on the laptop; run 2
+  proposed.
+
+## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
+
+- **Judge a locomotion policy by where it gets to, not by whether it falls.** Stairs v3 has
+  99% survival and near-zero falls per 100 m because it does not move (#26; earlier cases #1,
+  #14). Always read achieved speed, stalled fraction, or crossing rate first.
+- **Results from one course layout are results about that layout** (#24, #25). Evaluate over
+  `--random-layout` and analyse with `switch_follow_layouts.py`.
+- **The twin env has observation noise and pushes off** unless `--obs-noise` (#22). Say which.
+- **Repeat runs differ**: about 2 points with noise off, up to 3.5 with noise on. Pool.
+- **What counts as a fall matters**: "training" terminations end a trial on any knee or shin
+  contact over 10 N; `--terminations saro` only on tipping over.
+- **The stock terrain curriculum does not work for stairs**: it promotes on ending more than
+  4 m from the start, and the staircase is the inner 3 m of a patch
+  (`coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`).
+- **Cluster jobs need Rohan in the cluster session.** That session's permission layer has
+  refused `sbatch` and uploads on a relayed approval. It is also not always reachable by
+  message; the committed `coordination/inbox/to-cluster.md` entry is the delivery that counts.
+- **Laptop background jobs are killed two hours after launch**, waiting time included; chain
+  fresh jobs, `--resume` skips finished arms. Scheduled checks die with the session.
+- **The laptop GPU is shared** with other projects' sessions: check
   `nvidia-smi --query-compute-apps` and ask the owning session before launching.
-- Scan-classifier weights and recorded scans are under `unitree_rl_mjlab/logs/switch_follow/`
-  in the old `vlm-pipeline` worktree (gitignored). `scripts/switch_follow_clf_pipeline.sh`
-  regenerates them in about 25 minutes.
+- **Don't edit `scripts/switch_follow.py` while a multi-seed loop runs**; each seed re-reads it.
+- **Set `PYTHONPATH` to this repo's `unitree_rl_mjlab/`** (see `CLAUDE.md`); the batch scripts do.
 
-## 5. File map
+## 6. File map
 
 | Want to know... | Read |
 |---|---|
-| The whole project, as a report | `report_content/final_report.md` |
-| The switching experiment's numbers and intervals | `coordination/results/switch-follow-results.md` |
+| The active plan for the real robot | `report_content/go2_real_stairs_plan.md` |
+| The finished study, as a report | `report_content/final_report.md` |
+| The study's numbers and intervals | `coordination/results/switch-follow-results.md` |
 | What was fixed in advance | `coordination/results/switch-follow-preregistration.md` |
-| Why the project exists, the design, and the outcome | `objective.md` |
+| Stairs v3 failure | `coordination/results/2026-10-06-stairs-v3-result.md` |
+| Why the curriculum sits on easy rows | `coordination/results/2026-10-05-terrain-curriculum-diagnosis.md` |
 | Full experiment history, every bug | `findings.md` |
-| Runner, schedules, classifier | `unitree_rl_mjlab/scripts/switch_follow*.py`, `src/vlm_nav/schedule.py`, `src/vlm_nav/scan_classifier.py` |
-| Raw results | `unitree_rl_mjlab/eval_results/switch_follow/`, `eval_results/matrix_generalist/` |
+| The original research design and its outcome | `objective.md` |
 | Cluster state and what is asked of it | `coordination/status/cluster.json`, `coordination/inbox/to-cluster.md` |
-| VLM/SARO pipeline, person-following | `findings.md` (four sections dated 2026-09-17 to 09-22), `coordination/results/vlm-nav-*.md` |
-| Older per-section report notes | `report_content/ieee_report_source.md` |
+| Raw results | `unitree_rl_mjlab/eval_results/switch_follow/` (`random/`, `real_stairs/`, `scan_faults/`, `diag/`), `eval_results/stairs_heights/` (cluster) |
+| Robot hardware notes | `/run/media/rohan/New Volume/RL/temp` (`project.md`, `sessions/`) |
+| VLM/SARO pipeline, person-following | `findings.md` (sections dated 2026-09-17 to 09-22), `coordination/results/vlm-nav-*.md` |

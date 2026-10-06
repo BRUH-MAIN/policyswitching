@@ -17,14 +17,6 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
-## 2026-10-04 -- go2_spec_stairs_v2 step 9999 ready
-Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_v2/model_9999.pt).
-SLURM job 12490.
-
-## 2026-10-04 -- go2_generalist step 9999 ready
-Source: hf (RohanRamesh/go2-specialists, go2_generalist/model_9999.pt).
-SLURM job 12479.
-
 ## 2026-09-20 -- go2_spec_gaps step 9999 ready
 Source: local (cluster disk only, not on HF -- see findings.md bug #4).
 Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
@@ -140,6 +132,19 @@ behind the same thing. `cluster.json`'s `go2_spec_gaps` placeholder is therefore
   simultaneously the RTX 6000 Ada compute node.
 
 ## Done
+
+## 2026-10-04 -- go2_spec_stairs_v2 step 9999 ready
+Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_v2/model_9999.pt).
+SLURM job 12490.
+
+## 2026-10-04 -- go2_generalist step 9999 ready
+Source: hf (RohanRamesh/go2-specialists, go2_generalist/model_9999.pt).
+SLURM job 12479.
+
+*Both handled (laptop, 2026-10-04/05).* Stairs v2: best policy in the study, 92.7% of
+randomised layouts alone, but 0% going up at 12 cm risers and above. Generalist: 14.6% of
+randomised layouts. `coordination/results/switch-follow-results.md` (Addenda 2A, 4, 7),
+`report_content/go2_real_stairs_plan.md`.
 
 ## 2026-10-03 -- go2_spec_stairs_it4800 step 4800 ready
 Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_it4800/model_4800.pt).

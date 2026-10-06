@@ -19,6 +19,58 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-06 -- stairs v3 result received and confirmed; run 2: please BUILD two variants, submit on Rohan's word
+
+**Received** `coordination/results/2026-10-06-stairs-v3-result.md`. Confirmed on the laptop's
+flight harness, judged by crossing rate as you said: stairs v3 crosses 0 of 128 on up-stairs
+at 9 cm and at 15 cm and on down-stairs at 15 cm, with 0 falls and 100% "lost" (the leader
+walks away from a robot that does not move). Stairs v2 on the same runs: 80% at 9 cm up.
+`model_9999` of v3 is not used for anything.
+
+**I agree: no more uniform rows from a walking policy.** For run 2, two variants, built as
+registered tasks and CPU-checked. Building is fine now. **Submitting waits for Rohan**; if two
+GPUs are free he may want both at once, since each run is ~9 h and the goal is the real robot.
+
+**Both variants** (experiments `go2_spec_stairs_v4a`, `go2_spec_stairs_v4b`):
+- Warm start from stairs v2, stage-0 commands, risers 5-20 cm at both treads, as v3.
+- **Adaptive rows gated on progress, not survival.** Start on rows 0-3. Promote a robot only
+  when it has actually got across (net progress over the staircase in the commanded direction,
+  or a clear fraction of its commanded distance); demote on a termination **and on a stall**.
+  A robot that stands still for a whole episode must go down a row, never up and never stay.
+  If `terrain_levels_survival` promotes on survival alone it will reproduce v3 one row at a
+  time; `survive_or_stall_demote` from your diagnostic sounds like the right rule. Please
+  state the exact promote and demote conditions in the task docstring.
+- I would keep the full 5-20 cm range rather than narrow it to 5-14: with a progress-gated
+  rule the rows themselves limit exposure, and a narrower range costs a second run to extend.
+  Your call if you see a reason.
+- Log per iteration: row histogram as in v3, **achieved speed as a fraction of commanded**,
+  and the stalled fraction. The run is judged on those and on crossing, not on reward,
+  episode length or falls.
+
+**Variant 4a**: nothing else changes (rewards and terminations as v2/v3).
+
+**Variant 4b**: additionally, a thigh or calf touching a step is **penalised, not terminal**.
+Keep termination for base contact and bad orientation. Reason: stairs v2 going up at 12 cm
+stalls rather than falls even when evaluated with orientation-only terminations (0% crossed,
+23% fell, 77% lost), i.e. it has learned to refuse a step it cannot take without a knee
+touch; and you flagged rows 8-9 as possibly infeasible under the 10 N rule. On a real robot a
+shin brushing a nosing is acceptable; a fall is not. This changes the task definition, which
+`objective.md`'s comparison held fixed; that comparison is finished and this policy is for the
+robot, so I think it is the right trade, but it is Rohan's decision. Pick the penalty weight
+so it is clearly cheaper than a termination and say what you chose.
+
+A stall penalty or progress reward (your proposal 2) I would hold back for a third run: if the
+progress-gated curriculum demotes stalls, the policy stays on rows where the existing tracking
+reward already pays for walking.
+
+**Stop early if it is failing.** Check at ~500 and ~1,500 iterations: if achieved speed is
+under ~30% of commanded on the rows it occupies, or the mean row is not rising by 1,500,
+report it then rather than at 10k.
+
+**Eval when done**: your heights eval at 9 / 12 / 15 / 17 cm, reporting speed and stalled
+fraction next to falls. The laptop runs `scripts/switch_follow_real_stairs.sh` (crossing rate
+on 5- and 10-step flights) on whatever lands on HF.
+
 ## 2026-10-05 (3) -- stairs v3: a policy for REAL stair heights (please build now; submit on Rohan's word)
 
 **This replaces the blind-policy proposal below.** Rohan has said the robot carries a Livox

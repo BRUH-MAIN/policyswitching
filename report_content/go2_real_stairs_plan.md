@@ -1,6 +1,6 @@
 # Plan: real stairs on the physical Go2
 
-**Date**: 2026-10-05 · **Goal (Rohan)**: the real Go2, which carries a Livox Mid-360, follows a
+**Date**: 2026-10-05, updated 2026-10-06 · **Goal (Rohan)**: the real Go2, which carries a Livox Mid-360, follows a
 person and climbs real stairs. · **Status**: plan. Nothing here has been run on the robot.
 Robot facts are from the robot workspace (`/run/media/rohan/New Volume/RL/temp`, its
 `sessions/` logs and `project.md`); simulation facts from this repository.
@@ -9,7 +9,7 @@ Robot facts are from the robot workspace (`/run/media/rohan/New Volume/RL/temp`,
 
 | | |
 |---|---|
-| Best policy in simulation | Stairs v2 (`go2_spec_stairs_v2/model_9999.pt`): 93% of randomised courses with 5-7 cm risers. Needs its height scan (9% without). |
+| Best policy in simulation | Stairs v2 (`go2_spec_stairs_v2/model_9999.pt`): 93% of randomised courses with 5-7 cm risers. Needs its height scan (9% without). Still the best; stairs v3 failed (section 2.1). |
 | On real riser heights (sim, 128 trials per cell, 5-step straight flight, 0.3 m tread) | see table below: **it cannot climb real stairs** |
 | Switching, leader preview | Not needed: no benefit in any test. Deploy one policy. |
 | Robot compute | Jetson, L4T R35.3.1, Ubuntu 20.04, Python 3.8, ROS 2 foxy. **No torch, no onnxruntime.** |
@@ -32,27 +32,46 @@ at 12 cm and above; it does not fall, it just cannot get up. A building stair is
 
 ### 2.1 A policy trained on real step heights (cluster; the long pole)
 
-"Stairs v3". Proposal in `coordination/inbox/to-cluster.md`. In short:
+**Status, 2026-10-06: the first attempt failed. No policy for real stairs exists yet.**
 
-- Terrain: pyramid stairs and inverted pyramid stairs with risers 5-20 cm, treads of 0.30 m
-  and 0.26 m.
-- Warm start from stairs v2 (`a100/warm_start_ckpt.py`), so it does not have to learn to walk
-  and climb at once. A cold start on hard terrain is how the Gaps specialist failed twice.
-- Command range held at stage 0, as in v2.
-- The terrain curriculum is the risk. In every run so far it has sat at level 1-2 of 10 even
-  for policies that handle much harder rows in evaluation, so with a 0-20 cm range it would
-  train mostly on 2-4 cm. v3 must actually spend its time on 12-20 cm: either start and keep
-  robots spread across rows, or fix the promotion rule. The cluster reports `terrain_levels`
-  and a pinned eval per riser height; a run that never sees tall steps is a failed run however
-  good its reward looks.
-- Same 234-number observation including the scan, so the laptop harness evaluates it unchanged.
-- Expect more than one training run. This is the part with real research risk: whether a Go2
-  policy of this size, in this simulator, learns 17 cm risers is not known yet.
+**Run 1, "stairs v3"** (job 12563; risers 5-20 cm at treads 0.30 and 0.26 m, warm start from
+stairs v2, robots spread uniformly over all rows, 10k iterations): **it learned to stand
+still.** Achieved speed is 12% of commanded at every riser height (v2: 54-61%), and 53% of
+steps are stalled. On the laptop's stair flights it crosses 0 of 128 at 9 cm and at 15 cm,
+with no falls: the leader simply walks away from it. Its near-zero falls per 100 m and 99%
+survival are that, not success. Do not use `go2_spec_stairs_v3/model_9999.pt`.
+Write-up: `coordination/results/2026-10-06-stairs-v3-result.md`.
 
-**Acceptance in simulation before the robot** (laptop, existing harness):
-`switch_follow.py --step-height` on single flights at 12 / 15 / 17 cm, up and down, and
-randomised layouts at those heights; target at least 90% up and down at 17 cm with knee
-contact counted, and 10-step flights, not only 5.
+Why, as far as known: with 60% of robots on steps it could not climb, standing still avoided
+the termination for touching a step with a knee or shin, and a time-out costs nothing. The
+row spread itself behaved as designed. Why it stopped walking even on 5-9 cm steps is not
+isolated.
+
+Along the way the cluster confirmed why every earlier run sat on the easiest rows: the
+terrain curriculum promotes a robot only when it ends more than 4 m from where it started,
+and the staircase fills only the inner 3 m of a patch
+(`coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`).
+
+**Run 2, proposed, not submitted** (`coordination/inbox/to-cluster.md`, entry of 2026-10-06).
+Two variants, both warm-started from stairs v2 with risers 5-20 cm:
+
+- **4a**: rows adapt to the robot, starting easy. A robot moves up only when it has actually
+  crossed, and moves down when it falls **or stalls**. Nothing else changes.
+- **4b**: the same, plus a knee or shin touching a step is penalised and no longer ends the
+  episode (base contact and tipping over still do). Reason: stairs v2 going up at 12 cm
+  refuses the step rather than falling, and on a real robot a shin brushing a step is
+  acceptable where a fall is not. This changes the task the earlier comparison held fixed;
+  that comparison is finished.
+
+Each is about 9 GPU-hours. They are judged on crossing rate and achieved speed, never on
+falls, survival or reward alone. Whether a policy of this size learns 17 cm in this simulator
+is still unknown; more runs may be needed.
+
+**Acceptance in simulation before the robot** (laptop):
+`scripts/switch_follow_real_stairs.sh` on single flights at 9 / 12 / 15 / 17 cm, up and down,
+5 and 10 steps; target at least 90% crossed up and down at 17 cm, reported with knee contact
+counted and with only tipping over counted. Then `switch_follow_scan_faults.sh` at real riser
+heights and `switch_follow_stairs_ckpt.sh` to check it still handles easy ground.
 
 ### 2.2 A height scan on the robot
 
@@ -133,22 +152,23 @@ wrong scan has less margin.
 
 ## 3. Order of work
 
-1. **Now, cluster**: build and submit stairs v3 (needs your word in the cluster session).
-2. **Now, you, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. They decide
-   between A and B.
-3. **Laptop, while v3 trains**: scan degradation in the simulation harness; numpy export and
-   parity check; a scan node for whichever of A or B the checks support.
-4. **When v3 passes acceptance**: bring-up on the robot in stages, each one gated on the last:
-   suspended with legs free (joint order and signs) → standing on flat ground → walking on flat
-   ground with the real scan → one 9 cm step → one 15-17 cm step → a short flight with a
-   spotter and a tether. Stop and go back at the first surprise.
-5. **Person-following** rides on top once walking is trusted: the person tracker already on
+1. **Cluster**: build run 2 (4a and 4b); **submit when Rohan says so in the cluster session**.
+2. **Rohan, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. Still not done;
+   they decide between scan options A and B.
+3. **Laptop, when a run-2 checkpoint lands on HF**: the acceptance runs in 2.1.
+4. **Laptop, meanwhile**: a scan node for whichever of A or B the robot checks support.
+5. **When a policy passes acceptance**: export with `scripts/export_policy_numpy.py`, then
+   bring-up on the robot in stages, each gated on the last: suspended with legs free (joint
+   order and signs) → standing on flat ground → walking on flat ground with the real scan →
+   one 9 cm step → one 15-17 cm step → a short flight with a spotter and a tether. Stop and go
+   back at the first surprise.
+6. **Person-following** rides on top once walking is trusted: the person tracker already on
    the laptop gives direction, depth or LiDAR gives range, the follow controller gives the
    velocity command, and the LiDAR obstacle monitor keeps its veto.
 
 ## 4. What is not known
 
-- Whether v3 reaches 17 cm at all, and in how many training runs.
+- Whether any run reaches 17 cm at all, and in how many attempts. Run 1 failed.
 - Whether the firmware publishes a usable height map (2.2 A).
 - How the policy tolerates a real scan's delay and holes.
 - Real friction, real stair nosings and open risers, payload, and battery sag: none of it is
