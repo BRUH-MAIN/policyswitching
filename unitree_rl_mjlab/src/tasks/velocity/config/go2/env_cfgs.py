@@ -11,6 +11,7 @@ from mjlab.envs import mdp as envs_mdp
 from mjlab.envs.mdp.actions import JointPositionActionCfg
 from mjlab.managers import TerminationTermCfg
 from mjlab.managers.curriculum_manager import CurriculumTermCfg
+from mjlab.managers.metrics_manager import MetricsTermCfg
 from mjlab.managers.event_manager import EventTermCfg
 from mjlab.managers.observation_manager import ObservationGroupCfg, ObservationTermCfg
 from mjlab.managers.reward_manager import RewardTermCfg
@@ -22,7 +23,19 @@ from mjlab.terrains.config import ALL_TERRAINS_CFG, ROUGH_TERRAINS_CFG
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 
 from src.tasks.velocity.mdp.pas import foot_friction
-from src.tasks.velocity.mdp.terrain_curriculum import terrain_row_fraction, terrain_row_mean
+from src.tasks.velocity.mdp.terrain_curriculum import (
+  PROGRESS_ACROSS_M,
+  PROGRESS_STALL_CMD,
+  PROGRESS_STALL_M,
+  actual_speed,
+  cmd_moving,
+  cmd_speed,
+  limb_contact,
+  stalled,
+  terrain_levels_progress,
+  terrain_row_fraction,
+  terrain_row_mean,
+)
 from src.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
 TerrainType = Literal["rough", "obstacles"]
@@ -494,6 +507,107 @@ def unitree_go2_spec_stairs_v3_env_cfg(play: bool = False) -> ManagerBasedRlEnvC
         func=terrain_row_fraction, params={"lo": lo, "hi": lo + 1}
       )
   return cfg
+
+
+# StairsV4b: a thigh/calf touching a step costs this much per step in contact (rewards are
+# scaled by dt = 0.02, so -2.0 is -0.04 per step, about one step's whole positive reward).
+# A termination costs -200 * dt = -4 on the step AND forfeits the rest of the episode
+# (~0.04 per remaining step), so a 10-step knee brush (-0.4) is a tenth of the penalty
+# alone and far under the full price, while a scrape held for a whole climb (100 steps, -4)
+# is still discouraged.
+STAIRS_V4B_LIMB_CONTACT_WEIGHT = -2.0
+
+
+def _stairs_v4_env_cfg(play: bool, limb_contact_penalised: bool) -> ManagerBasedRlEnvCfg:
+  """Shared body of StairsV4a/V4b: StairsV3's terrain and command range, adaptive rows.
+
+  Identical to `unitree_go2_spec_stairs_v3_env_cfg` (risers 5-20 cm at treads 0.30/0.26 m,
+  four sub-terrains, stage-0 commands, observations, rewards, runner) except:
+
+  * Rows are NOT re-drawn uniformly. Robots start on rows 0-3 (5-11 cm) and move by
+    `terrain_levels_progress`, evaluated when an episode ends. With cheb = max(|dx|, |dy|)
+    from the spawn (the stairs span 1.5-3.0 m, so cheb >= 3.2 m means all 5 steps are
+    behind it) and cmd = |commanded xy velocity| at the last step:
+
+      promote : ran to the time limit (not terminated) AND cheb >= 3.2 m
+      demote  : terminated, OR (ran to the time limit AND cmd > 0.3 m/s AND cheb < 1.9 m)
+      stay    : anything else (part-way up the flight; told to stand)
+
+    A robot standing on the platform all episode is demoted, never promoted and never
+    left in place. StairsV3 did exactly that on rows it could not climb, from uniform rows.
+    (A promotion past row 9 re-draws the row uniformly, mjlab's own behaviour.)
+  * Per-iteration `Episode_Metrics/{cmd_speed, actual_speed, cmd_moving, stalled}` are
+    logged: achieved/commanded speed ~ actual_speed / cmd_speed and the stalled fraction
+    among commanded-to-move steps ~ stalled / cmd_moving. Judge the run on these, the row
+    histogram (`Curriculum/terrain_rows_*`, `terrain_row_mean`) and crossing, not on
+    reward, episode length or falls: a robot that stands still scores well on all three.
+  * `limb_contact_penalised` (V4b): see `unitree_go2_spec_stairs_v4b_env_cfg`.
+  """
+  cfg = unitree_go2_spec_stairs_v3_env_cfg(play=play)
+  cfg.metrics = {
+    **(cfg.metrics or {}),
+    "cmd_speed": MetricsTermCfg(func=cmd_speed),
+    "actual_speed": MetricsTermCfg(func=actual_speed),
+    "cmd_moving": MetricsTermCfg(func=cmd_moving),
+    "stalled": MetricsTermCfg(func=stalled),
+  }
+  if not play:
+    cfg.scene.terrain.max_init_terrain_level = 3
+    cfg.events.pop("randomize_terrain")  # rows move by the curriculum instead
+    cfg.curriculum["terrain_levels"] = CurriculumTermCfg(
+      func=terrain_levels_progress,
+      params={
+        "across_m": PROGRESS_ACROSS_M,
+        "stall_m": PROGRESS_STALL_M,
+        "stall_cmd": PROGRESS_STALL_CMD,
+      },
+    )
+
+  if limb_contact_penalised:
+    # The base sensor keeps terminating, but only on trunk geoms (base1-3) and hips;
+    # thigh and calf geoms move to their own sensor that feeds a penalty instead.
+    sensors = list(cfg.scene.sensors or ())
+    idx = next(i for i, s in enumerate(sensors) if s.name == "nonfoot_ground_touch")
+    trunk = sensors[idx]
+    sensors[idx] = replace(
+      trunk, primary=replace(trunk.primary, pattern=r"^(base[123]|[FR][LR]_hip)_collision$", exclude=())
+    )
+    sensors.append(
+      replace(
+        trunk,
+        name="limb_ground_touch",
+        primary=replace(trunk.primary, pattern=r"^[FR][LR]_(thigh|calf[12])_collision$", exclude=()),
+      )
+    )
+    cfg.scene.sensors = tuple(sensors)
+    cfg.rewards["limb_contact"] = RewardTermCfg(
+      func=limb_contact,
+      weight=STAIRS_V4B_LIMB_CONTACT_WEIGHT,
+      params={"sensor_name": "limb_ground_touch", "force_threshold": 10.0},
+    )
+  return cfg
+
+
+def unitree_go2_spec_stairs_v4a_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v4a: StairsV3's terrain with progress-gated adaptive rows (see `_stairs_v4_env_cfg`).
+
+  Rewards and terminations are exactly StairsV2/V3's: any non-foot contact above 10 N
+  (knee, calf, thigh, base, hip) ends the episode. Warm-start from stairs v2.
+  """
+  return _stairs_v4_env_cfg(play, limb_contact_penalised=False)
+
+
+def unitree_go2_spec_stairs_v4b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v4b: v4a, and a thigh or calf touching a step is penalised, not terminal.
+
+  `nonfoot_ground_touch` (the `illegal_contact` termination, >10 N) now matches only the
+  trunk (base1-3) and hip geoms; a new `limb_ground_touch` sensor covers thigh and calf
+  geoms and feeds a `limb_contact` reward at STAIRS_V4B_LIMB_CONTACT_WEIGHT (-2.0 per step
+  in contact, > 10 N). `fell_over` (70 deg) is unchanged. This changes the task definition
+  relative to every earlier specialist: its `illegal_contact` and falls/100 m are not
+  comparable with theirs, and a shin brushing a nosing no longer ends an episode.
+  """
+  return _stairs_v4_env_cfg(play, limb_contact_penalised=True)
 
 
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:

@@ -41,6 +41,12 @@ from mjlab.rl import RslRlVecEnvWrapper
 from mjlab.tasks.registry import load_env_cfg, load_rl_cfg, load_runner_cls
 from mjlab.utils.torch import configure_torch_backends
 
+from src.tasks.velocity.mdp.terrain_curriculum import (
+  PROGRESS_ACROSS_M,
+  PROGRESS_STALL_CMD,
+  PROGRESS_STALL_M,
+)
+
 # Alternative promote/demote rules, evaluated offline on the recorded episodes.
 #  survive: promote if the episode ran to the time limit AND walked at least MIN_PROGRESS_M
 #           from the spawn (the stairs start 1.5 m from the patch centre); demote if it
@@ -70,8 +76,17 @@ def rule_survive_or_stall_demote(r):
   return up, (down | stalled) & ~up
 
 
+def rule_progress_gated(r):
+  """terrain_levels_progress (the StairsV4a/V4b rule), thresholds from the mdp module."""
+  timed_out = r["timeout"] & ~r["terminated"]
+  up = timed_out & (r["cheb"] >= PROGRESS_ACROSS_M)
+  stalled = timed_out & (r["cmd"] > PROGRESS_STALL_CMD) & (r["cheb"] < PROGRESS_STALL_M)
+  return up, (r["terminated"] | stalled) & ~up
+
+
 ALTERNATIVES = {
   "current": rule_current,
+  "progress_gated": rule_progress_gated,
   "survive": rule_survive,
   "survive_or_stall_demote": rule_survive_or_stall_demote,
 }
@@ -163,6 +178,8 @@ def main():
         row=terrain.terrain_levels[env_ids].cpu().numpy().copy(),
         col=terrain.terrain_types[env_ids].cpu().numpy().copy(),
         dist=distance.cpu().numpy(),
+        cheb=(robot.data.root_link_pos_w[env_ids, :2] - unwrapped.scene.env_origins[env_ids, :2])
+        .abs().amax(dim=1).cpu().numpy(),
         cmd=torch.norm(command[env_ids, :2], dim=1).cpu().numpy(),
         timeout=tm.time_outs[env_ids].cpu().numpy().astype(bool),
         terminated=tm.terminated[env_ids].cpu().numpy().astype(bool),
@@ -247,11 +264,12 @@ def main():
   print("\n===== per terrain type, per row (rule = the curriculum's current promote/demote rule) =====")
   for tname, tout in out["types"].items():
     print(f"\n[{tname}]  (spawn at the patch centre; 'dist' = metres from it at episode end)")
-    print("row | n   | timeout% | dist med | >4m% | cmd | needs(m) | up%   down%  || survive: up%  down%")
+    print("row | n   | timeout% | dist med | >4m% | cmd | needs(m) | up%   down%  || survive: up%  down% || progress-gated: up%  down%")
     for r, s in tout["rows"].items():
       print(f"{r:3d} | {s['episodes']:3d} | {s['timeout_pct']:7.1f}  | {s['dist_median_m']:7.2f}  | "
             f"{s['dist_over_half_patch_pct']:4.0f} | {s['cmd_mean']:.2f} | {s['needed_to_avoid_demotion_m_mean']:7.2f}  | "
-            f"{s['current_up_pct']:5.1f} {s['current_down_pct']:6.1f}  ||  {s['survive_up_pct']:5.1f} {s['survive_down_pct']:6.1f}")
+            f"{s['current_up_pct']:5.1f} {s['current_down_pct']:6.1f}  ||  {s['survive_up_pct']:5.1f} {s['survive_down_pct']:6.1f}"
+            f"  ||  {s['progress_gated_up_pct']:5.1f} {s['progress_gated_down_pct']:6.1f}")
     for rname, a in tout["alternatives"].items():
       print(f"  stationary mean level under '{rname}': {a['stationary_mean_level']:.2f}")
 
