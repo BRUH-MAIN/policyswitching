@@ -52,7 +52,10 @@ terrain curriculum promotes a robot only when it ends more than 4 m from where i
 and the staircase fills only the inner 3 m of a patch
 (`coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`).
 
-**Run 2, proposed, not submitted** (`coordination/inbox/to-cluster.md`, entry of 2026-10-06).
+**Run 2, built and CPU-checked on the cluster, not submitted**
+(`coordination/results/2026-10-06-stairs-v4-built.md`; tasks `Unitree-Go2-Spec-StairsV4a` and
+`V4b`). Replayed offline, its curriculum rule sends stairs v2 to a mean row of about 5.5 and
+stairs v3 to row 0, so it does tell a walker from a stander.
 Two variants, both warm-started from stairs v2 with risers 5-20 cm:
 
 - **4a**: rows adapt to the robot, starting easy. A robot moves up only when it has actually
@@ -152,7 +155,8 @@ wrong scan has less margin.
 
 ## 3. Order of work
 
-1. **Cluster**: build run 2 (4a and 4b); **submit when Rohan says so in the cluster session**.
+1. **Rohan, in the cluster session**: submit run 2 (4a and 4b are built), and have that
+   session check each run at about 500 and 1,500 iterations so a failing one is stopped early.
 2. **Rohan, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. Still not done;
    they decide between scan options A and B.
 3. **Laptop, when a run-2 checkpoint lands on HF**: the acceptance runs in 2.1.

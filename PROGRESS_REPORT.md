@@ -52,7 +52,7 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 |---|---|
 | Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
-| Run 2 (variants 4a and 4b) | **Proposed, not built, not submitted.** `coordination/inbox/to-cluster.md`, entry of 2026-10-06. |
+| Run 2 (variants 4a and 4b) | **Built and CPU-checked on the cluster, not submitted.** Neither has run an iteration on a GPU. `coordination/results/2026-10-06-stairs-v4-built.md` |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
 | How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
@@ -61,15 +61,27 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.1 Rohan
 
-1. **Decide run 2 and tell the cluster session to submit it.** The proposal is two variants,
-   both warm-started from stairs v2 with risers 5-20 cm and a curriculum that promotes a robot
-   only when it actually crosses and demotes it when it falls or stalls:
+1. **Decide run 2 and submit it in the cluster session.** Two variants are built
+   (`Unitree-Go2-Spec-StairsV4a` / `V4b`, experiments `go2_spec_stairs_v4a` / `v4b`), both
+   warm-started from stairs v2 with risers 5-20 cm. Robots start on the four easiest rows; one
+   moves up only if it times out having got past all five steps, and moves down if it is
+   terminated or ends a moving episode without leaving the platform or first step.
    - **4a**: nothing else changes.
-   - **4b**: also, a knee or shin touching a step is penalised and no longer ends the
-     episode. This is the laptop session's recommendation for the real robot; it changes the
-     task definition the finished comparison held fixed, so it is your call.
-   About 9 GPU-hours each. If two GPUs are free, running both saves a day. Jobs on the cluster
-   start only when you say so in that session; a relayed approval has not been enough.
+   - **4b**: also, a thigh or calf touching a step costs a small penalty per step and no
+     longer ends the episode (base and hip contact, and tipping over, still do). This is the
+     laptop session's recommendation for the real robot; it changes the task definition, so
+     it is your call. 4b's fall numbers are not comparable with any earlier policy's; compare
+     by crossing rate, speed and stalled fraction.
+   ```
+   export HF_TOKEN=$(cat ~/.hf_token)
+   SPEC=StairsV4a sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
+   SPEC=StairsV4b sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
+   ```
+   About 9 GPU-hours each; one GPU was free on the afternoon of 10-06, so the second would
+   queue. **Nobody is watching a submitted run**: prompt the cluster session at about 500 and
+   1,500 iterations to run `coordination/scripts/stairs_run_status.py go2-spec-<JOB>.out`
+   (stop if speed is under 30% of commanded or the mean row is not rising), or a failing run
+   burns its full 9 hours as stairs v3 did.
 2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
    ```
    ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
@@ -81,8 +93,8 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- Build 4a and 4b as registered tasks and CPU-check them (asked on 2026-10-06; building needs
-  no approval, submitting does).
+- 4a and 4b are built and CPU-checked (2026-10-06). It submits only when Rohan says so there.
+- During a run: the stop test at ~500 and ~1,500 iterations, when prompted.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
   iteration 1,500.
@@ -152,7 +164,7 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   to the real Go2; stairs v2 found unable to climb real risers; real-stairs plan, numpy
   runner, scan-fault test; stairs v3 built by the cluster and submitted by Rohan.
 - **10-06**: stairs v3 finished and failed (stands still), confirmed on the laptop; run 2
-  proposed.
+  (4a, 4b) proposed and built on the cluster, not submitted.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
@@ -187,6 +199,7 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
 | The study's numbers and intervals | `coordination/results/switch-follow-results.md` |
 | What was fixed in advance | `coordination/results/switch-follow-preregistration.md` |
 | Stairs v3 failure | `coordination/results/2026-10-06-stairs-v3-result.md` |
+| Run 2 (4a, 4b): what was built and how its curriculum rule behaves | `coordination/results/2026-10-06-stairs-v4-built.md` |
 | Why the curriculum sits on easy rows | `coordination/results/2026-10-05-terrain-curriculum-diagnosis.md` |
 | Full experiment history, every bug | `findings.md` |
 | The original research design and its outcome | `objective.md` |
