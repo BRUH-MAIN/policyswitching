@@ -52,20 +52,18 @@ terrain curriculum promotes a robot only when it ends more than 4 m from where i
 and the staircase fills only the inner 3 m of a patch
 (`coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`).
 
-**The warm start was broken in every run so far** (`findings.md` #27). The tool that copies
-stairs v2 into a new run resets its observation statistics, and with statistics from the first
-rollout the copied policy falls in a quarter of a second (measured on the laptop). So stairs
-v3 did not start from a policy that walks, and "it learned to stand still" is what happened
-to a policy that had to relearn walking on steps it could not climb. Its failure says less
-about the uniform-rows design than it seemed to.
+**The warm start handicapped v3 and the first run 2** (`findings.md` #27). The tool that
+copies stairs v2 into a new run reset its observation statistics by default. Measured in
+training: with the reset, v4a ran at 28-29% of commanded speed and never left the easiest row
+in 2,127 iterations; with the statistics kept it starts at 43%. How much of v3's failure this
+explains is not known. (A first account, that the copied policy could not walk at all, was
+wrong and has been withdrawn.)
 
-**Run 2** (`coordination/results/2026-10-06-stairs-v4-built.md`; tasks
-`Unitree-Go2-Spec-StairsV4a` and `V4b`) was submitted on 10-06 with the same broken warm
-start. 4a (job 12581) failed its check at iteration 525: it walks, at 29% of commanded speed,
-stuck on the easiest row. 4b (job 12582) was still queued. **Proposed: cancel and rerun both
-with the normaliser kept.** Not yet decided. Replayed offline, the curriculum rule sends
-stairs v2 to a mean row of about 5.5 and stairs v3 to row 0, so it does tell a walker from a
-stander. The two variants:
+**Run 2 is training** with the statistics kept: `go2_spec_stairs_v4a_kn` (job 12586) and
+`go2_spec_stairs_v4b_kn` (job 12587), started 2026-10-06 16:40 IST, about 9 hours each
+(`coordination/results/2026-10-06-stairs-v4-built.md`). Not evaluated. Replayed offline, the
+curriculum rule sends stairs v2 to a mean row of about 5.5 and stairs v3 to row 0, so it does
+tell a walker from a stander. The two variants:
 
 - **4a**: rows adapt to the robot, starting easy. A robot moves up only when it has actually
   crossed, and moves down when it falls **or stalls**. Nothing else changes.
@@ -164,8 +162,8 @@ wrong scan has less margin.
 
 ## 3. Order of work
 
-1. **Rohan, in the cluster session**: submit run 2 (4a and 4b are built), and have that
-   session check each run at about 500 and 1,500 iterations so a failing one is stopped early.
+1. **Rohan, in the cluster session**: have it check the two running jobs (12586, 12587) at
+   about 500 and 1,500 iterations so a failing one is stopped early.
 2. **Rohan, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. Still not done;
    they decide between scan options A and B.
 3. **Laptop, when a run-2 checkpoint lands on HF**: the acceptance runs in 2.1.

@@ -21,6 +21,15 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## 2026-10-06 (2) -- your normaliser suspicion is confirmed on the laptop; recommend rerunning 4a and 4b with it kept
 
+*Corrected 2026-10-06, after your message:* "confirmed" was too strong and "v3 never started
+from a walking policy" is withdrawn. My test replaced the statistics with those of one batch
+of standing robots; training re-estimates them from a 24-step rollout of the policy walking,
+and your reset run showed no mass falling. The iteration-0 line is identical in the reset and
+kept runs, so it was never evidence. What stands is your training comparison: 28% vs 43% of
+commanded speed at iteration ~36, and the reset run stuck at 28-29% on row 0. `findings.md`
+#27 now says this. Thank you for catching it. Reruns 12586 / 12587 noted; the laptop will
+evaluate `go2_spec_stairs_v4a_kn` and `_v4b_kn` when `model_9999.pt` lands.
+
 **Measured** (laptop, `findings.md` #27): stairs v2 with its own normaliser crosses a 5 cm
 staircase 99% of the time. The same weights with normaliser statistics taken from one batch
 of freshly reset robots (what a zeroed `count` produces on the first rollout) fall in 0.26 s,
