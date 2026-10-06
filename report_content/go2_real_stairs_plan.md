@@ -59,11 +59,24 @@ in 2,127 iterations; with the statistics kept it starts at 43%. How much of v3's
 explains is not known. (A first account, that the copied policy could not walk at all, was
 wrong and has been withdrawn.)
 
-**Run 2 is training** with the statistics kept: `go2_spec_stairs_v4a_kn` (job 12586) and
-`go2_spec_stairs_v4b_kn` (job 12587), started 2026-10-06 16:40 IST, about 9 hours each
-(`coordination/results/2026-10-06-stairs-v4-built.md`). Not evaluated. Replayed offline, the
-curriculum rule sends stairs v2 to a mean row of about 5.5 and stairs v3 to row 0, so it does
-tell a walker from a stander. The two variants:
+**Run 2 with the statistics kept is failing too**: `go2_spec_stairs_v4a_kn` (job 12586) and
+`go2_spec_stairs_v4b_kn` (job 12587), started 2026-10-06 16:40 IST. Speed is 45% of commanded
+at iteration 10 and 26-30% from iteration 150 on, with every robot on the easiest row. On the
+laptop their iteration-400 checkpoints cross no flight at 9 or 12 cm and cannot keep up with
+the leader on flat ground. The curriculum rule itself behaves as intended (replayed offline it
+sends stairs v2 to a mean row of about 5.5 and stairs v3 to row 0); the policy is simply too
+slow to be promoted. Write-up: `coordination/results/2026-10-06-stairs-v4-stop-test.md`.
+
+**The pattern in all three attempts is the same: the policy gets safer by getting slower, and
+total reward does not change.** A candidate cause, found by reading the reward code and not yet
+checked against the training logs: the `foot_clearance` term penalises each moving foot by its
+distance from a height of 0.10 m measured in the world frame. On flat ground that asks for a
+10 cm swing. On a staircase the whole robot is above or below that level by up to five risers,
+so the term charges for the staircase's height every time a foot moves, and the cheapest
+response is to move less. If the logs bear this out, the fix is to measure foot height against
+the ground under the foot, and no curriculum or contact rule could have worked without it.
+
+The two variants as built:
 
 - **4a**: rows adapt to the robot, starting easy. A robot moves up only when it has actually
   crossed, and moves down when it falls **or stalls**. Nothing else changes.
@@ -162,8 +175,9 @@ wrong scan has less margin.
 
 ## 3. Order of work
 
-1. **Rohan, in the cluster session**: have it check the two running jobs (12586, 12587) at
-   about 500 and 1,500 iterations so a failing one is stopped early.
+1. **Rohan, in the cluster session**: have it check the `foot_clearance` hypothesis in its
+   logs; cancel the two failing jobs (12586, 12587); then short 300-500 iteration runs of a
+   fixed task before any full run.
 2. **Rohan, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. Still not done;
    they decide between scan options A and B.
 3. **Laptop, when a run-2 checkpoint lands on HF**: the acceptance runs in 2.1.

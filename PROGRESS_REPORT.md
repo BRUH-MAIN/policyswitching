@@ -52,8 +52,9 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 |---|---|
 | Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
-| Run 2 (variants 4a and 4b) | **Training now**: `go2_spec_stairs_v4a_kn` (job 12586) and `go2_spec_stairs_v4b_kn` (job 12587), started 2026-10-06 16:40 IST, about 9 h each, checkpoints on private HF. Not evaluated. A first submission (12581, 12582) was cancelled. `coordination/results/2026-10-06-stairs-v4-built.md` |
-| Warm start | Must keep the observation normaliser (`findings.md` #27). With it reset, v4a ran at 28-29% of commanded speed and never left the easiest row; kept, it starts at 43%. The reruns keep it. |
+| Run 2 (variants 4a and 4b) | **Failing.** With the normaliser kept (`go2_spec_stairs_v4a_kn` job 12586, `_v4b_kn` job 12587, started 16:40 IST on 10-06) both are at 28-30% of commanded speed on the easiest row by iteration 150 and fail the iteration-530 check. Laptop eval of their iteration-400 checkpoints: 0% of flights crossed, cannot follow on flat ground. Still running when this was written. `coordination/results/2026-10-06-stairs-v4-stop-test.md` |
+| Pattern across v3, v4a, v4b | The policy gets safer by getting slower, and reward does not show it. **Leading hypothesis (from the code, not yet checked in the logs)**: the `foot_clearance` reward uses the foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. `coordination/inbox/to-cluster.md`, entry 2026-10-06 (3). |
+| Warm start | Should keep the observation normaliser (`findings.md` #27): reset, v4a started at 28% of commanded speed against 43% kept. It did not rescue the runs. |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
 | How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
@@ -62,17 +63,24 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.1 Rohan
 
-1. **Nothing to decide on run 2 right now; it is training.** You cancelled the first
-   submission and resubmitted both variants with the normaliser kept (jobs 12586 and 12587).
-   - **4a** (`go2_spec_stairs_v4a_kn`): progress-gated rows, nothing else changed.
-   - **4b** (`go2_spec_stairs_v4b_kn`): also, thigh or calf contact is penalised and no longer
-     ends the episode. Its fall numbers are not comparable with any earlier policy's.
-   **Someone has to watch them.** The cluster session had a check armed for iteration ~530
-   (about 17:10 IST on 10-06) and said the 1,500 check needs re-arming after. Prompt it:
-   `coordination/scripts/stairs_run_status.py go2-spec-<JOB>.out`. Stop a run whose achieved
-   speed is under ~30% of commanded or whose mean row is not rising by 1,500 iterations.
-   If both fail, the next options are in `coordination/results/2026-10-06-stairs-v3-result.md`
-   (a stall penalty or progress reward; a narrower riser range first).
+1. **Decide, in the cluster session, what to do about the real-stairs training.** State on the
+   evening of 10-06: jobs 12586 and 12587 are running and failing. The laptop session's
+   recommendation:
+   - Have the cluster session check the `foot_clearance` hypothesis in its logs (read-only,
+     minutes): is that term large, and does it shrink as speed falls?
+   - Cancel 12586 and 12587.
+   - If the logs agree: a stairs v5 = 4b with `foot_clearance` made relative to the ground
+     under the foot (or removed for the stairs tasks). One change.
+   - **Short runs first.** The failure shows within 150 iterations, about 8 minutes. Run
+     300-500 iterations per variant, judge on speed fraction and mean row, and give a full
+     9-hour run only to a variant that holds above ~50% speed and climbs rows.
+   If the logs do not agree, the cluster's other options stand: a stall penalty or progress
+   reward, or a lower termination cost relative to tracking
+   (`coordination/results/2026-10-06-stairs-v4-stop-test.md`).
+   **Be realistic about time**: this is now reward design for real stair heights, and three
+   attempts have failed. It may take several more short iterations and at least one long run.
+   Walking and person-following on flat ground and low steps (up to ~9 cm) do not need it:
+   stairs v2 already does that in simulation.
 2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
    ```
    ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
@@ -84,17 +92,17 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- Running 12586 (4a_kn) and 12587 (4b_kn). Early checks at ~530 and ~1,500 iterations, the
-  second only if re-armed or prompted.
+- Asked (2026-10-06 (3)) to read `foot_clearance` and `track_linear_velocity` out of the
+  logs of 12586/12587 and v2. Jobs 12586 and 12587 keep running until Rohan says otherwise.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
   iteration 1,500.
 
 ### 2.3 Laptop session
 
-When `go2_spec_stairs_v4a_kn/model_9999.pt` or `go2_spec_stairs_v4b_kn/model_9999.pt` is on
-private HF (`RohanRamesh/go2-specialists`; expected in the early hours of 10-07 IST), from
-`unitree_rl_mjlab/`, for each:
+When a real-stairs checkpoint worth evaluating is on private HF
+(`RohanRamesh/go2-specialists`, folder named after the experiment; intermediate checkpoints
+land every 200 iterations and can be evaluated the same way), from `unitree_rl_mjlab/`:
 
 ```
 # download (the token is in the repo's .env; scripts/switch_follow_generalist.sh shows the pattern)
@@ -159,7 +167,8 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   (4a, 4b) built and submitted; 4a failed its early check and both were cancelled; the warm
   start's normaliser reset was found to cost speed from the first iterations (an overstated
   first account of this was corrected the same day); 4a and 4b resubmitted with the
-  normaliser kept.
+  normaliser kept, and both failing again by iteration 150; the `foot_clearance` reward
+  identified from the code as a candidate cause.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 

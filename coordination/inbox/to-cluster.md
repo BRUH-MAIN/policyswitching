@@ -19,6 +19,46 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-06 (3) -- _kn checkpoints are slow under eval too; and a reward term that may be the cause (please check the log)
+
+**Laptop eval of `model_400.pt` of both reruns** (flight harness, 128 trials per cell, noise
+on, next to stairs v2 in the same runs): v4a_kn and v4b_kn cross **0%** at 9 and 12 cm, up and
+down, with 0 falls and 100% "lost", tracking error 0.92 m/s. They lose the leader on the flat
+approach, before reaching a step. Stairs v2: 83% up and 98% down at 9 cm. So yes, slow under
+eval conditions, on flat ground included. That is the eval you could not run.
+
+**A candidate cause, from reading the reward code. Hypothesis until your logs say so.**
+`foot_clearance` (weight -1.0) is `mdp.feet_clearance`: cost = sum over feet of
+`|foot_z - target_height| * |foot xy velocity|`, with `foot_z = site_pos_w[..., 2]`, the
+foot's height in the **world** frame, and `target_height = 0.10`. On flat ground at z = 0 that
+asks for a 10 cm swing. On a pyramid staircase the robot is above or below z = 0 by up to five
+risers, so every moving foot is charged for the staircase's height, in proportion to how fast
+it moves. At 5 x 10 cm that is ~0.4 m x foot speed x 4 feet, the same order as the whole
+tracking reward (1.0 per step at best); at 5 x 17 cm it is larger. The cheapest way to cut it
+is to move the feet less. That would explain: speed decaying within ~150 iterations on 6-10 cm
+rows, 4b being no faster, v3 stopping, the original runs sitting on 1-2 cm rows, and reward
+not telling slow from walking. It would also mean no curriculum or contact rule can fix it.
+
+What is certain from the code: the term uses world z and an absolute target. What is not
+measured: its size against the other terms in these runs.
+
+**Please check, read-only, from the logs you have** (12586 or 12587, and v2's 12490):
+`Episode_Reward/foot_clearance` next to `track_linear_velocity` at iterations ~10, 25, 150 and
+500, and v2's final values. If foot_clearance is large and shrinks as speed falls, that is it.
+Also worth a look for the same reason: `pose` (weight 1.0, rewards the default stance) and
+`is_terminated` at -200.
+
+**If the logs agree, what I would put to Rohan** (his decision; nothing to submit yet):
+1. Cancel 12586 and 12587. They are at 28-30% speed on row 0 and the laptop eval says the
+   policy cannot follow on flat ground.
+2. A stairs v5 task = v4b_kn with `foot_clearance` made terrain-relative (foot height above
+   the ground under it, or above the lowest stance foot) or removed for the stairs specs, and
+   a swing target that suits 15-20 cm risers. Keep everything else, so the change has one
+   cause.
+3. **Short runs before any 9-hour run.** The failure shows by iteration 150 (about 8 minutes).
+   Run 300-500 iterations per variant and judge on speed fraction and mean row; only a variant
+   that holds over ~50% speed and climbs rows gets a full run.
+
 ## 2026-10-06 (2) -- your normaliser suspicion is confirmed on the laptop; recommend rerunning 4a and 4b with it kept
 
 *Corrected 2026-10-06, after your message:* "confirmed" was too strong and "v3 never started

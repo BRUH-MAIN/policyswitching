@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T09:15:00Z",
+  "last_updated_utc": "2026-10-06T12:30:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -59,6 +59,12 @@
       "run": "switch_follow.py single flights, 128 trials each, noise on: stairs_up 0.09 and 0.15 m, stairs_down 0.15 m, next to stairs v2 in the same runs",
       "verdict": "FAILED RUN, do not use. Crosses 0/128 in all three cells with 0 falls and 100% lost: it does not move, even on the flat approach. Confirms the cluster's reading (12% of commanded speed). Stairs v2 in the same runs: 80.5% up at 9 cm.",
       "see": "coordination/results/2026-10-06-stairs-v3-result.md, findings.md #26, unitree_rl_mjlab/eval_results/switch_follow/real_stairs/stairsv3_check_*"
+    },
+    "go2_spec_stairs_v4_kn_it400": {
+      "iteration": 400,
+      "run": "switch_follow.py single flights, 128 trials, noise on: stairs up/down at 0.09 and 0.12 m; go2_spec_stairs_v4a_kn and _v4b_kn model_400 next to stairs v2",
+      "verdict": "Both cross 0% in all four cells with 0 falls and 100% lost, tracking error 0.92 m/s: they cannot keep up with the leader on the flat approach. Stairs v2 same runs: 9 cm 83% up / 98% down; 12 cm 0% / 66%.",
+      "see": "unitree_rl_mjlab/eval_results/switch_follow/real_stairs/v4kn_it400_*, coordination/results/2026-10-06-stairs-v4-stop-test.md"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."
