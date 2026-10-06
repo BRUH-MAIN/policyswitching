@@ -23,6 +23,7 @@ from mjlab.terrains.config import ALL_TERRAINS_CFG, ROUGH_TERRAINS_CFG
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 
 from src.tasks.velocity.mdp.pas import foot_friction
+from src.tasks.velocity.mdp.rewards import feet_clearance_relative
 from src.tasks.velocity.mdp.terrain_curriculum import (
   PROGRESS_ACROSS_M,
   PROGRESS_STALL_CMD,
@@ -608,6 +609,34 @@ def unitree_go2_spec_stairs_v4b_env_cfg(play: bool = False) -> ManagerBasedRlEnv
   comparable with theirs, and a shin brushing a nosing no longer ends an episode.
   """
   return _stairs_v4_env_cfg(play, limb_contact_penalised=True)
+
+
+def unitree_go2_spec_stairs_v5a_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v5a: v4b with the `foot_clearance` reward REMOVED.
+
+  `mdp.feet_clearance` charges |foot_z_world - 0.10| * foot speed. On a staircase the robot is
+  up to five risers away from z = 0, so every moving foot is charged for the staircase's height
+  and the cheapest response is to move less. In the v4/v3 logs that term is 1.5-2x v2's and
+  about half the tracking reward (coordination/results/2026-10-06-stairs-v4-stop-test.md).
+  Everything else is v4b (progress-gated rows from 0-3, limb contact penalised, speed/stall
+  metrics, warm start from v2, normalizer kept). One change, to test one hypothesis.
+  """
+  cfg = _stairs_v4_env_cfg(play, limb_contact_penalised=True)
+  cfg.rewards.pop("foot_clearance")
+  return cfg
+
+
+def unitree_go2_spec_stairs_v5b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v5b: v4b with `foot_clearance` measured relative to the lowest foot.
+
+  Same term, weight (-1.0), target (0.10 m), speed weighting and command gate as the stock
+  reward, but a foot's height is taken above the robot's lowest foot instead of world z
+  (`mdp.feet_clearance_relative`), so a staircase's height is not charged and a swing still is
+  asked to clear. Otherwise identical to v5a/v4b.
+  """
+  cfg = _stairs_v4_env_cfg(play, limb_contact_penalised=True)
+  cfg.rewards["foot_clearance"] = replace(cfg.rewards["foot_clearance"], func=feet_clearance_relative)
+  return cfg
 
 
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:

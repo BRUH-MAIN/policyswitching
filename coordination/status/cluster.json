@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T11:42:24Z",
+  "last_updated_utc": "2026-10-06T12:13:46Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -190,7 +190,7 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "in_progress",
+      "status": "cancelled",
       "slurm_job_id": "12586",
       "notes": "See jobs.stairs_v4a_train."
     },
@@ -202,7 +202,7 @@
       "path_on_cluster": null,
       "iteration": null,
       "sha256": null,
-      "status": "in_progress",
+      "status": "cancelled",
       "slurm_job_id": "12587",
       "notes": "See jobs.stairs_v4b_train."
     }
@@ -287,7 +287,7 @@
       "outputs": "unitree_rl_mjlab/eval_results/stairs_heights/stairs_v3_h{9,12,15,17}_w{30,26}.json"
     },
     "stairs_v4a_train": {
-      "status": "running",
+      "status": "cancelled",
       "task": "Unitree-Go2-Spec-StairsV4a",
       "experiment": "go2_spec_stairs_v4a_kn",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4a sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
@@ -296,10 +296,10 @@
       "node": "asaicomputemaster (RTX 6000 Ada)",
       "started_ist": "2026-10-06 16:40:36",
       "submitted_by": "Rohan, directly (scancel 12581 12582; EXPERIMENT_SUFFIX=_kn)",
-      "progress": "STOP TEST FAILED at iteration ~520: speed 28-30%% of commanded, mean row 0.01-0.04 (all robots on row 0). Normalizer kept did not fix it (speed 45%% at it. 10 decaying to 28%% by it. 150 as terminations fell). Left running pending Rohan. coordination/results/2026-10-06-stairs-v4-stop-test.md"
+      "progress": "Cancelled 2026-10-06 ~18:20 IST at iteration ~1090 after failing the stop test (speed 28-30%, row 0). Superseded by StairsV5a/V5b trials."
     },
     "stairs_v4b_train": {
-      "status": "running",
+      "status": "cancelled",
       "task": "Unitree-Go2-Spec-StairsV4b",
       "experiment": "go2_spec_stairs_v4b_kn",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4b sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
@@ -307,7 +307,7 @@
       "slurm_job_id": "12587",
       "submitted_by": "Rohan, directly (scancel 12581 12582; EXPERIMENT_SUFFIX=_kn)",
       "started_ist": "2026-10-06 16:40:36",
-      "progress": "STOP TEST FAILED at iteration ~520: speed 28-30%% of commanded, mean row 0.01-0.04 (all robots on row 0). Normalizer kept did not fix it (speed 45%% at it. 10 decaying to 28%% by it. 150 as terminations fell). Left running pending Rohan. coordination/results/2026-10-06-stairs-v4-stop-test.md"
+      "progress": "Cancelled 2026-10-06 ~18:20 IST at iteration ~1090 after failing the stop test (speed 28-30%, row 0). Superseded by StairsV5a/V5b trials."
     },
     "progress_rule_replay": {
       "slurm_job_ids": [
@@ -317,6 +317,17 @@
       "status": "completed",
       "headline": "progress-gated rule: v2 stationary mean row 5.4-5.5; v3 stander demoted 73-79%, promoted 0%, mean row 0.0. ~17-20% false-stall demotions on a competent policy's easy rows.",
       "outputs": "unitree_rl_mjlab/eval_results/terrain_curriculum/{stairs_v2_progress,stairs_v3_stander}.json"
+    },
+    "stairs_v5_trials": {
+      "status": "running",
+      "slurm_job_ids": {
+        "v5a (foot_clearance removed)": "12589",
+        "v5b (clearance above lowest foot)": "12590 (pending: no second GPU)"
+      },
+      "submitted_by": "cluster-sess, under Rohan's 'do what accelerates the completion of the project'",
+      "budget": "600 iterations each (BUDGET=600, same experiment resumes to 10000 if it passes)",
+      "pass": "speed >= ~45% of commanded (v4 runs: 28-30%), mean row rising, by ~iteration 500",
+      "notes": "Test of the foot_clearance (world-z) hypothesis: both are v4b + one change. coordination/results/2026-10-06-stairs-v4-stop-test.md addendum."
     }
   }
 }

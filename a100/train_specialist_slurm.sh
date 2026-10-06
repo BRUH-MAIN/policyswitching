@@ -10,6 +10,8 @@
 # SPEC:
 #   Flat | Rough | Stairs | Gaps   -> Unitree-Go2-Spec-<SPEC>, experiment go2_spec_<spec>
 #   GapsWarm                       -> 100% stepping_stones, warm-started (see INIT_FROM)
+#   StairsV5a | StairsV5b          -> v4b with foot_clearance removed (a) / measured above the lowest
+#                                     foot (b): the world-z clearance term charges a staircase's height
 #   StairsV4a | StairsV4b          -> Unitree-Go2-Spec-StairsV4a/V4b, experiments go2_spec_stairs_v4a/
 #                                     v4b: StairsV3's terrain with progress-gated adaptive rows
 #                                     (start on rows 0-3). V4b also makes thigh/calf contact a
@@ -79,7 +81,7 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
@@ -101,6 +103,14 @@ case "$SPEC" in
     TASK="Unitree-Go2-Spec-StairsV4b"
     EXPERIMENT_NAME="go2_spec_stairs_v4b"
     ;;
+  StairsV5a)
+    TASK="Unitree-Go2-Spec-StairsV5a"
+    EXPERIMENT_NAME="go2_spec_stairs_v5a"
+    ;;
+  StairsV5b)
+    TASK="Unitree-Go2-Spec-StairsV5b"
+    EXPERIMENT_NAME="go2_spec_stairs_v5b"
+    ;;
   Generalist)
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
@@ -109,7 +119,7 @@ case "$SPEC" in
     TASK="Unitree-Go2-GeneralistV2"
     EXPERIMENT_NAME="go2_generalist_v2"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
@@ -119,7 +129,7 @@ A100_DIR="$REPO_DIR/a100"
 EXPERIMENT_NAME="${EXPERIMENT_NAME}${EXPERIMENT_SUFFIX:-}"
 
 case "$SPEC" in
-  StairsV3|StairsV4a|StairsV4b) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
+  StairsV3|StairsV4a|StairsV4b|StairsV5a|StairsV5b) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
   *) KEEP_NORMALIZER="${KEEP_NORMALIZER:-0}" ;;
 esac
 
@@ -132,7 +142,7 @@ if [ "$SPEC" = "GapsWarm" ] && [ -z "${INIT_FROM:-}" ]; then
   INIT_FROM="$MJLAB_DIR/logs/rsl_rl/go2_spec_rough/2026-09-06_12-07-49/model_9999.pt"
 fi
 
-if { [ "$SPEC" = "StairsV3" ] || [ "$SPEC" = "StairsV4a" ] || [ "$SPEC" = "StairsV4b" ]; } && [ -z "${INIT_FROM:-}" ]; then
+if { [ "$SPEC" = "StairsV3" ] || [ "$SPEC" = "StairsV4a" ] || [ "$SPEC" = "StairsV4b" ] || [ "$SPEC" = "StairsV5a" ] || [ "$SPEC" = "StairsV5b" ]; } && [ -z "${INIT_FROM:-}" ]; then
   # Loud failure (set -e + no match) rather than a silent cold start on hard terrain.
   INIT_FROM="$(ls "$MJLAB_DIR"/logs/rsl_rl/go2_spec_stairs_v2/*/model_9999.pt | head -1)"
 fi

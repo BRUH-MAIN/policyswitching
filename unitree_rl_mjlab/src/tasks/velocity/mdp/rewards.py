@@ -185,6 +185,36 @@ def feet_clearance(
   return cost
 
 
+def feet_clearance_relative(
+  env: ManagerBasedRlEnv,
+  target_height: float,
+  command_name: str | None = None,
+  command_threshold: float = 0.1,
+  asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+  """`feet_clearance` with foot height measured above the robot's lowest foot, not world z.
+
+  The stock term charges |foot_z_world - target| * foot speed, so on a staircase (the robot sits
+  up to five risers above or below z = 0) every moving foot pays for the staircase's height and
+  the cheapest response is to move the feet less. Here each foot's height is taken relative to
+  the lowest of the four, which on flat ground is within a couple of centimetres of the stock
+  value and on stairs is the swing height above the stance foot (the lowest foot is a stance
+  foot nearly always). Same target, same speed weighting, same command gate.
+  """
+  asset: Entity = env.scene[asset_cfg.name]
+  foot_z = asset.data.site_pos_w[:, asset_cfg.site_ids, 2]  # [B, N]
+  rel_z = foot_z - foot_z.min(dim=1, keepdim=True).values
+  foot_vel_xy = asset.data.site_lin_vel_w[:, asset_cfg.site_ids, :2]
+  vel_norm = torch.norm(foot_vel_xy, dim=-1)
+  cost = torch.sum(torch.abs(rel_z - target_height) * vel_norm, dim=1)
+  if command_name is not None:
+    command = env.command_manager.get_command(command_name)
+    if command is not None:
+      total_command = torch.norm(command[:, :2], dim=1) + torch.abs(command[:, 2])
+      cost = cost * (total_command > command_threshold).float()
+  return cost
+
+
 def feet_gait(
         env: ManagerBasedRlEnv,
         period: float,
