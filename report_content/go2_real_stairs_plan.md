@@ -52,11 +52,20 @@ terrain curriculum promotes a robot only when it ends more than 4 m from where i
 and the staircase fills only the inner 3 m of a patch
 (`coordination/results/2026-10-05-terrain-curriculum-diagnosis.md`).
 
-**Run 2, built and CPU-checked on the cluster, not submitted**
-(`coordination/results/2026-10-06-stairs-v4-built.md`; tasks `Unitree-Go2-Spec-StairsV4a` and
-`V4b`). Replayed offline, its curriculum rule sends stairs v2 to a mean row of about 5.5 and
-stairs v3 to row 0, so it does tell a walker from a stander.
-Two variants, both warm-started from stairs v2 with risers 5-20 cm:
+**The warm start was broken in every run so far** (`findings.md` #27). The tool that copies
+stairs v2 into a new run resets its observation statistics, and with statistics from the first
+rollout the copied policy falls in a quarter of a second (measured on the laptop). So stairs
+v3 did not start from a policy that walks, and "it learned to stand still" is what happened
+to a policy that had to relearn walking on steps it could not climb. Its failure says less
+about the uniform-rows design than it seemed to.
+
+**Run 2** (`coordination/results/2026-10-06-stairs-v4-built.md`; tasks
+`Unitree-Go2-Spec-StairsV4a` and `V4b`) was submitted on 10-06 with the same broken warm
+start. 4a (job 12581) failed its check at iteration 525: it walks, at 29% of commanded speed,
+stuck on the easiest row. 4b (job 12582) was still queued. **Proposed: cancel and rerun both
+with the normaliser kept.** Not yet decided. Replayed offline, the curriculum rule sends
+stairs v2 to a mean row of about 5.5 and stairs v3 to row 0, so it does tell a walker from a
+stander. The two variants:
 
 - **4a**: rows adapt to the robot, starting easy. A robot moves up only when it has actually
   crossed, and moves down when it falls **or stalls**. Nothing else changes.

@@ -19,6 +19,35 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-06 (2) -- your normaliser suspicion is confirmed on the laptop; recommend rerunning 4a and 4b with it kept
+
+**Measured** (laptop, `findings.md` #27): stairs v2 with its own normaliser crosses a 5 cm
+staircase 99% of the time. The same weights with normaliser statistics taken from one batch
+of freshly reset robots (what a zeroed `count` produces on the first rollout) fall in 0.26 s,
+13 control steps, 128 of 128. First-batch std against trained std: previous action 0.000 vs
+0.77, joint position 0.006 vs 0.14, joint velocity 0.86 vs 2.0; with std + 0.01 in the
+denominator those inputs are amplified up to 100x once the robot moves. That is your
+iteration-0 episode length of 17. Caveat: my batch had zero commands, so it is an emulation of
+the reset, not the training code path; your iteration-0 numbers are the direct evidence.
+
+So v3 never started from a walking policy, and neither did v4a. I would not read v4a's stall
+at row 0 as evidence about the progress rule.
+
+**Recommendation, for Rohan to decide in your session**: cancel 12581 and the pending 12582,
+and resubmit 4a and 4b with the normaliser kept.
+
+- `a100/warm_start_ckpt.py` already has `--keep-normalizer`; `train_specialist_slurm.sh`
+  needs to pass it (an env var such as `KEEP_NORMALIZER=1`, default on for the StairsV3/V4
+  specs since they stay on stairs).
+- The tool is a no-op when the experiment already has a checkpoint, so use fresh experiment
+  names (e.g. `go2_spec_stairs_v4a_kn`) or clear the old run folders; keeping the failed
+  runs under their own names is better for the record.
+- **First check at iteration 0-5, not 500**: mean episode length should be in the hundreds
+  and reward near v2's. If it is 17 again the warm start is still broken; stop there.
+- The docstring's reason for the reset (Rough onto stepping stones) still holds for that case.
+- With a policy that really walks from iteration 0, v3's design (uniform rows) is untested
+  rather than refuted. I would still run the progress-gated v4 pair first.
+
 ## 2026-10-06 -- stairs v3 result received and confirmed; run 2: please BUILD two variants, submit on Rohan's word
 
 **Received** `coordination/results/2026-10-06-stairs-v3-result.md`. Confirmed on the laptop's

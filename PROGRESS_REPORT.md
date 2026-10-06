@@ -52,7 +52,8 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 |---|---|
 | Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
-| Run 2 (variants 4a and 4b) | **Built and CPU-checked on the cluster, not submitted.** Neither has run an iteration on a GPU. `coordination/results/2026-10-06-stairs-v4-built.md` |
+| Run 2 (variants 4a and 4b) | Submitted by Rohan on 10-06: 4a = job 12581, **failed its iteration-525 check** (29% of commanded speed, stuck on the easiest row); 4b = job 12582, pending for a GPU. `coordination/results/2026-10-06-stairs-v4-built.md` |
+| Why v3 and v4a started badly | **The warm start breaks the policy it copies** (`findings.md` #27): it resets the observation normaliser, and stairs v2 with first-rollout statistics falls in 0.26 s. Both runs began from a policy that could not walk. |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
 | How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
@@ -61,27 +62,19 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.1 Rohan
 
-1. **Decide run 2 and submit it in the cluster session.** Two variants are built
-   (`Unitree-Go2-Spec-StairsV4a` / `V4b`, experiments `go2_spec_stairs_v4a` / `v4b`), both
-   warm-started from stairs v2 with risers 5-20 cm. Robots start on the four easiest rows; one
-   moves up only if it times out having got past all five steps, and moves down if it is
-   terminated or ends a moving episode without leaving the platform or first step.
-   - **4a**: nothing else changes.
-   - **4b**: also, a thigh or calf touching a step costs a small penalty per step and no
-     longer ends the episode (base and hip contact, and tipping over, still do). This is the
-     laptop session's recommendation for the real robot; it changes the task definition, so
-     it is your call. 4b's fall numbers are not comparable with any earlier policy's; compare
-     by crossing rate, speed and stalled fraction.
-   ```
-   export HF_TOKEN=$(cat ~/.hf_token)
-   SPEC=StairsV4a sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
-   SPEC=StairsV4b sbatch --gres=gpu:1 a100/train_specialist_slurm.sh
-   ```
-   About 9 GPU-hours each; one GPU was free on the afternoon of 10-06, so the second would
-   queue. **Nobody is watching a submitted run**: prompt the cluster session at about 500 and
-   1,500 iterations to run `coordination/scripts/stairs_run_status.py go2-spec-<JOB>.out`
-   (stop if speed is under 30% of commanded or the mean row is not rising), or a failing run
-   burns its full 9 hours as stairs v3 did.
+1. **Decide what to do with run 2, in the cluster session.** State on the afternoon of
+   10-06: 4a (job 12581) is running and has failed its early check; 4b (job 12582) is queued
+   and would start with the same broken warm start. **Recommendation from the laptop session:
+   cancel both and resubmit both with the normaliser kept.** That needs the cluster session to
+   pass `--keep-normalizer` from `a100/train_specialist_slurm.sh` to `a100/warm_start_ckpt.py`
+   (the option exists in the tool, not in the script), and fresh experiment names or cleared
+   warm-start folders, because the tool does nothing when the experiment already has a
+   checkpoint. Then check iteration 0: episode length should be in the hundreds, not 17.
+   - **4a**: progress-gated rows, nothing else changed.
+   - **4b**: also, thigh or calf contact is penalised and no longer ends the episode. The
+     laptop session's pick for the real robot; your call.
+   About 9 GPU-hours each. **Nobody watches a run**: prompt the cluster session at about 500
+   and 1,500 iterations to run `coordination/scripts/stairs_run_status.py go2-spec-<JOB>.out`.
 2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
    ```
    ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
@@ -93,7 +86,8 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- 4a and 4b are built and CPU-checked (2026-10-06). It submits only when Rohan says so there.
+- Waiting for Rohan's decision on jobs 12581 / 12582 and on a rerun with the normaliser kept
+  (`coordination/inbox/to-cluster.md`, entry "2026-10-06 (2)").
 - During a run: the stop test at ~500 and ~1,500 iterations, when prompted.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
@@ -164,13 +158,16 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   to the real Go2; stairs v2 found unable to climb real risers; real-stairs plan, numpy
   runner, scan-fault test; stairs v3 built by the cluster and submitted by Rohan.
 - **10-06**: stairs v3 finished and failed (stands still), confirmed on the laptop; run 2
-  (4a, 4b) proposed and built on the cluster, not submitted.
+  (4a, 4b) built and submitted; 4a failed its early check; the warm start was found to break
+  the copied policy (normaliser reset), which undermines v3 and v4a alike.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
 - **Judge a locomotion policy by where it gets to, not by whether it falls.** Stairs v3 has
   99% survival and near-zero falls per 100 m because it does not move (#26; earlier cases #1,
   #14). Always read achieved speed, stalled fraction, or crossing rate first.
+- **A warm start must keep the observation normaliser** (#27). With it reset, the copied
+  policy falls in a quarter of a second. Check iteration 0 of any warm-started run.
 - **Results from one course layout are results about that layout** (#24, #25). Evaluate over
   `--random-layout` and analyse with `switch_follow_layouts.py`.
 - **The twin env has observation noise and pushes off** unless `--obs-noise` (#22). Say which.
