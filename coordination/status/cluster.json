@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T17:29:04Z",
+  "last_updated_utc": "2026-10-06T17:41:51Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -358,7 +358,7 @@
       "status": "pending",
       "slurm_job_id": "12594",
       "command": "BUDGET=10000 SPEC=StairsV5a sbatch --gres=gpu:1 (HF_TOKEN exported)",
-      "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'. Still PENDING at 22:58 IST 10-06 (no GPU free; held by other users' jobs and 12578 csasr-abl). Watcher expired with no start."
+      "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'. Still PENDING at 22:58 IST 10-06 (no GPU free; held by other users' jobs and 12578 csasr-abl). Watcher expired with no start. 23:10 IST 10-06: Rohan requeued 12578 (csasr-abl, other project) to free an A100; the freed A100 was taken within a second by another user's higher-priority job 12591 (saranyad, jupyter), NOT by 12594. 12594 priority 10151, behind 12593 (11173); scheduler worst-case start now 2026-10-07 17:08. 12578 is pending again (priority 10101, behind 12594)."
     }
   }
 }
