@@ -116,8 +116,9 @@ tipping over is a fall): they are trained with thigh and calf contact penalised,
 so the "training" rows count every shin brush as a fall. Report both.
 
 Intermediate checkpoints (every 200 iterations) can be evaluated the same way while 12594
-runs; the one-off loops used on 10-06 are in the shell history of this file's commit, and
-`eval_results/switch_follow/real_stairs/v5a_it400_*` and `v5ab_it599_*` are their outputs.
+runs: download `go2_spec_stairs_v5a/model_<N>.pt` and point `STAIRS_CKPT` at it with a `TAG`
+that names the iteration, e.g. `TAG=stairsv5a_it2000`. The 10-06 results for iterations 400
+and 599 are `eval_results/switch_follow/real_stairs/v5a_it400_*` and `v5ab_it599_*`.
 
 If it passes: `scripts/export_policy_numpy.py <ckpt> --out deploy_numpy/<name>.npz` (it checks
 parity with PyTorch), then the staged bring-up in the plan, section 3.
