@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T09:13:55Z",
+  "last_updated_utc": "2026-10-06T09:44:50Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -271,7 +271,8 @@
       "slurm_job_id": "12581",
       "node": "asaicomputemaster (RTX 6000 Ada)",
       "started_ist": "2026-10-06 14:43:06",
-      "submitted_by": "cluster-sess, on Rohan's 'both'"
+      "submitted_by": "cluster-sess, on Rohan's 'both'",
+      "progress": "REPORT at iteration ~525 (stop test): achieved speed 29% of commanded (threshold 30%), mean row 0.00 -- every robot demoted to row 0 by iteration ~200 and not rising. Not a v3 repeat (walks: tracking reward 0.55, ep length 997, stalled 10%), but weak: v2 tracking 0.78. Iteration-0 reward 0.39 / episode length 17 = the warm-started policy falls at once (same as v3), which points at the warm start's normalizer reset; unproven. Awaiting Rohan."
     },
     "stairs_v4b_train": {
       "status": "pending",
