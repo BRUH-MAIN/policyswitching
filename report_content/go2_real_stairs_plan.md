@@ -73,8 +73,12 @@ checked against the training logs: the `foot_clearance` term penalises each movi
 distance from a height of 0.10 m measured in the world frame. On flat ground that asks for a
 10 cm swing. On a staircase the whole robot is above or below that level by up to five risers,
 so the term charges for the staircase's height every time a foot moves, and the cheapest
-response is to move less. If the logs bear this out, the fix is to measure foot height against
-the ground under the foot, and no curriculum or contact rule could have worked without it.
+response is to move less. The cluster then read the term out of its logs: the failed runs pay
+1.5 to 2 times stairs v2's clearance penalty, about half their tracking reward against about a
+fifth for v2, in the order the hypothesis predicts. That is consistent with it and does not
+prove it, since the penalty shrinks only about 20% while speed falls from 43% to 28%. The test
+is an intervention: a "stairs v5" equal to 4b with the term removed or measured against the
+ground under the foot, tried first in runs of 300-500 iterations. Not built or submitted.
 
 The two variants as built:
 

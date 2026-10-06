@@ -53,7 +53,7 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 | Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
 | Run 2 (variants 4a and 4b) | **Failing.** With the normaliser kept (`go2_spec_stairs_v4a_kn` job 12586, `_v4b_kn` job 12587, started 16:40 IST on 10-06) both are at 28-30% of commanded speed on the easiest row by iteration 150 and fail the iteration-530 check. Laptop eval of their iteration-400 checkpoints: 0% of flights crossed, cannot follow on flat ground. Still running when this was written. `coordination/results/2026-10-06-stairs-v4-stop-test.md` |
-| Pattern across v3, v4a, v4b | The policy gets safer by getting slower, and reward does not show it. **Leading hypothesis (from the code, not yet checked in the logs)**: the `foot_clearance` reward uses the foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. `coordination/inbox/to-cluster.md`, entry 2026-10-06 (3). |
+| Pattern across v3, v4a, v4b | The policy gets safer by getting slower, and reward does not show it. **Hypothesis: the `foot_clearance` reward** uses the foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. Confirmed in the code. In the logs it is **consistent, not demonstrated**: the failed runs pay 1.5-2x stairs v2's clearance penalty, about half their tracking reward against about a fifth for v2, ordered as predicted; but the penalty falls only ~20% while speed falls from 43% to 28%. It needs an intervention: train with the term fixed or removed. Addendum of `coordination/results/2026-10-06-stairs-v4-stop-test.md`. |
 | Warm start | Should keep the observation normaliser (`findings.md` #27): reset, v4a started at 28% of commanded speed against 43% kept. It did not rescue the runs. |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
@@ -66,16 +66,16 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 1. **Decide, in the cluster session, what to do about the real-stairs training.** State on the
    evening of 10-06: jobs 12586 and 12587 are running and failing. The laptop session's
    recommendation:
-   - Have the cluster session check the `foot_clearance` hypothesis in its logs (read-only,
-     minutes): is that term large, and does it shrink as speed falls?
-   - Cancel 12586 and 12587.
-   - If the logs agree: a stairs v5 = 4b with `foot_clearance` made relative to the ground
-     under the foot (or removed for the stairs tasks). One change.
+   - Cancel 12586 and 12587 (they are failing and hold both usable GPUs).
+   - Say "go" to a **stairs v5 = 4b_kn with `foot_clearance` changed**: removed (a one-line
+     change, the quickest test) or measured against the ground (e.g. foot height above the
+     lowest foot). The log check is done and is consistent with the hypothesis without
+     proving it; only training with the term changed can.
    - **Short runs first.** The failure shows within 150 iterations, about 8 minutes. Run
      300-500 iterations per variant, judge on speed fraction and mean row, and give a full
      9-hour run only to a variant that holds above ~50% speed and climbs rows.
-   If the logs do not agree, the cluster's other options stand: a stall penalty or progress
-   reward, or a lower termination cost relative to tracking
+   If v5 slows down the same way, the cluster's other options stand: a stall penalty or
+   progress reward, or a lower termination cost relative to tracking
    (`coordination/results/2026-10-06-stairs-v4-stop-test.md`).
    **Be realistic about time**: this is now reward design for real stair heights, and three
    attempts have failed. It may take several more short iterations and at least one long run.
@@ -92,8 +92,9 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- Asked (2026-10-06 (3)) to read `foot_clearance` and `track_linear_velocity` out of the
-  logs of 12586/12587 and v2. Jobs 12586 and 12587 keep running until Rohan says otherwise.
+- Log check of `foot_clearance` done (consistent, not conclusive). Ready to build v5 as a
+  registered task and to run short trials when Rohan says go. Jobs 12586 and 12587 keep
+  running until he says otherwise.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
   iteration 1,500.
