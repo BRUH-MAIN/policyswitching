@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T09:09:50Z",
+  "last_updated_utc": "2026-10-06T09:13:55Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -157,6 +157,30 @@
       "status": "complete",
       "slurm_job_id": "12563",
       "notes": "Training finished 2026-10-06 06:56 IST (job 12563, 9h01m) and model_9999.pt is on private HF, but the policy stands still (12% of commanded speed at every riser height); a failed run, not a candidate. coordination/results/2026-10-06-stairs-v3-result.md"
+    },
+    "go2_spec_stairs_v4a": {
+      "task": "Unitree-Go2-Spec-StairsV4a",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v4a",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "in_progress",
+      "slurm_job_id": "12581",
+      "notes": "See jobs.stairs_v4a_train. Judge by crossing, speed fraction and stalled fraction (coordination/scripts/stairs_run_status.py), not reward/length/falls."
+    },
+    "go2_spec_stairs_v4b": {
+      "task": "Unitree-Go2-Spec-StairsV4b",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v4b",
+      "path_on_cluster": null,
+      "iteration": null,
+      "sha256": null,
+      "status": "pending",
+      "slurm_job_id": "12582",
+      "notes": "See jobs.stairs_v4b_train. Judge by crossing, speed fraction and stalled fraction (coordination/scripts/stairs_run_status.py), not reward/length/falls."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed three times more on 2026-10-03: stairs step-1 status check, the laptop's 'submit generalist / push gaps to HF / report stairs curve' request (2 of 3 blocked by this session's own permission layer -- see coordination/log/2026-10-03-cluster.md), then Rohan ran the generalist sbatch himself directly after the cluster session's attempt to even self-edit its own settings.local.json to allow it was *also* blocked (reason 'Self-Modification') -- job 12479 is now RUNNING (runs.go2_generalist). The gaps->HF push is still not done; still needs a human to run it directly (see runs.go2_spec_gaps notes) -- it was not re-attempted here. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist, go2_spec_gaps notes, jobs.*. TIMEZONE: fields ending in Z are UTC. squeue/sacct/scontrol print the cluster's local time (Asia/Kolkata, UTC+05:30) with no suffix -- convert before writing a Z timestamp. Two entries were mislabeled this way on 2026-10-03 and have been corrected (jobs.stairs_pyramid_eval, runs.go2_generalist). 2026-10-03 evening: jobs.stairs_precollapse_eval and jobs.stairs_v2_train hand-edited by session cluster-sess.",
@@ -239,18 +263,25 @@
       "outputs": "unitree_rl_mjlab/eval_results/stairs_heights/stairs_v3_h{9,12,15,17}_w{30,26}.json"
     },
     "stairs_v4a_train": {
-      "status": "not_submitted",
+      "status": "running",
       "task": "Unitree-Go2-Spec-StairsV4a",
       "experiment": "go2_spec_stairs_v4a",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4a sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
-      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md"
+      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md",
+      "slurm_job_id": "12581",
+      "node": "asaicomputemaster (RTX 6000 Ada)",
+      "started_ist": "2026-10-06 14:43:06",
+      "submitted_by": "cluster-sess, on Rohan's 'both'"
     },
     "stairs_v4b_train": {
-      "status": "not_submitted",
+      "status": "pending",
       "task": "Unitree-Go2-Spec-StairsV4b",
       "experiment": "go2_spec_stairs_v4b",
       "submit_command": "export HF_TOKEN=$(cat ~/.hf_token); SPEC=StairsV4b sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
-      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Thigh/calf contact is a -2.0/step penalty instead of a termination (task definition change: Rohan's decision). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md"
+      "notes": "Built and CPU-checked 2026-10-06, never run on a GPU. Warm start from stairs v2, rows adaptive from 0-3 gated on progress (promote: timed out and Chebyshev >= 3.2 m; demote: terminated or stalled within 1.9 m; else stay). Thigh/calf contact is a -2.0/step penalty instead of a termination (task definition change: Rohan's decision). Early-stop check: coordination/scripts/stairs_run_status.py at ~500 and ~1500 iterations. coordination/results/2026-10-06-stairs-v4-built.md",
+      "slurm_job_id": "12582",
+      "submitted_by": "cluster-sess, on Rohan's 'both'",
+      "progress": "PENDING (Priority) at submission, no free GPU; scheduler projected a start ~15:16 IST 10-06 but that is a walltime-based estimate."
     },
     "progress_rule_replay": {
       "slurm_job_ids": [
