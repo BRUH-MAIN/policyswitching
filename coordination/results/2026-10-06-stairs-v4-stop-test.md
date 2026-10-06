@@ -61,3 +61,36 @@ the reset run) but the run then slows to the same 28% as terminations fall. Thre
 
 My recommendation: 2 or 1, with the eval first, since it separates "the policy is slow" from
 "the training metric is".
+
+## Addendum: the foot_clearance hypothesis (laptop, 2026-10-06 (3)), read-only check
+
+Code read: `mdp.feet_clearance` is `sum over feet of |foot_z - 0.10| * |foot xy velocity|`, with
+`foot_z = site_pos_w[:, :, 2]`: WORLD height against an absolute 0.10 m target, weight -1.0,
+active when the command is nonzero. So the mechanism the laptop describes is what the code does:
+on a pyramid staircase a foot several risers above or below z = 0 is charged for the staircase's
+height in proportion to its speed. (Logged value is the weighted, dt-scaled episode term;
+negative = penalty; windows of +-10 iterations.)
+
+| run | iteration | foot_clearance | tracking reward | \|clearance\| / tracking | mean row |
+|---|---|---|---|---|---|
+| 12586 v4a_kn | 10 / 25 / 150 / 500 | -0.20 / -0.35 / -0.29 / -0.26 | 0.10 / 0.30 / 0.53 / 0.56 | 2.0 / 1.2 / 0.54 / 0.47 | 1.3 / 1.2 / 0.3 / 0.0 |
+| 12587 v4b_kn | same | -0.20 / -0.35 / -0.28 / -0.26 | 0.10 / 0.29 / 0.53 / 0.56 | same | same |
+| 12581 v4a (reset) | same | -0.15 / -0.30 / -0.26 / -0.26 | 0.07 / 0.24 / 0.53 / 0.55 | same | same |
+| 12563 v3 (uniform rows, mean row 4.5) | 25 / 500 / 9984 | -0.43 / -0.31 / -0.30 | 0.24 / 0.46 / 0.45 | 1.8 / 0.68 / 0.67 | 4.4 / 4.5 / 4.6 |
+| 12490 v2 | 25 / 500 / 9984 | -0.11 / -0.14 / -0.19 | 0.14 / 0.75 / 0.79 | 0.8 / 0.19 / 0.24 | 1.2 / 1.1 / 2.1 |
+| 11849 stairs v1 | 25 / 500 / 9984 | -0.13 / -0.14 / -0.12 | 0.15 / 0.74 / 0.43 | 0.9 / 0.19 / 0.29 | 1.2 / 1.1 / 1.0 |
+| 11852 flat | 25 / 500 / 9984 | -0.05 / -0.08 / -0.09 | 0.16 / 0.82 / 0.58 | 0.3 / 0.10 / 0.16 | 1.2 / 1.5 / 5.0 |
+
+What this supports and what it does not:
+
+- **Consistent with the hypothesis**: the stairs-v4 and v3 runs pay a clearance penalty 1.5-2x
+  v2's and 3-4x flat's once past the first iterations, and it is about half the tracking
+  reward (0.47-0.54) against about a fifth for v2 and v1 (0.19-0.24). The runs that trained on
+  1-2 cm rows (v2, v1) sit lowest, the run on row 4.5 (v3) highest, as predicted.
+- **Not a clean demonstration**: the penalty falls only 18-25% (-0.35 -> -0.26/-0.29) while
+  speed falls from 43% to 28% of commanded; the early numbers are contaminated by the
+  start-up transient (tracking reward 0.1 at iteration 10). A reward-term correlation cannot
+  show the policy slowed *because of* the term.
+- The decisive test is an intervention: the same task with the clearance term terrain-relative
+  or removed, judged at 300-500 iterations on speed fraction and mean row, as the laptop
+  proposes. Not built; I'd build it as a registered task variant on request.
