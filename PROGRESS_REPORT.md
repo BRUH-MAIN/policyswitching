@@ -52,9 +52,10 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 |---|---|
 | Stairs v2 on real riser heights (sim, going up a 5-step flight) | 84% at 9 cm, 0% at 12, 15 and 17 cm. It stalls; it was trained on at most 10 cm. |
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
-| Run 2 (variants 4a and 4b) | **Failing.** With the normaliser kept (`go2_spec_stairs_v4a_kn` job 12586, `_v4b_kn` job 12587, started 16:40 IST on 10-06) both are at 28-30% of commanded speed on the easiest row by iteration 150 and fail the iteration-530 check. Laptop eval of their iteration-400 checkpoints: 0% of flights crossed, cannot follow on flat ground. Still running when this was written. `coordination/results/2026-10-06-stairs-v4-stop-test.md` |
-| Pattern across v3, v4a, v4b | The policy gets safer by getting slower, and reward does not show it. **Hypothesis: the `foot_clearance` reward** uses the foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. Confirmed in the code. In the logs it is **consistent, not demonstrated**: the failed runs pay 1.5-2x stairs v2's clearance penalty, about half their tracking reward against about a fifth for v2, ordered as predicted; but the penalty falls only ~20% while speed falls from 43% to 28%. It needs an intervention: train with the term fixed or removed. Addendum of `coordination/results/2026-10-06-stairs-v4-stop-test.md`. |
-| Warm start | Should keep the observation normaliser (`findings.md` #27): reset, v4a started at 28% of commanded speed against 43% kept. It did not rescue the runs. |
+| Runs v3, v4a, v4b (5-20 cm risers) | All failed the same way: the policy got safer by getting slower (12-30% of commanded speed), with reward unchanged. All cancelled or discarded. |
+| **Cause found: the `foot_clearance` reward** | It measures each foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. **Shown by intervention** (cluster, 600-iteration trials of the 4b task with one change): term removed (v5a) 67% of commanded speed and mean row 3.3 and rising; term measured above the lowest foot (v5b) 66% and 2.9; unchanged (v4b) 30% and 0.04. `findings.md` #28, `coordination/results/2026-10-06-stairs-v5-clearance-trials.md` |
+| **Stairs v5a, the current attempt** | Full run (10,000 iterations, resuming from iteration 599) submitted as **job 12594, PENDING for a GPU**; scheduler's worst case is a start on 2026-10-08 about 17:00 IST. Early checkpoints on the laptop's flights (only tipping over counted): going up, 100% at 9 cm and 56-78% at 12 cm, **0% at 15 and 17 cm (it stalls)**; going down it swings between checkpoints (81% at 17 cm at iteration 400, 0% at iteration 599). **Not yet a real-stairs policy.** |
+| Warm start | Should keep the observation normaliser (`findings.md` #27); it is now the default for the stairs specs. |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
 | How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
@@ -63,24 +64,20 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.1 Rohan
 
-1. **Decide, in the cluster session, what to do about the real-stairs training.** State on the
-   evening of 10-06: jobs 12586 and 12587 are running and failing. The laptop session's
-   recommendation:
-   - Cancel 12586 and 12587 (they are failing and hold both usable GPUs).
-   - Say "go" to a **stairs v5 = 4b_kn with `foot_clearance` changed**: removed (a one-line
-     change, the quickest test) or measured against the ground (e.g. foot height above the
-     lowest foot). The log check is done and is consistent with the hypothesis without
-     proving it; only training with the term changed can.
-   - **Short runs first.** The failure shows within 150 iterations, about 8 minutes. Run
-     300-500 iterations per variant, judge on speed fraction and mean row, and give a full
-     9-hour run only to a variant that holds above ~50% speed and climbs rows.
-   If v5 slows down the same way, the cluster's other options stand: a stall penalty or
-   progress reward, or a lower termination cost relative to tracking
-   (`coordination/results/2026-10-06-stairs-v4-stop-test.md`).
-   **Be realistic about time**: this is now reward design for real stair heights, and three
-   attempts have failed. It may take several more short iterations and at least one long run.
-   Walking and person-following on flat ground and low steps (up to ~9 cm) do not need it:
-   stairs v2 already does that in simulation.
+1. **Nothing to decide on training right now.** You told the cluster session to do what
+   accelerates completion; it cancelled the failing jobs, ran the two v5 trials and submitted
+   the full v5a run (job 12594), which is waiting for a GPU. Two things you may want to do:
+   - If the wait is long, ask whether the other project's job on the same account (12578)
+     can give up its GPU. The cluster session did not touch it.
+   - Once 12594 starts, have the cluster session check it at ~1,500 iterations and again when
+     the mean row passes 6 (risers of 15 cm and up): the open question is whether it learns
+     to go **up** tall steps, where every checkpoint so far stalls.
+   **Be realistic about time**: the cause of three failed runs is fixed, and v5a walks and
+   climbs to 12 cm after 600 iterations. Whether 10,000 iterations reach 17 cm is not known.
+   If it plateaus at ~12 cm the next levers are in the plan (section 2.1): a swing-height
+   incentive (v5b keeps one), a progress reward, more steps per flight in training.
+   Walking and person-following on flat ground and low steps (up to ~9 cm) do not need any of
+   this: stairs v2 already does that in simulation.
 2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
    ```
    ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
@@ -92,9 +89,8 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- Log check of `foot_clearance` done (consistent, not conclusive). Ready to build v5 as a
-  registered task and to run short trials when Rohan says go. Jobs 12586 and 12587 keep
-  running until he says otherwise.
+- Job 12594 (full v5a run) pending for a GPU. v5b (clearance above the lowest foot) has only
+  its 600-iteration trial; it is the alternative if v5a drags its feet.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
   iteration 1,500.
@@ -115,7 +111,13 @@ STAIRS_CKPT=... TAG=<name> scripts/switch_follow_stairs_ckpt.sh        # still f
 
 **Acceptance**: at least 90% of flights crossed, up and down, at 17 cm, on 5- and 10-step
 flights. Judge by **crossed / fell / lost** separately. A policy that never falls and never
-crosses has failed (that was stairs v3).
+crosses has failed (that was stairs v3). For v5 policies read the `saro` rows first (only
+tipping over is a fall): they are trained with thigh and calf contact penalised, not terminal,
+so the "training" rows count every shin brush as a fall. Report both.
+
+Intermediate checkpoints (every 200 iterations) can be evaluated the same way while 12594
+runs; the one-off loops used on 10-06 are in the shell history of this file's commit, and
+`eval_results/switch_follow/real_stairs/v5a_it400_*` and `v5ab_it599_*` are their outputs.
 
 If it passes: `scripts/export_policy_numpy.py <ckpt> --out deploy_numpy/<name>.npz` (it checks
 parity with PyTorch), then the staged bring-up in the plan, section 3.
@@ -138,6 +140,8 @@ restarted; scheduled jobs live only inside one session.
 | `go2_spec_stairs` / `_rough` / `_flat` | the three original specialists | study only; stairs and rough were damaged by the curriculum collapse |
 | `go2_generalist`, `go2_generalist_v2` | two generalists (jobs 12479, 12518) | study only; both brittle at stair edges |
 | `go2_spec_stairs_v3` | first real-stairs attempt (job 12563) | **failed, do not use** |
+| `go2_spec_stairs_v4a`, `_v4b`, `_v4a_kn`, `_v4b_kn` | run 2 and its reruns | **failed (slow), do not use** |
+| `go2_spec_stairs_v5a`, `_v5b` | 600-iteration trials with the clearance term fixed; v5a continues as job 12594 | in progress; early checkpoints only |
 | `go2_spec_gaps` | blended gaps run | cluster disk only, never evaluated |
 
 **Harness** (`unitree_rl_mjlab/`): `scripts/switch_follow.py` is the runner (follow task;
@@ -169,13 +173,17 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   start's normaliser reset was found to cost speed from the first iterations (an overstated
   first account of this was corrected the same day); 4a and 4b resubmitted with the
   normaliser kept, and both failing again by iteration 150; the `foot_clearance` reward
-  identified from the code as a candidate cause.
+  identified from the code as the cause and confirmed by the cluster's v5 trials; full v5a
+  run submitted (12594, pending).
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
 - **Judge a locomotion policy by where it gets to, not by whether it falls.** Stairs v3 has
   99% survival and near-zero falls per 100 m because it does not move (#26; earlier cases #1,
   #14). Always read achieved speed, stalled fraction, or crossing rate first.
+- **`foot_clearance` uses world-frame foot height** (#28): on any raised terrain it punishes
+  moving. Every stairs policy before v5 trained under it. Do not reuse the stock term on
+  stairs.
 - **A warm start should keep the observation normaliser** (#27). Reset, it cost a third of
   the speed at the start of v4a and the run never recovered. Judge the start of a run by speed
   and stalled fraction over the first few dozen iterations; the iteration-0 log line (episode
@@ -208,6 +216,7 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
 | The study's numbers and intervals | `coordination/results/switch-follow-results.md` |
 | What was fixed in advance | `coordination/results/switch-follow-preregistration.md` |
 | Stairs v3 failure | `coordination/results/2026-10-06-stairs-v3-result.md` |
+| Why v4 was slow, and the v5 trials that fixed it | `coordination/results/2026-10-06-stairs-v4-stop-test.md`, `coordination/results/2026-10-06-stairs-v5-clearance-trials.md` |
 | Run 2 (4a, 4b): what was built and how its curriculum rule behaves | `coordination/results/2026-10-06-stairs-v4-built.md` |
 | Why the curriculum sits on easy rows | `coordination/results/2026-10-05-terrain-curriculum-diagnosis.md` |
 | Full experiment history, every bug | `findings.md` |

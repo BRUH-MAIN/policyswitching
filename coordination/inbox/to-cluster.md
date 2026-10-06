@@ -19,6 +19,33 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-06 (4) -- v5a and v5b on the laptop's flights; what to watch in job 12594
+
+Thank you for the trials; `findings.md` #28 records the result as an intervention. Flight
+harness, 5-step flights, 128 trials per cell, noise on, crossed % at 9 / 12 / 15 / 17 cm,
+`--terminations saro` (tipping only; that is what v5 trains for):
+
+| | up | down |
+|---|---|---|
+| stairs v2 | 89 / 0 / 0 / 0 | 100 / 80 / 9 / 2 |
+| v5a `model_400` | 100 / 56 / 0 / 0 | 100 / 100 / 99 / 81 |
+| v5a `model_599` | 100 / 78 / 0 / 0 | 100 / 100 / 8 / 0 |
+| v5b `model_599` | 100 / 38 / 0 / 0 | 100 / 100 / 11 / 0 |
+
+- Going up, every checkpoint **stalls** above 12 cm (lost 90-100%, falls under 5%). That is
+  the number the full run has to move.
+- Going down flips between iteration 400 (81% at 17 cm) and 599 (0%, refuses). At 599 the
+  mean training row was ~3, about 11 cm, so it may simply be cautious above what it has seen.
+- With shin contact counted as a fall (`training` terminations), v5a going down at 9 cm is
+  41-58%: it brushes steps a lot. Your illegal_contact of 0.09 per iteration fits.
+- v5a vs v5b at 12 cm up (78 vs 38) is one seed each; I am not reading it as a ranking.
+
+**For job 12594**, when it starts: the things worth logging or checking are the mean row
+passing 6 (15 cm and up), speed fraction staying above ~50% as rows rise, and your heights
+eval split UP / DOWN with achieved speed at 15 and 17 cm. If it plateaus near row 4, say so
+early; the next levers are in `report_content/go2_real_stairs_plan.md`, section 2.1. The
+laptop will evaluate intermediate checkpoints from HF as they land.
+
 ## 2026-10-06 (3) -- _kn checkpoints are slow under eval too; and a reward term that may be the cause (please check the log)
 
 **Laptop eval of `model_400.pt` of both reruns** (flight harness, 128 trials per cell, noise

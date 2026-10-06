@@ -67,18 +67,42 @@ the leader on flat ground. The curriculum rule itself behaves as intended (repla
 sends stairs v2 to a mean row of about 5.5 and stairs v3 to row 0); the policy is simply too
 slow to be promoted. Write-up: `coordination/results/2026-10-06-stairs-v4-stop-test.md`.
 
-**The pattern in all three attempts is the same: the policy gets safer by getting slower, and
-total reward does not change.** A candidate cause, found by reading the reward code and not yet
-checked against the training logs: the `foot_clearance` term penalises each moving foot by its
-distance from a height of 0.10 m measured in the world frame. On flat ground that asks for a
-10 cm swing. On a staircase the whole robot is above or below that level by up to five risers,
-so the term charges for the staircase's height every time a foot moves, and the cheapest
-response is to move less. The cluster then read the term out of its logs: the failed runs pay
-1.5 to 2 times stairs v2's clearance penalty, about half their tracking reward against about a
-fifth for v2, in the order the hypothesis predicts. That is consistent with it and does not
-prove it, since the penalty shrinks only about 20% while speed falls from 43% to 28%. The test
-is an intervention: a "stairs v5" equal to 4b with the term removed or measured against the
-ground under the foot, tried first in runs of 300-500 iterations. Not built or submitted.
+**The cause, found and confirmed on 2026-10-06** (`findings.md` #28): the stock
+`foot_clearance` reward penalises each moving foot by its distance from a height of 0.10 m
+measured in the world frame. On flat ground that asks for a 10 cm swing. On a staircase the
+whole robot is above or below that level by up to five risers, so the term charges for the
+staircase's height every time a foot moves, and the cheapest response is to move less. No
+curriculum, contact rule or warm start could have fixed that.
+
+**Stairs v5: the 4b task with that one term changed.** 600-iteration trials on the cluster:
+
+| | clearance term | speed / commanded | mean training row |
+|---|---|---|---|
+| v4b_kn | stock | 30% | 0.04 |
+| **v5a** | removed | 67% | 3.3, rising |
+| **v5b** | measured above the lowest foot | 66% | 2.9 |
+
+Early v5a checkpoints on the laptop's 5-step flights (128 trials per cell, only tipping over
+counted as a fall, since v5 trains with shin contact penalised and not terminal):
+
+| riser | up, iteration 400 | up, iteration 599 | down, iteration 400 | down, iteration 599 | stairs v2 up / down |
+|---|---|---|---|---|---|
+| 9 cm | 100% | 100% | 100% | 100% | 89% / 100% |
+| 12 cm | 56% | 78% | 100% | 100% | 0% / 80% |
+| 15 cm | 0% | 0% | 99% | 8% | 0% / 9% |
+| 17 cm | 0% | 0% | 81% | 0% | 0% / 2% |
+
+Going up it has gained a riser height over stairs v2 in 600 iterations and stalls above
+12 cm. Going down it swings between checkpoints: bold at iteration 400, refusing tall descents
+at 599, when its training rows averaged about 11 cm. With shin contact counted as failure the
+numbers are lower (down at 9 cm: 41-58%); it brushes steps often. v5b at iteration 599 is
+similar going down and behind going up at 12 cm (38%); one seed each, so not a ranking.
+
+**The full v5a run (10,000 iterations, job 12594) is submitted and waiting for a GPU.** It is
+the first run that can answer whether this policy reaches 15-17 cm going up. If it plateaus
+near 12 cm, the levers in order: v5b's swing-height incentive with a taller target; a
+progress reward on stairs; longer flights in training (each staircase is 5 steps); more
+iterations once the mean row passes 6.
 
 The two variants as built:
 
@@ -179,9 +203,8 @@ wrong scan has less margin.
 
 ## 3. Order of work
 
-1. **Rohan, in the cluster session**: have it check the `foot_clearance` hypothesis in its
-   logs; cancel the two failing jobs (12586, 12587); then short 300-500 iteration runs of a
-   fixed task before any full run.
+1. **Cluster**: job 12594 (full v5a run) starts when a GPU frees; check it at ~1,500
+   iterations and when the mean row passes 6.
 2. **Rohan, on the robot (read-only, 10 minutes)**: the topic checks in 2.2. Still not done;
    they decide between scan options A and B.
 3. **Laptop, when a run-2 checkpoint lands on HF**: the acceptance runs in 2.1.
@@ -197,7 +220,7 @@ wrong scan has less margin.
 
 ## 4. What is not known
 
-- Whether any run reaches 17 cm at all, and in how many attempts. Run 1 failed.
+- Whether v5a reaches 15-17 cm going up. After 600 iterations it stalls above 12 cm.
 - Whether the firmware publishes a usable height map (2.2 A).
 - How the policy tolerates a real scan's delay and holes.
 - Real friction, real stair nosings and open risers, payload, and battery sag: none of it is
