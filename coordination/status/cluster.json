@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T12:13:46Z",
+  "last_updated_utc": "2026-10-06T16:49:20Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -205,6 +205,30 @@
       "status": "cancelled",
       "slurm_job_id": "12587",
       "notes": "See jobs.stairs_v4b_train."
+    },
+    "go2_spec_stairs_v5a": {
+      "task": "Unitree-Go2-Spec-StairsV5a",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v5a",
+      "path_on_cluster": null,
+      "iteration": 599,
+      "sha256": null,
+      "status": "trial_complete",
+      "slurm_job_id": "12589",
+      "notes": "600-iteration trial; model_400 and model_599 on HF. v5a continues as job 12594. Not evaluated."
+    },
+    "go2_spec_stairs_v5b": {
+      "task": "Unitree-Go2-Spec-StairsV5b",
+      "source": "hf",
+      "hf_repo": "RohanRamesh/go2-specialists",
+      "hf_stage": "go2_spec_stairs_v5b",
+      "path_on_cluster": null,
+      "iteration": 599,
+      "sha256": null,
+      "status": "trial_complete",
+      "slurm_job_id": "12580",
+      "notes": "600-iteration trial; model_400 and model_599 on HF. v5a continues as job 12594. Not evaluated."
     }
   },
   "notes": "Seeded from findings.md as of 2026-09-11; refreshed 2026-09-20 (cluster session); refreshed three times more on 2026-10-03: stairs step-1 status check, the laptop's 'submit generalist / push gaps to HF / report stairs curve' request (2 of 3 blocked by this session's own permission layer -- see coordination/log/2026-10-03-cluster.md), then Rohan ran the generalist sbatch himself directly after the cluster session's attempt to even self-edit its own settings.local.json to allow it was *also* blocked (reason 'Self-Modification') -- job 12479 is now RUNNING (runs.go2_generalist). The gaps->HF push is still not done; still needs a human to run it directly (see runs.go2_spec_gaps notes) -- it was not re-attempted here. Keep current via coordination/scripts/cluster_update_status.sh for checkpoint (runs.*) entries; hand-edited fields (that script doesn't touch): cluster_state, go2_generalist, go2_spec_gaps notes, jobs.*. TIMEZONE: fields ending in Z are UTC. squeue/sacct/scontrol print the cluster's local time (Asia/Kolkata, UTC+05:30) with no suffix -- convert before writing a Z timestamp. Two entries were mislabeled this way on 2026-10-03 and have been corrected (jobs.stairs_pyramid_eval, runs.go2_generalist). 2026-10-03 evening: jobs.stairs_precollapse_eval and jobs.stairs_v2_train hand-edited by session cluster-sess.",
@@ -319,15 +343,22 @@
       "outputs": "unitree_rl_mjlab/eval_results/terrain_curriculum/{stairs_v2_progress,stairs_v3_stander}.json"
     },
     "stairs_v5_trials": {
-      "status": "running",
+      "status": "completed",
       "slurm_job_ids": {
-        "v5a (foot_clearance removed)": "12589",
-        "v5b (clearance above lowest foot)": "12590 (pending: no second GPU)"
+        "v5a": "12589 COMPLETED",
+        "v5b": "12590 COMPLETED"
       },
       "submitted_by": "cluster-sess, under Rohan's 'do what accelerates the completion of the project'",
       "budget": "600 iterations each (BUDGET=600, same experiment resumes to 10000 if it passes)",
       "pass": "speed >= ~45% of commanded (v4 runs: 28-30%), mean row rising, by ~iteration 500",
-      "notes": "Test of the foot_clearance (world-z) hypothesis: both are v4b + one change. coordination/results/2026-10-06-stairs-v4-stop-test.md addendum."
+      "notes": "Test of the foot_clearance (world-z) hypothesis: both are v4b + one change. coordination/results/2026-10-06-stairs-v4-stop-test.md addendum.",
+      "headline": "Both pass: v5a speed 67-72% of commanded, mean row 1.4 -> 3.4; v5b 65-67%, 1.4 -> 3.0 (v4b: 26-30%, row 0). The world-z foot_clearance term was the cause. Training logs only; no eval yet. coordination/results/2026-10-06-stairs-v5-clearance-trials.md"
+    },
+    "stairs_v5a_full": {
+      "status": "pending",
+      "slurm_job_id": "12594",
+      "command": "BUDGET=10000 SPEC=StairsV5a sbatch --gres=gpu:1 (HF_TOKEN exported)",
+      "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'."
     }
   }
 }
