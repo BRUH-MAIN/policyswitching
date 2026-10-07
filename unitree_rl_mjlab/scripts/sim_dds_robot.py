@@ -52,6 +52,13 @@ def main() -> None:
 
   model, qpos0 = T.build_model(args.step_height)
   robot = T.SimRobot(model, qpos0)
+  # Start as the real robot is after it has lain down: legs folded, belly near the floor,
+  # motors damped. (Left standing with no command it would topple onto its nose, which is
+  # not a pose the robot is ever started from.)
+  robot.d.qpos[robot.qadr] = go2_runner.CROUCH_POSE  # the same three angles for every leg
+  robot.d.qpos[robot.fq + 2] -= 0.20
+  mujoco.mj_forward(model, robot.d)
+  lying_damped = (np.zeros(12), np.zeros(12), np.full(12, go2_runner.PASSIVE_KD))
   ray = T.RayScan(robot)
   feet_geoms = [model.geom(("robot/" if not T._exists(model, mujoco.mjtObj.mjOBJ_GEOM, f"{f}_foot_collision") else "")
                            + f"{f}_foot_collision").id for f in T.ROBOT_FEET]
@@ -94,7 +101,9 @@ def main() -> None:
       robot.set_remote()
 
     cmd = got["cmd"]
-    if cmd is not None:
+    if cmd is None:
+      robot.send(*lying_damped)
+    else:
       q = np.array([cmd.motor_cmd[i].q for i in range(12)])
       kp = np.array([cmd.motor_cmd[i].kp for i in range(12)])
       kd = np.array([cmd.motor_cmd[i].kd for i in range(12)])

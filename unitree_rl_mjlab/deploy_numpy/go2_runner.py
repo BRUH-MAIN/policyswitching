@@ -137,14 +137,17 @@ def base_height_from_legs(q_robot, quat_wxyz):
 # ---------------------------------------------------------------------------------------
 # Robot backend: unitree_sdk2py. Imported lazily so the file loads on a laptop without it.
 class Go2Backend(object):
-    def __init__(self, iface, dry_run, domain=0):
+    def __init__(self, iface, dry_run, domain=0, write_hz=500.0):
         from unitree_sdk2py.core.channel import ChannelFactoryInitialize, ChannelSubscriber
         from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowState_
 
         self.dry_run = dry_run
         self._state = None
         self._state_t = 0.0
-        self._latest = None  # (q_des, kp, kd, time): what the writer thread keeps sending
+        self._latest = None  # (q_des, time) of the command the writer thread keeps sending
+        self._damped = False
+        self._lock = threading.Lock()
+        self._write_period = 1.0 / write_hz if write_hz > 0 else None
         self._stop = False
         ChannelFactoryInitialize(domain, iface)
         self._sub = ChannelSubscriber("rt/lowstate", LowState_)
@@ -173,29 +176,34 @@ class Go2Backend(object):
                 cmd.motor_cmd[i].kd = 0.0
                 cmd.motor_cmd[i].tau = 0.0
             self._cmd = cmd
-            self._writer = threading.Thread(target=self._write_loop, name="lowcmd-writer")
-            self._writer.daemon = True
-            self._writer.start()
+            if self._write_period is not None:
+                self._writer = threading.Thread(target=self._write_loop, name="lowcmd-writer")
+                self._writer.daemon = True
+                self._writer.start()
+
+    def _fill(self, q_des, kp, kd):
+        for i in range(12):
+            m = self._cmd.motor_cmd[i]
+            m.q = float(q_des[i])
+            m.dq = 0.0
+            m.kp = float(kp[i])
+            m.kd = float(kd[i])
+            m.tau = 0.0
+        self._cmd.crc = self._crc.Crc(self._cmd)
 
     def _write_loop(self):
-        """Send the latest target at 500 Hz. If the control loop has not refreshed it for
-        WRITER_STALE_S (it crashed or hung), send damping instead of a frozen stiff pose."""
+        """Re-send the current command at 500 Hz (the checksum is only recomputed when the
+        command changes, 50 times a second). If the control loop has not refreshed it for
+        WRITER_STALE_S (it crashed or hung), switch to damping instead of holding a stiff pose."""
         while not self._stop:
-            latest = self._latest
-            if latest is not None:
-                q_des, kp, kd, t = latest
-                if time.time() - t > WRITER_STALE_S:
-                    kp, kd = np.zeros(12), np.full(12, PASSIVE_KD)
-                for i in range(12):
-                    m = self._cmd.motor_cmd[i]
-                    m.q = float(q_des[i])
-                    m.dq = 0.0
-                    m.kp = float(kp[i])
-                    m.kd = float(kd[i])
-                    m.tau = 0.0
-                self._cmd.crc = self._crc.Crc(self._cmd)
-                self._pub.Write(self._cmd)
-            time.sleep(WRITE_PERIOD_S)
+            with self._lock:
+                if self._latest is not None:
+                    q_des, t = self._latest
+                    if not self._damped and time.time() - t > WRITER_STALE_S:
+                        self._fill(q_des, np.zeros(12), np.full(12, PASSIVE_KD))
+                        self._damped = True
+                    self._pub.Write(self._cmd)
+            time.sleep(self._write_period)
 
     def close(self):
         self._stop = True
@@ -221,8 +229,12 @@ class Go2Backend(object):
     def send(self, q_des, kp, kd):
         if self._pub is None:
             return
-        self._latest = (np.array(q_des, dtype=np.float64), np.array(kp, dtype=np.float64),
-                        np.array(kd, dtype=np.float64), time.time())
+        with self._lock:
+            self._fill(q_des, kp, kd)
+            self._latest = (np.array(q_des, dtype=np.float64), time.time())
+            self._damped = False
+            if self._write_period is None:
+                self._pub.Write(self._cmd)
 
     def release_motion_service(self):
         """Make the robot lie down and switch off its own controller. True if confirmed off."""
@@ -493,6 +505,9 @@ def main():
     ap.add_argument("--npz", help="Policy exported by scripts/export_policy_numpy.py.")
     ap.add_argument("--iface", default="eth0", help="Network interface that reaches the robot's motor board.")
     ap.add_argument("--domain", type=int, default=0, help="DDS domain: 0 is the robot. Simulators use 1.")
+    ap.add_argument("--write-hz", type=float, default=500.0,
+                    help="How often the current command is re-sent to the motors. 0: only once per control "
+                         "step (50 Hz), with no watchdog thread; for a CPU that cannot keep up.")
     ap.add_argument("--no-motion-service", action="store_true",
                     help="Simulator only (refused on domain 0): there is no robot controller to release.")
     ap.add_argument("--dry-run", action="store_true", help="Send nothing. Print what the policy sees and would do.")
@@ -523,7 +538,7 @@ def main():
     if policy.obs_dim != go2_obs.OBS_DIM:
         raise SystemExit("policy expects %d inputs, this runner builds %d" % (policy.obs_dim, go2_obs.OBS_DIM))
 
-    backend = Go2Backend(args.iface, args.dry_run, args.domain)
+    backend = Go2Backend(args.iface, args.dry_run, args.domain, args.write_hz)
     print("waiting for robot state on %s ..." % args.iface)
     t0 = time.time()
     while backend.read() is None:
