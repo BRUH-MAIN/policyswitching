@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-06, afternoon · **Written for**: a fresh session (human or Claude) with no
+**As of**: 2026-10-07, morning · **Written for**: a fresh session (human or Claude) with no
 memory of how this state was reached. This file is the entry point; where it needs more
 detail it names a file. Read that file rather than re-deriving it.
 
@@ -54,7 +54,8 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
 | Runs v3, v4a, v4b (5-20 cm risers) | All failed the same way: the policy got safer by getting slower (12-30% of commanded speed), with reward unchanged. All cancelled or discarded. |
 | **Cause found: the `foot_clearance` reward** | It measures each foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. **Shown by intervention** (cluster, 600-iteration trials of the 4b task with one change): term removed (v5a) 67% of commanded speed and mean row 3.3 and rising; term measured above the lowest foot (v5b) 66% and 2.9; unchanged (v4b) 30% and 0.04. `findings.md` #28, `coordination/results/2026-10-06-stairs-v5-clearance-trials.md` |
-| **Stairs v5a, the current attempt** | Full run (10,000 iterations, resuming from iteration 599) submitted as **job 12594, PENDING for a GPU**; scheduler's worst case is a start on 2026-10-08 about 17:00 IST. Early checkpoints on the laptop's flights (only tipping over counted): going up, 100% at 9 cm and 56-78% at 12 cm, **0% at 15 and 17 cm (it stalls)**; going down it swings between checkpoints (81% at 17 cm at iteration 400, 0% at iteration 599). **Not yet a real-stairs policy.** |
+| **Stairs v5a, the current attempt** | Full run is **job 12594, running since 2026-10-06 23:12 IST**, iteration ~4,400 of 10,000 on the morning of 10-07, due about 18:30 IST. **It walks (68-69% of commanded speed) but has plateaued**: robots sit on the 12-14 cm rows and the 15-20 cm rows have emptied (cluster report, 10-07). Laptop flights of `model_4400`, 128 trials per cell: **going up 100% at 9 and 12 cm (97-99% even counting shin contact), 0% at 15 and 17 cm; going down 100% at 9 cm and 0-1% at 12 cm and above.** Every failure is a stall, not a fall. **Not a real-stairs policy.** |
+| Stairs v5c, queued | Job 12602, pending for a GPU: v5a continued for 4,000 iterations with half the robots spread evenly over all rows so the tall rows keep getting data. Built and queued by the cluster session under "do what accelerates completion"; the 50/50 split is its judgement. Watch achieved speed early: stairs v3 put every robot on spread rows and stopped walking. |
 | Warm start | Should keep the observation normaliser (`findings.md` #27); it is now the default for the stairs specs. |
 | Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
 | Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
@@ -64,20 +65,22 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.1 Rohan
 
-1. **Nothing to decide on training right now.** You told the cluster session to do what
-   accelerates completion; it cancelled the failing jobs, ran the two v5 trials and submitted
-   the full v5a run (job 12594), which is waiting for a GPU. Two things you may want to do:
-   - If the wait is long, ask whether the other project's job on the same account (12578)
-     can give up its GPU. The cluster session did not touch it.
-   - Once 12594 starts, have the cluster session check it at ~1,500 iterations and again when
-     the mean row passes 6 (risers of 15 cm and up): the open question is whether it learns
-     to go **up** tall steps, where every checkpoint so far stalls.
-   **Be realistic about time**: the cause of three failed runs is fixed, and v5a walks and
-   climbs to 12 cm after 600 iterations. Whether 10,000 iterations reach 17 cm is not known.
-   If it plateaus at ~12 cm the next levers are in the plan (section 2.1): a swing-height
-   incentive (v5b keeps one), a progress reward, more steps per flight in training.
-   Walking and person-following on flat ground and low steps (up to ~9 cm) do not need any of
-   this: stairs v2 already does that in simulation.
+1. **Training: nothing blocked on you, but the result so far is a plateau at 12 cm.**
+   Job 12594 (v5a) finishes about 18:30 IST on 10-07; job 12602 (v5c) starts when a GPU
+   frees and you can `scancel` it if you would rather not spend the time.
+   - The policy now climbs 12 cm steps every time and refuses 15 cm and up, and refuses to
+     **descend** 12 cm and up. Real stairs (15-18 cm) are still out of reach in both
+     directions.
+   - Why, as far as known: a robot is promoted only after crossing all five steps in one
+     episode; on the tall rows it stalls, is sent back, and the tall rows empty. Untested.
+   - If v5c does not move it, the levers left are in the plan (section 2.1): a reward for
+     progress on stairs, a swing-height incentive with a taller target (v5b keeps one),
+     promotion on partial progress, longer flights in training.
+   **Be realistic about time**: four training designs in three days have moved the up-stairs
+   limit from 9 cm to 12 cm. Reaching 17 cm is not a matter of waiting for a run to finish.
+   Walking and person-following on flat ground and steps up to 12 cm going up (9 cm going
+   down) could go to the robot now with v5a, and up to ~9 cm with stairs v2, which is the
+   better-tested of the two.
 2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
    ```
    ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
@@ -89,8 +92,9 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 
 ### 2.2 Cluster session
 
-- Job 12594 (full v5a run) pending for a GPU. v5b (clearance above the lowest foot) has only
-  its 600-iteration trial; it is the alternative if v5a drags its feet.
+- Job 12594 (full v5a run) running, due ~18:30 IST 10-07; job 12602 (v5c) pending. Owes
+  its heights eval of a v5a checkpoint, split up/down with speed at 15 and 17 cm, when a GPU
+  frees.
 - After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
   fraction next to falls**, and an early stop if speed is under ~30% of commanded by
   iteration 1,500.
@@ -175,7 +179,9 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   first account of this was corrected the same day); 4a and 4b resubmitted with the
   normaliser kept, and both failing again by iteration 150; the `foot_clearance` reward
   identified from the code as the cause and confirmed by the cluster's v5 trials; full v5a
-  run submitted (12594, pending).
+  run submitted (12594).
+- **10-07**: v5a at iteration ~4,400 walks at full speed and has plateaued on 12-14 cm rows;
+  laptop flights: up 100% to 12 cm, 0% at 15-17 cm; down refuses from 12 cm. v5c queued.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 

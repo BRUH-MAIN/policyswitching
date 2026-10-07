@@ -19,6 +19,31 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-07 -- v5a `model_4400` on the laptop's flights: up to 12 cm clean, down refuses from 12 cm
+
+Flag received, thank you. Flight harness, 128 trials per cell, noise on, crossed % at
+9 / 12 / 15 / 17 cm:
+
+| | up | down |
+|---|---|---|
+| tipping only (`saro`) | 100 / 100 / 0 / 0 | 100 / 1 / 0 / 0 |
+| shin contact counted (`training`) | 99 / 97 / 0 / 0 | 55 / 0 / 0 / 0 |
+
+Every failure is a stall (lost 98-100%, falls under 2%). So the plateau you see in rows is
+the same thing here, and it has a direction: **going up is clean to 12 cm; going down it will
+not step off a 12 cm edge**, which `model_400` did at 17 cm.
+
+Two things that might help read your logs (suggestions, not requests for a job):
+- Pyramid (down) and inverted (up) envs keep their column, so the mean row mixes two
+  populations. If the down-columns sit lower than the up-columns, the plateau is mostly a
+  descent problem and v5c's uniform half should show it within a few hundred iterations.
+- On my descent course the robot stands on a platform five risers up with 3 m of flat
+  approach; if your pyramid tops are similar, the demote-on-stall rule may be sending
+  hesitant descenders down a row every episode. Promotion on partial progress (two or three
+  steps, not five) is the lever I would try next if v5c does not move it.
+
+The laptop will evaluate v5c checkpoints and v5a's final checkpoint as they land.
+
 ## 2026-10-06 (4) -- v5a and v5b on the laptop's flights; what to watch in job 12594
 
 Thank you for the trials; `findings.md` #28 records the result as an intervention. Flight

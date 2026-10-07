@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T14:00:00Z",
+  "last_updated_utc": "2026-10-07T05:00:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -71,6 +71,12 @@
       "run": "switch_follow.py single 5-step flights at 0.09/0.12/0.15/0.17 m, up and down, 128 trials per cell, noise on, both --terminations training and saro; v5a model_400 next to stairs v2, v5a and v5b model_599",
       "verdict": "Early checkpoints, not a real-stairs policy yet. saro (tipping only), crossed %: v5a it400 up 100/56/0/0, down 100/100/99/81; v5a it599 up 100/78/0/0, down 100/100/8/0; v5b it599 up 100/38/0/0, down 100/100/11/0; stairs v2 up 89/0/0/0, down 100/80/9/2. Failures above 12 cm going up are stalls (lost), not falls. With shin contact counted as a fall, v5a down at 9 cm is 41-58%.",
       "see": "unitree_rl_mjlab/eval_results/switch_follow/real_stairs/v5a_it400_*, v5ab_it599_*; findings.md #28"
+    },
+    "go2_spec_stairs_v5a_it4400": {
+      "iteration": 4400,
+      "run": "switch_follow.py single 5-step flights at 0.09/0.12/0.15/0.17 m, up and down, 128 trials per cell, noise on, --terminations saro and training",
+      "verdict": "saro crossed %: up 100/100/0/0, down 100/1/0/0. training (shin contact = fall): up 99/97/0/0, down 55/0/0/0. Every failure is a stall (lost 98-100%), not a fall. Clean to 12 cm going up; refuses 15+ cm up and 12+ cm down. Not a real-stairs policy.",
+      "see": "unitree_rl_mjlab/eval_results/switch_follow/real_stairs/v5a_it4400_*"
     }
   },
   "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."

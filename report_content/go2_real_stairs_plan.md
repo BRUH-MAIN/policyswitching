@@ -98,11 +98,26 @@ at 599, when its training rows averaged about 11 cm. With shin contact counted a
 numbers are lower (down at 9 cm: 41-58%); it brushes steps often. v5b at iteration 599 is
 similar going down and behind going up at 12 cm (38%); one seed each, so not a ranking.
 
-**The full v5a run (10,000 iterations, job 12594) is submitted and waiting for a GPU.** It is
-the first run that can answer whether this policy reaches 15-17 cm going up. If it plateaus
-near 12 cm, the levers in order: v5b's swing-height incentive with a taller target; a
-progress reward on stairs; longer flights in training (each staircase is 5 steps); more
-iterations once the mean row passes 6.
+**The full v5a run (job 12594) at iteration 4,400 of 10,000, 2026-10-07**: it walks at
+68-69% of commanded speed and has plateaued. Robots have settled on the 12-14 cm rows and the
+15-20 cm rows have emptied. On the laptop's flights, `model_4400`, 128 trials per cell:
+
+| riser | up | up, shin contact counted | down | down, shin contact counted |
+|---|---|---|---|---|
+| 9 cm | 100% | 99% | 100% | 55% |
+| 12 cm | 100% | 97% | 1% | 0% |
+| 15 cm | 0% | 0% | 0% | 0% |
+| 17 cm | 0% | 0% | 0% | 0% |
+
+Every failure is a stall. Going up it is clean to 12 cm and does not attempt 15 cm. Going down
+it now refuses 12 cm, which iteration 400 took easily. The likely reason for the plateau,
+not tested: a robot is promoted only after crossing all five steps in an episode, so on rows
+where it hesitates it is sent back and those rows stop getting data.
+
+**Stairs v5c (job 12602, queued)** continues v5a for 4,000 iterations with half the robots
+spread evenly over all rows. If that does not move the limit, the levers left, in order:
+promotion on partial progress; a reward for progress on stairs; v5b's swing-height incentive
+with a taller target; longer flights in training.
 
 The two variants as built:
 
@@ -220,7 +235,8 @@ wrong scan has less margin.
 
 ## 4. What is not known
 
-- Whether v5a reaches 15-17 cm going up. After 600 iterations it stalls above 12 cm.
+- Whether anything reaches 15-17 cm. v5a at iteration 4,400 goes up 12 cm cleanly and no
+  higher, and refuses to go down 12 cm.
 - Whether the firmware publishes a usable height map (2.2 A).
 - How the policy tolerates a real scan's delay and holes.
 - Real friction, real stair nosings and open risers, payload, and battery sag: none of it is
