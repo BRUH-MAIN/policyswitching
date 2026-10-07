@@ -91,3 +91,19 @@ uniformly drawn rows.
 
 Raw: `unitree_rl_mjlab/eval_results/switch_follow/real_stairs/v6alap_*`, `v5c_it800_*`,
 `eval_results/reward_diag/v6alap_*`.
+
+## 6. Added 03:50 IST: v6a `model_1600` in full, and the first v7a checkpoint
+
+**v6a `model_1600`**, same acceptance run as section 1. Tipping only: up 100 / 100 / 95.3 /
+0.5%, down 100 / 100 / 100 / 98.4% at 9 / 12 / 15 / 17 cm. Shin contact counted: up 94 / 71 /
+26 / 0%, down 56 / 50 / 43 / 50%. (The tipping-only cells at 12, 15 and 17 cm are 192 trials,
+not 256: the seed-800 files already existed from the 64-trial quick look and were reused.)
+So of the two v6a checkpoints evaluated in full, `model_1600` is better going up 15 cm (95%
+against 85%) and neither goes up 17 cm.
+
+**v7a `model_1600`** (laptop, 1,600 iterations from v6a final), quick flights, 64 trials per
+cell, one seed, tipping only: **up 15 cm 98%, up 17 cm 52%** (12% tip over, 36% left behind),
+down 15 and 17 cm 100%. In its training env at a pinned 17 cm riser 57% of robots cross the
+up-flight in one episode (v6a: 14-25%) and 83% the down-flight. Log at iteration ~1,640:
+speed 98-99% of commanded, up row mean 6.6, down 5.9, rows 8-9 at 32%. One checkpoint; the
+sweep over checkpoints and the 256-trial runs are what section 4's pass marks ask for.
