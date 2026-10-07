@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-07T05:00:00Z",
+  "last_updated_utc": "2026-10-07T18:00:00Z",
   "last_commit": null,
   "laptop_hostname": "romen",
   "laptop_gpu": "NVIDIA GeForce RTX 5060 Laptop GPU (8151 MiB VRAM)",
@@ -77,7 +77,32 @@
       "run": "switch_follow.py single 5-step flights at 0.09/0.12/0.15/0.17 m, up and down, 128 trials per cell, noise on, --terminations saro and training",
       "verdict": "saro crossed %: up 100/100/0/0, down 100/1/0/0. training (shin contact = fall): up 99/97/0/0, down 55/0/0/0. Every failure is a stall (lost 98-100%), not a fall. Clean to 12 cm going up; refuses 15+ cm up and 12+ cm down. Not a real-stairs policy.",
       "see": "unitree_rl_mjlab/eval_results/switch_follow/real_stairs/v5a_it4400_*"
+    },
+    "go2_spec_stairs_v5a": {
+      "iteration": 9999,
+      "run": "scripts/switch_follow_real_stairs.sh, 5-step flights, 256 trials per cell (seeds 800, 801), noise on, both fall definitions",
+      "verdict": "NOT a real-stairs policy. Tipping-only: up 100 / 96.5 / 0 / 0 %, down 100 / 76.2 / 0 / 0 % at 9 / 12 / 15 / 17 cm; every failure is a stall. Shin contact counted: up 99.6 / 84.4 / 0 / 0, down 68.8 / 38.7 / 0 / 0. Under a constant 0.5 m/s command only 7 of 32 climb the 12 cm flight (28 of 32 at 0.8 m/s): the follow controller's speed-up is part of the 96.5%.",
+      "see": "coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md, findings.md #29, #30"
+    },
+    "go2_spec_stairs_v6a_lap": {
+      "iteration": 600,
+      "run": "scripts/quick_flights.sh (64 trials per cell, seed 800, tipping-only, noise on); diag_reward_terms.py crossing share in the training env",
+      "verdict": "IN TRAINING, quick look only. Down 100 / 100 / 98.4 % at 12 / 15 / 17 cm (v5a final: 76 / 0 / 0). Up 100 / 0 / 0 %. Share of robots crossing a pinned 15 cm up-flight in one training episode: 8 % (it 200), 16 % (it 600), 37 % (it 1000).",
+      "see": "findings.md #29"
     }
   },
-  "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent."
+  "notes": "Existing eval numbers in findings.md were produced by SLURM eval jobs run ON THE CLUSTER, not this laptop pipeline -- this pipeline is new as of 2026-09-11 and adds the ability to spot-check checkpoints locally (specialists especially, since those never touch HF) without spending cluster queue time. laptop_pull_and_eval.sh defaults to --num-envs 256, empirically confirmed on this machine's 8GB RTX 5060 Laptop GPU on 2026-09-11 (ran Unitree-Go2-PAS-Oracle task, stage2/model_79998.pt, estimator-only mode, 200 steps, no OOM, GPU memory fully released after). Not yet pushed higher -- the cluster's own eval default is 1024 envs, so there may be headroom, but that hasn't been tested here. If a checkpoint's eval genuinely doesn't fit at a reasonable env count, say so explicitly rather than silently shrinking further and treating it as equivalent.",
+  "training_on_laptop": {
+    "unit": "go2-v6a-lap (systemd --user)",
+    "task": "Unitree-Go2-Spec-StairsV6a",
+    "experiment": "go2_spec_stairs_v6a_lap",
+    "started_ist": "2026-10-07 22:41",
+    "num_envs": 1536,
+    "budget": 6000,
+    "s_per_iteration": 1.9,
+    "init_from": "go2_spec_stairs_v5a/model_9999.pt (normaliser kept)",
+    "hf_stage": "go2_spec_stairs_v6a_lap",
+    "log": "unitree_rl_mjlab/logs/train_StairsV6a_lap.log",
+    "notes": "1536 envs is the most that fits in 8 GB. Evals may share the GPU at <=128 envs."
+  }
 }

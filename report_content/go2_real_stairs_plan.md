@@ -5,6 +5,27 @@ person and climbs real stairs. · **Status**: plan. Nothing here has been run on
 Robot facts are from the robot workspace (`/run/media/rohan/New Volume/RL/temp`, its
 `sessions/` logs and `project.md`); simulation facts from this repository.
 
+## 0. Update, 2026-10-07 night (read this first; sections 1-3 below are the state on the morning of 10-07)
+
+- **Deadline**: on the robot by Sunday 2026-10-11 (Rohan).
+- **Policy**: stairs v5a finished at 12 cm (up 100 / 96.5 / 0 / 0%, down 100 / 76 / 0 / 0% at
+  9 / 12 / 15 / 17 cm). Its ceiling came from the reward paying more for refusing a tall
+  flight than for crossing it (`findings.md` #29). **Stairs v6a** pays the posture and gait
+  rewards only in proportion to progress; training on the laptop, at iteration 600 it goes
+  **down** 15 and 17 cm flights 100% and 98% of the time and **up** only to 12 cm, with
+  ascent at 15 cm improving in training. v5c (cluster, pending) keeps the old reward.
+- **Robot side, written and checked in simulation, never run on the robot**:
+  `unitree_rl_mjlab/deploy_numpy/` holds the control program (`go2_runner.py`), the height
+  scan node (`go2_scan_node.py`, from the firmware's LiDAR height map, option A of section
+  2.2), the person-follow command bridge (`follow_cmd.py`) and a staged runbook
+  (`README.md`). Section 2.3's "alternative" C++ stack is not being used.
+- **Order of work now**: README stage 0 on the robot (probe and dry run), then legs-free,
+  standing, flat walking with the flat scan, all of which need no new policy; the real scan;
+  steps up to what the current policy passes in simulation; person-following on top.
+- **New things known about the policies**: flight success depends on the commanded speed
+  (#30), so a follow controller that speeds up when the gap opens matters on stairs; the
+  trained scan contains the robot's own legs on a few cells and v5a does not need them.
+
 ## 1. Where things stand
 
 | | |

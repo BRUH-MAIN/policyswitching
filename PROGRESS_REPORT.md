@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-07, morning · **Written for**: a fresh session (human or Claude) with no
+**As of**: 2026-10-07, night · **Deadline (Rohan, 10-07)**: on the robot by Sunday 2026-10-11 · **Written for**: a fresh session (human or Claude) with no
 memory of how this state was reached. This file is the entry point; where it needs more
 detail it names a file. Read that file rather than re-deriving it.
 
@@ -9,8 +9,9 @@ detail it names a file. Read that file rather than re-deriving it.
 ## 0. How to resume
 
 1. `git pull --rebase` in `/home/rohan/rl/policyswitching` (branch `main`; everything is here).
-2. Read this file, then `report_content/go2_real_stairs_plan.md` (the active work), then
-   `findings.md` if you are about to trust or produce a number.
+2. Read this file, then `unitree_rl_mjlab/deploy_numpy/README.md` (the robot bring-up, the
+   active work), `report_content/go2_real_stairs_plan.md` (background), and `findings.md` if
+   you are about to trust or produce a number.
 3. On the laptop (`romen`) also read `docs/CLAUDE.laptop.md`; on the cluster,
    `docs/CLAUDE.cluster.md`. `CLAUDE.md` has the repo-wide rules.
 4. Go to §2. It says what is waiting on whom.
@@ -46,7 +47,9 @@ Stated by Rohan on 2026-10-05. The robot carries a Livox Mid-360. Plan and all d
 `/run/media/rohan/New Volume/RL/temp` (its own `CLAUDE.md` forbids editing files on the
 robot; `robot_info.md` there holds credentials and should not be printed).
 
-**No policy for real stairs exists yet.**
+**No policy climbs real stairs yet; one descends them** (stairs v6a, in training on the
+laptop). Rohan's deadline is Sunday 2026-10-11, and on 10-07 he gave the laptop session
+leave to do anything project-related here, training code included.
 
 | | |
 |---|---|
@@ -54,52 +57,57 @@ robot; `robot_info.md` there holds credentials and should not be printed).
 | Stairs v3, first attempt at 5-20 cm (job 12563, finished 10-06) | **Failed: it learned to stand still.** 12% of commanded speed at every riser; crosses 0 of 128 flights. Its near-zero fall rate is that, not success. Do not use the checkpoint. `coordination/results/2026-10-06-stairs-v3-result.md` |
 | Runs v3, v4a, v4b (5-20 cm risers) | All failed the same way: the policy got safer by getting slower (12-30% of commanded speed), with reward unchanged. All cancelled or discarded. |
 | **Cause found: the `foot_clearance` reward** | It measures each foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. **Shown by intervention** (cluster, 600-iteration trials of the 4b task with one change): term removed (v5a) 67% of commanded speed and mean row 3.3 and rising; term measured above the lowest foot (v5b) 66% and 2.9; unchanged (v4b) 30% and 0.04. `findings.md` #28, `coordination/results/2026-10-06-stairs-v5-clearance-trials.md` |
-| **Stairs v5a, the current attempt** | Full run is **job 12594, running since 2026-10-06 23:12 IST**, iteration ~4,400 of 10,000 on the morning of 10-07, due about 18:30 IST. **It walks (68-69% of commanded speed) but has plateaued**: robots sit on the 12-14 cm rows and the 15-20 cm rows have emptied (cluster report, 10-07). Laptop flights of `model_4400`, 128 trials per cell: **going up 100% at 9 and 12 cm (97-99% even counting shin contact), 0% at 15 and 17 cm; going down 100% at 9 cm and 0-1% at 12 cm and above.** Every failure is a stall, not a fall. **Not a real-stairs policy.** |
-| Stairs v5c, queued | Job 12602, pending for a GPU: v5a continued for 4,000 iterations with half the robots spread evenly over all rows so the tall rows keep getting data. Built and queued by the cluster session under "do what accelerates completion"; the 50/50 split is its judgement. Watch achieved speed early: stairs v3 put every robot on spread rows and stopped walking. |
+| Stairs v5a, final (job 12594, finished 10-07 16:06) | **Not a real-stairs policy.** Flights, 256 trials per cell, tipping-only: up 100 / 96.5 / 0 / 0% at 9 / 12 / 15 / 17 cm, down 100 / 76 / 0 / 0%. Every failure is a stall. Mean row 3.45 at the end. `coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md` |
+| **Why it stalls: the reward pays for refusing** (`findings.md` #29) | In the training env a robot told to walk that trots on the spot keeps 2.6 of ~3.0 reward/s; on a 15 cm flight it earns ~1.8. Measured with `scripts/diag_reward_terms.py`, then tested by training. |
+| **Stairs v6a, the current attempt** (`Unitree-Go2-Spec-StairsV6a`) | v5a with the posture and gait rewards multiplied by achieved/commanded speed. **Training on the laptop GPU** since 10-07 22:41 from v5a final (unit `go2-v6a-lap`, 1,536 envs, 6,000 iterations, ~3.2 h, checkpoints on HF under `go2_spec_stairs_v6a_lap/`). Speed 95-99% of commanded (v5a 70%); mean row ~5.7, 20% of robots on rows 8-9 (v5a: 3.45, 0%). Flights at iteration 600, 64 trials: **down 100 / 100 / 98% at 12 / 15 / 17 cm; up 100 / 0 / 0%.** Ascent is still being learned: robots crossing a pinned 15 cm up-flight in one training episode went 8% -> 16% -> 37% at iterations 200 / 600 / 1,000. |
+| Stairs v5c (cluster job 12608, pending) | v5a's reward with half the robots on uniform rows. By #29 this is the pressure that made v3 stand still; the laptop suggested giving its slot to `SPEC=StairsV6a` (inbox, 10-07 night). Rohan's call in the cluster session. |
+| Flight numbers depend on the commanded speed (`findings.md` #30) | v5a on a 12 cm up-flight at a constant command: 7 of 32 at 0.5 m/s, 28 of 32 at 0.8 m/s. The follow eval's controller speeds up when the robot lags, which is why it reports 96.5%. |
 | Warm start | Should keep the observation normaliser (`findings.md` #27); it is now the default for the stairs specs. |
-| Height scan on the robot | Not built. The Mid-360 does not see ground within about a metre of the robot. The firmware L1 LiDAR (`/utlidar/cloud`) may; unverified. |
-| Running the policy on the Jetson | Numpy runner written and matched to PyTorch on the laptop. Never run on the robot. |
+| Height scan on the robot | `deploy_numpy/go2_scan_node.py` written against the firmware's LiDAR height map (`rt/utlidar/height_map_array`) plus a pose, with the vertical offset anchored on the loaded feet. **Never run on the robot**; `--probe` is the first thing to run there. Its sampler passes the simulator test from a noisy map with holes and drift (median error 0.7 cm). The scan must be terrain only: the trained scan also sees the robot's legs on a few cells, and v5a does not care (`findings.md`, checked 10-07). |
+| Running the policy on the Jetson | `deploy_numpy/go2_runner.py`: stand-up, 50 Hz policy loop, remote, safety stops, `--dry-run`. Observation builder equals the simulator's to 1e-5; the runner stands the robot up and climbs a 12 cm flight in plain CPU MuJoCo. **Never run on the robot.** Runbook: `deploy_numpy/README.md`. |
+| Person-following on the robot | `deploy_numpy/follow_cmd.py` (laptop): perception hub -> velocity command over UDP, used by the runner only while R1 is held. Untested. |
 | How good the robot's scan must be | Measured on stairs v2, low steps: 200 ms delay and 60% stale cells cost under 2 points; a ±6 cm height offset costs 19. Height above ground good to ~3 cm. |
 
 ## 2. What is waiting on whom
 
 ### 2.1 Rohan
 
-1. **Training: nothing blocked on you, but the result so far is a plateau at 12 cm.**
-   Job 12594 (v5a) finishes about 18:30 IST on 10-07; job 12602 (v5c) starts when a GPU
-   frees and you can `scancel` it if you would rather not spend the time.
-   - The policy now climbs 12 cm steps every time and refuses 15 cm and up, and refuses to
-     **descend** 12 cm and up. Real stairs (15-18 cm) are still out of reach in both
-     directions.
-   - Why, as far as known: a robot is promoted only after crossing all five steps in one
-     episode; on the tall rows it stalls, is sent back, and the tall rows empty. Untested.
-   - If v5c does not move it, the levers left are in the plan (section 2.1): a reward for
-     progress on stairs, a swing-height incentive with a taller target (v5b keeps one),
-     promotion on partial progress, longer flights in training.
-   **Be realistic about time**: four training designs in three days have moved the up-stairs
-   limit from 9 cm to 12 cm. Reaching 17 cm is not a matter of waiting for a run to finish.
-   Walking and person-following on flat ground and steps up to 12 cm going up (9 cm going
-   down) could go to the robot now with v5a, and up to ~9 cm with stairs v2, which is the
-   better-tested of the two.
-2. **Read-only checks on the robot** (never done; they decide how the scan is produced):
-   ```
-   ros2 topic list | grep -i -E 'utlidar|height|odom|sportmode'
-   ros2 topic hz /utlidar/cloud
-   ros2 topic echo --once /utlidar/height_map_array | head -30
-   ```
-3. Optional: report format (the final report is Markdown with four figures; related-work
-   citations other than SARO are unchecked).
+1. **The robot session** (the long pole now; nothing here has touched the robot). Follow
+   `unitree_rl_mjlab/deploy_numpy/README.md` stage by stage with the laptop session:
+   - Stage 0, nothing moves (15 minutes): `go2_scan_node.py --probe` and
+     `go2_runner.py --dry-run`. These replace the `ros2 topic` checks asked for earlier and
+     decide how the height scan is produced.
+   - Stage 1-3: legs free, standing, walking on flat ground with `--scan flat`. Needs no
+     LiDAR and no new policy; stairs v2, v5a or v6a all do.
+   - Stage 4-5: the real scan, then steps, only up to the riser the policy passes in
+     simulation.
+2. **Cluster**: v5c (12608) is still pending. Whether to replace it with
+   `SPEC=StairsV6a BUDGET=4000` is yours to say in the cluster session (inbox entry of 10-07
+   night has the evidence). The laptop run does not depend on it.
+3. **What can go on the robot today**: flat ground and low steps with any of the policies;
+   stairs **down** to 17 cm and **up** to 12 cm with v6a once its run is evaluated properly
+   (256 trials, both fall definitions). Up 15-17 cm is not there yet.
 
 ### 2.2 Cluster session
 
-- Job 12594 (full v5a run) running, due ~18:30 IST 10-07; job 12602 (v5c) pending. Owes
-  its heights eval of a v5a checkpoint, split up/down with speed at 15 and 17 cm, when a GPU
-  frees.
-- After a run: its heights eval at 9 / 12 / 15 / 17 cm **with achieved speed and stalled
-  fraction next to falls**, and an early stop if speed is under ~30% of commanded by
-  iteration 1,500.
+- v5a (12594) finished. v5c is job 12608, pending, warm start from v5a `model_4400` (Rohan's
+  choice there). Its status file edits were uncommitted on the night of 10-07.
+- Open suggestion from the laptop: run `SPEC=StairsV6a` at 8,192 envs (see 2.1 item 2).
 
 ### 2.3 Laptop session
+
+**Running now**: stairs v6a on the laptop GPU.
+```
+systemctl --user status go2-v6a-lap                       # the training unit
+python3 coordination/scripts/stairs_run_status.py unitree_rl_mjlab/logs/train_StairsV6a_lap.log
+cd unitree_rl_mjlab && scripts/quick_flights.sh logs/rsl_rl/go2_spec_stairs_v6a_lap/<run>/model_<N>.pt v6alap_it<N>
+PYTHONPATH=$PWD MUJOCO_GL=egl python scripts/diag_reward_terms.py --task Unitree-Go2-Spec-StairsV6a \
+    --checkpoint <ckpt> --step-height 0.15 --num-envs 128      # share of robots crossing, up and down
+```
+An eval can share the GPU with it at up to ~128 envs; at 256 the eval runs out of memory
+(the training restarts itself from its last checkpoint if it is the one killed). When it
+ends: the full acceptance below on its final checkpoint, export, and the README's checks.
+If ascent has not reached 15 cm, the next levers are in `findings.md` #29 and the plan.
 
 When a real-stairs checkpoint worth evaluating is on private HF
 (`RohanRamesh/go2-specialists`, folder named after the experiment; intermediate checkpoints
@@ -127,8 +135,8 @@ and 599 are `eval_results/switch_follow/real_stairs/v5a_it400_*` and `v5ab_it599
 If it passes: `scripts/export_policy_numpy.py <ckpt> --out deploy_numpy/<name>.npz` (it checks
 parity with PyTorch), then the staged bring-up in the plan, section 3.
 
-Not started, and independent of training: the scan node for the robot (waits on §2.1 item 2),
-and scan faults at real riser heights (waits on a policy that climbs them).
+Waiting on the robot: the scan node's assumptions about the firmware's height map and pose
+(README stage 0), and scan faults at real riser heights (waits on a policy that climbs them).
 
 No scheduled checks are pending. A check set for 07:12 on 10-06 was lost when the session
 restarted; scheduled jobs live only inside one session.
@@ -182,12 +190,21 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   run submitted (12594).
 - **10-07**: v5a at iteration ~4,400 walks at full speed and has plateaued on 12-14 cm rows;
   laptop flights: up 100% to 12 cm, 0% at 15-17 cm; down refuses from 12 cm. v5c queued.
+  v5a finished, unchanged apart from descending 12 cm. Night: per-term reward diagnosis
+  (the reward pays for refusing), StairsV6a built and training on the laptop GPU, descents
+  to 17 cm solved by iteration 600; robot-side runner, observation builder, scan node and
+  follow bridge written and checked against the simulator; Sunday deadline set.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
 - **Judge a locomotion policy by where it gets to, not by whether it falls.** Stairs v3 has
   99% survival and near-zero falls per 100 m because it does not move (#26; earlier cases #1,
   #14). Always read achieved speed, stalled fraction, or crossing rate first.
+- **Price the do-nothing policy** (#29): posture, gait and angular-tracking rewards paid a
+  stalled robot 85% of a walking one's reward, so tall flights were refused. Any new reward
+  term: ask what a robot standing still earns from it.
+- **Quote the command with a flight number** (#30): the same policy climbs a flight at
+  0.8 m/s and stops at its foot at 0.5 m/s.
 - **`foot_clearance` uses world-frame foot height** (#28): on any raised terrain it punishes
   moving. Every stairs policy before v5 trained under it. Do not reuse the stock term on
   stairs.
@@ -218,7 +235,9 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
 
 | Want to know... | Read |
 |---|---|
-| The active plan for the real robot | `report_content/go2_real_stairs_plan.md` |
+| How to bring the policy up on the robot | `unitree_rl_mjlab/deploy_numpy/README.md` |
+| The plan for the real robot, background | `report_content/go2_real_stairs_plan.md` |
+| v5a final result and the reward diagnosis | `coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md` |
 | The finished study, as a report | `report_content/final_report.md` |
 | The study's numbers and intervals | `coordination/results/switch-follow-results.md` |
 | What was fixed in advance | `coordination/results/switch-follow-preregistration.md` |

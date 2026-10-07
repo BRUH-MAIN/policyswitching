@@ -83,6 +83,12 @@ def main():
   speed_sum = {g: 0.0 for g in groups}
   cmd_sum = {g: 0.0 for g in groups}
 
+  # Furthest each robot gets from its spawn point within its first episode (20 s = 1,000 steps),
+  # as the training row rule measures it: >= 3.2 m is across all five steps, < 1.9 m never left
+  # the platform and the first step.
+  far = torch.zeros(args.num_envs, device=device)
+  first_episode = torch.ones(args.num_envs, dtype=torch.bool, device=device)
+
   obs, _ = env.reset()
   for _ in range(args.steps):
     with torch.no_grad():
@@ -94,6 +100,8 @@ def main():
     row = torch.cat([step_r, step_r.sum(dim=1, keepdim=True)], dim=1)
     commanded = cmd_xy > 0.3
     cheb = (robot.data.root_link_pos_w[:, :2] - origins_xy).abs().max(dim=1).values
+    first_episode &= u.episode_length_buf > 0  # a reset zeroes the counter: that robot's episode is over
+    far = torch.where(first_episode, torch.maximum(far, cheb), far)
     masks = {
       "moving": commanded & (speed >= 0.5 * cmd_xy),
       "stalled": commanded & (speed < 0.1),
@@ -120,10 +128,14 @@ def main():
       "frac_moving": cnt[g]["moving"] / n_all,
       "frac_stalled": cnt[g]["stalled"] / n_all,
       "frac_on_stairs": cnt[g]["on_stairs"] / n_all,
+      "frac_crossed": float((far[groups[g]] >= 3.2).float().mean()),
+      "frac_never_left": float((far[groups[g]] < 1.9).float().mean()),
       "terms": {},
     }
     print(f"\n== {g.upper()} at {args.step_height * 100:.0f} cm: speed/cmd {res['speed_over_cmd']:.2f}, "
           f"moving {100 * res['frac_moving']:.0f}% of commanded steps, stalled {100 * res['frac_stalled']:.0f}%, on the flight {100 * res['frac_on_stairs']:.0f}%")
+    print(f"   first episode: {100 * res['frac_crossed']:.0f}% of robots got across all five steps, "
+          f"{100 * res['frac_never_left']:.0f}% never got past the first")
     print(f"{'term':26s} {'moving':>9s} {'stalled':>9s} {'on_stairs':>9s} {'all':>9s}")
     for i, name in enumerate(cols):
       vals = {k: float(acc[g][k][i]) / max(cnt[g][k], 1.0) for k in kinds}
