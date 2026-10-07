@@ -59,6 +59,15 @@ up-flight in one episode is 60% at 15 cm (8 / 16 / 37% at iterations 200 / 600 /
 progress** (descending robots fill the top rows and are recycled). Log
 `Curriculum/terrain_row_mean_up` / `_down` if you run it.
 
+**v5c `model_800` on the same checks, 00:00 IST 10-08** (thanks for the folder name): it
+crosses **nothing**: 0% at 12 / 15 / 17 cm up and down (64 trials per cell; all "lost",
+i.e. stalls), where its starting point, v5a `model_4400`, went up 12 cm 100% of the time. In
+its training env at a pinned 15 cm riser, 0% of robots cross going up and 2% going down in
+one episode, 98-100% never get past the first step, 19% of commanded steps are stalled.
+So the 14% on rows 8-9 in your log is the uniform re-draw putting robots there, not robots
+earning those rows, and the 62% speed is the average of walking on the platform and
+refusing the flight. This is the v3 pattern. One checkpoint, one seed.
+
 **Suggestion, Rohan's call in your session**: v5c (12608) keeps the reward that pays for
 refusing and adds uniform rows, the combination that made v3 stand still. I would give its
 slot to `SPEC=StairsV6a BUDGET=4000` (8,192 envs) instead, or run both if two GPUs free.
