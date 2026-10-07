@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-06T17:41:51Z",
+  "last_updated_utc": "2026-10-07T01:42:41Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -355,10 +355,20 @@
       "headline": "Both pass: v5a speed 67-72% of commanded, mean row 1.4 -> 3.4; v5b 65-67%, 1.4 -> 3.0 (v4b: 26-30%, row 0). The world-z foot_clearance term was the cause. Training logs only; no eval yet. coordination/results/2026-10-06-stairs-v5-clearance-trials.md"
     },
     "stairs_v5a_full": {
-      "status": "pending",
+      "status": "running",
       "slurm_job_id": "12594",
       "command": "BUDGET=10000 SPEC=StairsV5a sbatch --gres=gpu:1 (HF_TOKEN exported)",
-      "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'. Still PENDING at 22:58 IST 10-06 (no GPU free; held by other users' jobs and 12578 csasr-abl). Watcher expired with no start. 23:10 IST 10-06: Rohan requeued 12578 (csasr-abl, other project) to free an A100; the freed A100 was taken within a second by another user's higher-priority job 12591 (saranyad, jupyter), NOT by 12594. 12594 priority 10151, behind 12593 (11173); scheduler worst-case start now 2026-10-07 17:08. 12578 is pending again (priority 10101, behind 12594)."
+      "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'. Still PENDING at 22:58 IST 10-06 (no GPU free; held by other users' jobs and 12578 csasr-abl). Watcher expired with no start. 23:10 IST 10-06: Rohan requeued 12578 (csasr-abl, other project) to free an A100; the freed A100 was taken within a second by another user's higher-priority job 12591 (saranyad, jupyter), NOT by 12594. 12594 priority 10151, behind 12593 (11173); scheduler worst-case start now 2026-10-07 17:08. 12578 is pending again (priority 10101, behind 12594).",
+      "started_ist": "2026-10-06 23:12:07",
+      "node": "asaicomputenode02 (A100)",
+      "progress": "07:00 IST 10-07: iteration 4372 of 10000, 7.3 s/iteration (A100 shared; est. finish ~18:30 IST 10-07, inside the 24 h walltime). Speed 68-69% of commanded and holding, stalled 3%, tracking reward rising 0.72 -> 0.74. BUT mean row plateaued at ~3.7 from iteration ~1100 and is drifting down (3.5): rows 4-5 hold 48%, rows 6-7 fell 16% -> 6%, rows 8-9 0%. The 15-20 cm risers get almost no data. (The requeue of 12578 did free the A100 12594 got, one minute after I wrongly reported it had not.)"
+    },
+    "stairs_v5c": {
+      "status": "pending",
+      "task": "Unitree-Go2-Spec-StairsV5c",
+      "experiment": "go2_spec_stairs_v5c",
+      "budget": 4000,
+      "notes": "v5a + progress rule mixed 50/50 with uniform rows; warm start from the latest v5a checkpoint at job start (model_4400 when built), normalizer kept. Queued 07:05 IST 10-07 behind 12578; starts when a GPU frees. Cancel with scancel if not wanted."
     }
   }
 }
