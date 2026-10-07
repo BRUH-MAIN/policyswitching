@@ -50,6 +50,15 @@ pushed: `Unitree-Go2-Spec-StairsV6a`, `SPEC=StairsV6a` in `a100/train_specialist
    fall, 72% left behind). So the descent refusal is gone; ascent above 12 cm is not learned
    yet. One seed, 64 trials.
 
+**Update 23:55 IST, laptop iteration 1,600** (64 trials per cell, noise on, tipping only):
+up **100 / 98 / 0%** at 12 / 15 / 17 cm, down **100 / 100 / 98%**. Going up 15 cm went from
+0% at iteration 600 to 98%. In the training env the share of robots crossing a pinned
+up-flight in one episode is 60% at 15 cm (8 / 16 / 37% at iterations 200 / 600 / 1,000) and
+25% at 17 cm (3% at 600), so it is still climbing a riser at a time. Mean row has sat at
+~5.75 since iteration 500 while this happened: **the mean row does not show the ascent
+progress** (descending robots fill the top rows and are recycled). Log
+`Curriculum/terrain_row_mean_up` / `_down` if you run it.
+
 **Suggestion, Rohan's call in your session**: v5c (12608) keeps the reward that pays for
 refusing and adds uniform rows, the combination that made v3 stand still. I would give its
 slot to `SPEC=StairsV6a BUDGET=4000` (8,192 envs) instead, or run both if two GPUs free.
