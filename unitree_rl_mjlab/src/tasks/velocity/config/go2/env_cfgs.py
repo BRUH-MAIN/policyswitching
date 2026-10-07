@@ -37,6 +37,7 @@ from src.tasks.velocity.mdp.terrain_curriculum import (
   terrain_levels_progress_mixed,
   terrain_row_fraction,
   terrain_row_mean,
+  terrain_row_mean_by_direction,
 )
 from src.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
@@ -656,6 +657,11 @@ def unitree_go2_spec_stairs_v5c_env_cfg(play: bool = False) -> ManagerBasedRlEnv
       func=terrain_levels_progress_mixed,
       params={"explore_frac": 0.5, "across_m": PROGRESS_ACROSS_M, "stall_m": PROGRESS_STALL_M, "stall_cmd": PROGRESS_STALL_CMD},
     )
+    # Mean row of the descending and ascending populations separately (they keep their column).
+    for direction in ("down", "up"):
+      cfg.curriculum[f"terrain_row_mean_{direction}"] = CurriculumTermCfg(
+        func=terrain_row_mean_by_direction, params={"direction": direction}
+      )
   return cfg
 
 

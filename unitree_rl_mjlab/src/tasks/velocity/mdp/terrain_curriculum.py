@@ -139,6 +139,35 @@ def terrain_levels_progress_mixed(
   return torch.mean(terrain.terrain_levels.float())
 
 
+def terrain_row_mean_by_direction(
+  env: ManagerBasedRlEnv,
+  env_ids: torch.Tensor,
+  direction: str,
+) -> torch.Tensor:
+  """Mean row of the envs on pyramid ("down": spawn on the top platform, walks down) or
+  inverted-pyramid ("up": spawn in the pit, walks up) sub-terrains. Envs keep their column, so
+  `terrain_row_mean` mixes two populations; a plateau can sit in only one of them."""
+  del env_ids
+  assert direction in ("down", "up")
+  terrain = env.scene.terrain
+  assert terrain is not None
+  gen = terrain.cfg.terrain_generator
+  names = list(gen.sub_terrains)
+  props = torch.tensor([s.proportion for s in gen.sub_terrains.values()], dtype=torch.float)
+  cum = torch.cumsum(props / props.sum(), dim=0)
+  col_type = [
+    int(torch.nonzero(c / gen.num_cols + 0.001 < cum)[0]) for c in range(gen.num_cols)
+  ]
+  want_up = direction == "up"
+  col_ok = torch.tensor(
+    [("inv" in names[t]) == want_up for t in col_type], device=env.device
+  )
+  mask = col_ok[terrain.terrain_types]
+  if not mask.any():
+    return torch.zeros((), device=env.device)
+  return torch.mean(terrain.terrain_levels[mask].float())
+
+
 def terrain_row_mean(
   env: ManagerBasedRlEnv,
   env_ids: torch.Tensor,

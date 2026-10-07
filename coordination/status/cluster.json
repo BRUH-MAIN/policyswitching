@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-07T01:42:41Z",
+  "last_updated_utc": "2026-10-07T02:20:25Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -368,7 +368,7 @@
       "task": "Unitree-Go2-Spec-StairsV5c",
       "experiment": "go2_spec_stairs_v5c",
       "budget": 4000,
-      "notes": "v5a + progress rule mixed 50/50 with uniform rows; warm start from the latest v5a checkpoint at job start (model_4400 when built), normalizer kept. Queued 07:05 IST 10-07 behind 12578; starts when a GPU frees. Cancel with scancel if not wanted."
+      "notes": "v5a + progress rule mixed 50/50 with uniform rows; warm start from the latest v5a checkpoint at job start (model_4400 when built), normalizer kept. Queued 07:05 IST 10-07 behind 12578; starts when a GPU frees. Cancel with scancel if not wanted. 07:50 IST: added Curriculum/terrain_row_mean_down and _up (descending vs ascending populations), CPU-checked; job still pending. Watch achieved speed in the first few hundred iterations (v3 with all-uniform rows stopped walking; half-uniform is the same pressure at half strength)."
     }
   }
 }
