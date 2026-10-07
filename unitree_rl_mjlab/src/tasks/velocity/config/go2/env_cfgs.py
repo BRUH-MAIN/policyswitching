@@ -24,6 +24,7 @@ from mjlab.utils.noise import UniformNoiseCfg as Unoise
 
 from src.tasks.velocity.mdp.pas import foot_friction
 from src.tasks.velocity.mdp.rewards import (
+  climb_progress,
   feet_clearance_relative,
   feet_gait_gated,
   variable_posture_gated,
@@ -688,6 +689,36 @@ def unitree_go2_spec_stairs_v6a_env_cfg(play: bool = False) -> ManagerBasedRlEnv
   cfg = unitree_go2_spec_stairs_v5a_env_cfg(play=play)
   cfg.rewards["pose"] = replace(cfg.rewards["pose"], func=variable_posture_gated)
   cfg.rewards["foot_gait"] = replace(cfg.rewards["foot_gait"], func=feet_gait_gated)
+  return cfg
+
+
+# StairsV7a: reward per m/s of height gained on an up-flight. A five-step 17 cm flight is
+# 0.85 m, so the whole climb is worth 4.25 reward-seconds, about one termination (-4), and a
+# robot climbing at 0.2 m/s along the ground earns ~0.57/s for it against a flight-versus-stall
+# difference of 0.09/s without it.
+STAIRS_V7_CLIMB_WEIGHT = 5.0
+
+
+def unitree_go2_spec_stairs_v7a_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v7a: v6a plus a reward for height gained on up-flights (`climb_progress`).
+
+  Final v6a (6,000 laptop iterations) goes down 9-17 cm flights 99-100% of the time and up
+  12 cm 99.6%, 15 cm 85%, 17 cm 3% (256 trials per cell), and its 15 cm ascent swings between
+  0% and 98% from checkpoint to checkpoint. Per reward term at a pinned 17 cm riser, a robot
+  on the up-flight earns 0.86/s and a stalled one 0.77/s: the climb itself is not paid. This
+  adds STAIRS_V7_CLIMB_WEIGHT x vertical base velocity on inverted-pyramid columns only
+  (signed, so only net height gained counts). Also logs the up and down row means, since the
+  overall mean row hid everything that happened to ascent in v6a. Warm-start from v6a.
+  """
+  cfg = unitree_go2_spec_stairs_v6a_env_cfg(play=play)
+  if not play:  # the play terrain has no fixed up/down columns to key the term on
+    cfg.rewards["climb_progress"] = RewardTermCfg(
+      func=climb_progress, weight=STAIRS_V7_CLIMB_WEIGHT, params={"command_name": "twist"}
+    )
+    for direction in ("down", "up"):
+      cfg.curriculum[f"terrain_row_mean_{direction}"] = CurriculumTermCfg(
+        func=terrain_row_mean_by_direction, params={"direction": direction}
+      )
   return cfg
 
 

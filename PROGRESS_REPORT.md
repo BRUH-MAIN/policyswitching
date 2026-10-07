@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-07, night · **Deadline (Rohan, 10-07)**: on the robot by Sunday 2026-10-11 · **Written for**: a fresh session (human or Claude) with no
+**As of**: 2026-10-08, 03:00 IST · **Deadline (Rohan, 10-07)**: on the robot by Sunday 2026-10-11 · **Written for**: a fresh session (human or Claude) with no
 memory of how this state was reached. This file is the entry point; where it needs more
 detail it names a file. Read that file rather than re-deriving it.
 
@@ -59,8 +59,9 @@ leave to do anything project-related here, training code included.
 | **Cause found: the `foot_clearance` reward** | It measures each foot's height in the world frame against a fixed 0.10 m, so on a raised staircase it charges every moving foot for the staircase's height. **Shown by intervention** (cluster, 600-iteration trials of the 4b task with one change): term removed (v5a) 67% of commanded speed and mean row 3.3 and rising; term measured above the lowest foot (v5b) 66% and 2.9; unchanged (v4b) 30% and 0.04. `findings.md` #28, `coordination/results/2026-10-06-stairs-v5-clearance-trials.md` |
 | Stairs v5a, final (job 12594, finished 10-07 16:06) | **Not a real-stairs policy.** Flights, 256 trials per cell, tipping-only: up 100 / 96.5 / 0 / 0% at 9 / 12 / 15 / 17 cm, down 100 / 76 / 0 / 0%. Every failure is a stall. Mean row 3.45 at the end. `coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md` |
 | **Why it stalls: the reward pays for refusing** (`findings.md` #29) | In the training env a robot told to walk that trots on the spot keeps 2.6 of ~3.0 reward/s; on a 15 cm flight it earns ~1.8. Measured with `scripts/diag_reward_terms.py`, then tested by training. |
-| **Stairs v6a, the current attempt** (`Unitree-Go2-Spec-StairsV6a`) | v5a with the posture and gait rewards multiplied by achieved/commanded speed. **Training on the laptop GPU** since 10-07 22:41 from v5a final (unit `go2-v6a-lap`, 1,536 envs, 6,000 iterations, ~3.2 h, checkpoints on HF under `go2_spec_stairs_v6a_lap/`). Speed 95-99% of commanded (v5a 70%); mean row ~5.7, 20% of robots on rows 8-9 (v5a: 3.45, 0%). Flights at iteration 600, 64 trials: **down 100 / 100 / 98% at 12 / 15 / 17 cm; up 100 / 0 / 0%.** Ascent is still being learned: robots crossing a pinned 15 cm up-flight in one training episode went 8% -> 16% -> 37% at iterations 200 / 600 / 1,000. |
-| Stairs v5c (cluster job 12608, pending) | v5a's reward with half the robots on uniform rows. By #29 this is the pressure that made v3 stand still; the laptop suggested giving its slot to `SPEC=StairsV6a` (inbox, 10-07 night). Rohan's call in the cluster session. |
+| Stairs v6a (`Unitree-Go2-Spec-StairsV6a`), finished 10-08 02:30 | v5a with the posture and gait rewards multiplied by achieved/commanded speed; 6,000 laptop iterations from v5a final (`go2_spec_stairs_v6a_lap/` on HF). **Final checkpoint, 256 trials per cell, tipping only: up 100 / 99.6 / 85 / 3%, down 100 / 100 / 100 / 99% at 9 / 12 / 15 / 17 cm.** With shin contact counted as a fall: up 83 / 95 / 57 / 1%, down 27 / 39 / 29 / 34% (it brushes steps on two descents in three). **Its 15 cm ascent swings between 0% and 98% from checkpoint to checkpoint** (`findings.md` #31), so the checkpoint for the robot has to be chosen by full evaluation; `model_1600` is the first candidate (98% on 64 trials). `coordination/results/2026-10-08-stairs-v6a-final.md` |
+| **Stairs v7a, the current attempt** (`Unitree-Go2-Spec-StairsV7a`) | v6a plus a reward for height gained on up-flights, because a 17 cm climb paid no more than standing at its foot (#32). **Training on the laptop GPU since 10-08 02:50** from v6a final (unit `go2-v7a-lap`, 6,000 iterations, due ~06:05, HF `go2_spec_stairs_v7a_lap/`). Pass marks are in the v6a write-up, section 4. Not evaluated yet. |
+| Stairs v5c (cluster job 12608, running since 10-07 22:35) | v5a's reward with half the robots on uniform rows. **`model_800` crosses no flight at 12-17 cm in either direction** (64 trials per cell) and the cluster's log has its up/down row means flat since iteration 100: the v3 pattern. Cancelling it frees an A100 that would go to another user's job first, so it is harmless and useless either way; Rohan's call in the cluster session. |
 | Flight numbers depend on the commanded speed (`findings.md` #30) | v5a on a 12 cm up-flight at a constant command: 7 of 32 at 0.5 m/s, 28 of 32 at 0.8 m/s. The follow eval's controller speeds up when the robot lags, which is why it reports 96.5%. |
 | Warm start | Should keep the observation normaliser (`findings.md` #27); it is now the default for the stairs specs. |
 | Height scan on the robot | `deploy_numpy/go2_scan_node.py` written against the firmware's LiDAR height map (`rt/utlidar/height_map_array`) plus a pose, with the vertical offset anchored on the loaded feet. **Never run on the robot**; `--probe` is the first thing to run there. Its sampler passes the simulator test from a noisy map with holes and drift (median error 0.7 cm). The scan must be terrain only: the trained scan also sees the robot's legs on a few cells, and v5a does not care (`findings.md`, checked 10-07). |
@@ -85,8 +86,9 @@ leave to do anything project-related here, training code included.
    `SPEC=StairsV6a BUDGET=4000` is yours to say in the cluster session (inbox entry of 10-07
    night has the evidence). The laptop run does not depend on it.
 3. **What can go on the robot today**: flat ground and low steps with any of the policies;
-   stairs **down** to 17 cm and **up** to 12 cm with v6a once its run is evaluated properly
-   (256 trials, both fall definitions). Up 15-17 cm is not there yet.
+   with v6a, stairs **down** to 17 cm and **up** to 12 cm reliably and 15 cm most of the
+   time (85% for the final checkpoint; pick the checkpoint by full evaluation). It touches
+   the steps with its shins on most descents. Up 17 cm is not there; v7a is the attempt.
 
 ### 2.2 Cluster session
 
@@ -96,18 +98,20 @@ leave to do anything project-related here, training code included.
 
 ### 2.3 Laptop session
 
-**Running now**: stairs v6a on the laptop GPU.
+**Running now**: stairs v7a on the laptop GPU (v6a finished 10-08 02:30).
 ```
-systemctl --user status go2-v6a-lap                       # the training unit
-python3 coordination/scripts/stairs_run_status.py unitree_rl_mjlab/logs/train_StairsV6a_lap.log
-cd unitree_rl_mjlab && scripts/quick_flights.sh logs/rsl_rl/go2_spec_stairs_v6a_lap/<run>/model_<N>.pt v6alap_it<N>
-PYTHONPATH=$PWD MUJOCO_GL=egl python scripts/diag_reward_terms.py --task Unitree-Go2-Spec-StairsV6a \
+systemctl --user status go2-v7a-lap                       # the training unit
+python3 coordination/scripts/stairs_run_status.py unitree_rl_mjlab/logs/train_StairsV7a_lap.log
+grep terrain_row_mean_up unitree_rl_mjlab/logs/train_StairsV7a_lap.log | tail -3    # ascent, which the mean row hides
+cd unitree_rl_mjlab && scripts/quick_flights.sh logs/rsl_rl/go2_spec_stairs_v7a_lap/<run>/model_<N>.pt v7alap_it<N>
+PYTHONPATH=$PWD MUJOCO_GL=egl python scripts/diag_reward_terms.py --task Unitree-Go2-Spec-StairsV7a \
     --checkpoint <ckpt> --step-height 0.15 --num-envs 128      # share of robots crossing, up and down
 ```
 An eval can share the GPU with it at up to ~128 envs; at 256 the eval runs out of memory
 (the training restarts itself from its last checkpoint if it is the one killed). When it
-ends: the full acceptance below on its final checkpoint, export, and the README's checks.
-If ascent has not reached 15 cm, the next levers are in `findings.md` #29 and the plan.
+ends: the full acceptance below on **several** checkpoints, not only the last (#31), then
+export the chosen one and run the README's checks. Still owed for v6a: the full acceptance
+on `model_1600` (started 03:00 on 10-08) and the 10-step flights.
 
 When a real-stairs checkpoint worth evaluating is on private HF
 (`RohanRamesh/go2-specialists`, folder named after the experiment; intermediate checkpoints
@@ -194,6 +198,9 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
   (the reward pays for refusing), StairsV6a built and training on the laptop GPU, descents
   to 17 cm solved by iteration 600; robot-side runner, observation builder, scan node and
   follow bridge written and checked against the simulator; Sunday deadline set.
+- **10-08, early**: v6a finished (up to 15 cm, down to 17 cm; ascent unstable across
+  checkpoints; a 17 cm climb unpaid). v5c found to cross nothing. The runner passed a DDS
+  loopback test against a pretend Go2. StairsV7a (reward for height gained) started.
 
 ## 5. Gotchas (full list: `findings.md`, "Bugs found and fixed")
 
@@ -203,6 +210,8 @@ scan (17 × 11 grid, 0.1 m, 1.6 × 1.0 m, heading-aligned, height of base above 
 - **Price the do-nothing policy** (#29): posture, gait and angular-tracking rewards paid a
   stalled robot 85% of a walking one's reward, so tall flights were refused. Any new reward
   term: ask what a robot standing still earns from it.
+- **Evaluate several checkpoints, fully, before choosing one** (#31): v6a's 15 cm ascent
+  reads anywhere from 0% to 98% depending on the checkpoint, and the mean row shows nothing.
 - **Quote the command with a flight number** (#30): the same policy climbs a flight at
   0.8 m/s and stops at its foot at 0.5 m/s.
 - **`foot_clearance` uses world-frame foot height** (#28): on any raised terrain it punishes

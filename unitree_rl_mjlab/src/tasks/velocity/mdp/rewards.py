@@ -475,6 +475,45 @@ def feet_gait_gated(env: ManagerBasedRlEnv, gate_threshold: float = 0.1, **kwarg
   return feet_gait(env, **kwargs) * progress_gate(env, kwargs["command_name"], gate_threshold)
 
 
+class climb_progress:
+  """Vertical base velocity (m/s, signed, world frame) on up-flights, when commanded to move.
+
+  Zero on every sub-terrain whose name lacks "inv" (the pyramids, which are walked down) and
+  for a robot told to stand. Signed, so bobbing or hopping in place nets nothing: only height
+  actually gained is paid, 0.75-1.0 m over a five-step flight.
+
+  Why (StairsV7a): with the posture and gait rewards gated by progress (v6a) a robot on a
+  17 cm up-flight earns 0.86 reward/s and one stalled at its foot 0.77, so nothing pays for
+  the climb, and at a discount of 0.99 (a 2 s horizon) the flat ground beyond a 10-30 s climb
+  is invisible. v6a goes down 17 cm flights and does not go up them.
+  """
+
+  def __init__(self, cfg: RewardTermCfg, env: ManagerBasedRlEnv):
+    terrain = env.scene.terrain
+    gen = terrain.cfg.terrain_generator
+    names = list(gen.sub_terrains)
+    props = torch.tensor([s.proportion for s in gen.sub_terrains.values()], dtype=torch.float)
+    cum = torch.cumsum(props / props.sum(), dim=0)
+    col_type = [int(torch.nonzero(c / gen.num_cols + 0.001 < cum)[0]) for c in range(gen.num_cols)]
+    self.col_up = torch.tensor(["inv" in names[t] for t in col_type], device=env.device)
+
+  def __call__(
+    self,
+    env: ManagerBasedRlEnv,
+    command_name: str,
+    command_threshold: float = 0.1,
+    max_speed: float = 1.0,
+    asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+  ) -> torch.Tensor:
+    asset: Entity = env.scene[asset_cfg.name]
+    command = env.command_manager.get_command(command_name)
+    assert command is not None
+    moving = torch.norm(command[:, :2], dim=1) > command_threshold
+    on_up_flight = self.col_up[env.scene.terrain.terrain_types]
+    v_z = torch.clamp(asset.data.root_link_lin_vel_w[:, 2], -max_speed, max_speed)
+    return v_z * (moving & on_up_flight).float()
+
+
 def stand_still(
         env: ManagerBasedRlEnv,
         command_name: str,

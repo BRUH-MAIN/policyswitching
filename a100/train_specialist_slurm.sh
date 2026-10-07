@@ -81,7 +81,7 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, StairsV6a, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, StairsV6a, StairsV7a, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
@@ -119,6 +119,10 @@ case "$SPEC" in
     TASK="Unitree-Go2-Spec-StairsV6a"
     EXPERIMENT_NAME="go2_spec_stairs_v6a"
     ;;
+  StairsV7a)
+    TASK="Unitree-Go2-Spec-StairsV7a"
+    EXPERIMENT_NAME="go2_spec_stairs_v7a"
+    ;;
   Generalist)
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
@@ -127,7 +131,7 @@ case "$SPEC" in
     TASK="Unitree-Go2-GeneralistV2"
     EXPERIMENT_NAME="go2_generalist_v2"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, StairsV6a, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, StairsV6a, StairsV7a, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
@@ -137,7 +141,7 @@ A100_DIR="$REPO_DIR/a100"
 EXPERIMENT_NAME="${EXPERIMENT_NAME}${EXPERIMENT_SUFFIX:-}"
 
 case "$SPEC" in
-  StairsV3|StairsV4a|StairsV4b|StairsV5a|StairsV5b|StairsV5c|StairsV6a) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
+  StairsV3|StairsV4a|StairsV4b|StairsV5a|StairsV5b|StairsV5c|StairsV6a|StairsV7a) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
   *) KEEP_NORMALIZER="${KEEP_NORMALIZER:-0}" ;;
 esac
 
