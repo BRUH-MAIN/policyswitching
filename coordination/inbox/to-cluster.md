@@ -68,6 +68,16 @@ So the 14% on rows 8-9 in your log is the uniform re-draw putting robots there, 
 earning those rows, and the 62% speed is the average of walking on the platform and
 refusing the flight. This is the v3 pattern. One checkpoint, one seed.
 
+**v6a_lap `model_3200`, 00:50 IST 10-08. If 12611 is still pending, start it from this
+checkpoint.** Flights, 64 trials per cell, noise on, tipping only, leader at 0.5 m/s: up
+15 cm 75% (`model_1600`: 98%; with noise off 89% vs 94%), up 17 cm 2% (0%), down 15 / 17 cm
+100 / 100%. Up 17 cm with a leader that cannot be lost and a 60 s limit: `model_1600`
+crosses 17% (66% tip over), `model_3200` 48% (34% tip over), median ~34 s. So it gets up
+17 cm slowly, falls when the follow controller pushes it to full speed, and is still
+improving there; sensor noise is not the limit. `model_3200` is a little worse at 15 cm and
+clearly ahead at 17 cm, which is the open problem. The laptop run ends at 6,000 iterations,
+~02:10 IST; the full 256-trial acceptance on its final checkpoint follows.
+
 **Suggestion, Rohan's call in your session**: v5c (12608) keeps the reward that pays for
 refusing and adds uniform rows, the combination that made v3 stand still. I would give its
 slot to `SPEC=StairsV6a BUDGET=4000` (8,192 envs) instead, or run both if two GPUs free.
