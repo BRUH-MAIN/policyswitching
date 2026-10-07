@@ -111,6 +111,34 @@ def terrain_levels_progress(
   return torch.mean(terrain.terrain_levels.float())
 
 
+def terrain_levels_progress_mixed(
+  env: ManagerBasedRlEnv,
+  env_ids: torch.Tensor,
+  explore_frac: float = 0.5,
+  **progress_kwargs,
+) -> torch.Tensor:
+  """`terrain_levels_progress`, then re-draw the row of a random `explore_frac` of the resetting
+  envs uniformly over all rows (their column, i.e. sub-terrain, is kept).
+
+  Why: stairs v5a under the pure progress rule settled at a mean row of ~3.7 and by iteration
+  4,400 only ~6% of robots were on rows 6-7 and none on rows 8-9, so the 15-20 cm risers it must
+  learn got almost no data. The adaptive half keeps robots at the frontier; the uniform half
+  guarantees every row (5% each at the default 0.5) whatever the rule decides.
+  """
+  terrain = env.scene.terrain
+  assert terrain is not None
+  terrain_levels_progress(env, env_ids, **progress_kwargs)
+  pick = env_ids[torch.rand(len(env_ids), device=env.device) < explore_frac]
+  if len(pick) > 0:
+    terrain.terrain_levels[pick] = torch.randint(
+      0, terrain.max_terrain_level, (len(pick),), device=env.device
+    )
+    terrain.env_origins[pick] = terrain.terrain_origins[
+      terrain.terrain_levels[pick], terrain.terrain_types[pick]
+    ]
+  return torch.mean(terrain.terrain_levels.float())
+
+
 def terrain_row_mean(
   env: ManagerBasedRlEnv,
   env_ids: torch.Tensor,

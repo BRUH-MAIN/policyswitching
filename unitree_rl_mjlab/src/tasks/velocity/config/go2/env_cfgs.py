@@ -34,6 +34,7 @@ from src.tasks.velocity.mdp.terrain_curriculum import (
   limb_contact,
   stalled,
   terrain_levels_progress,
+  terrain_levels_progress_mixed,
   terrain_row_fraction,
   terrain_row_mean,
 )
@@ -636,6 +637,25 @@ def unitree_go2_spec_stairs_v5b_env_cfg(play: bool = False) -> ManagerBasedRlEnv
   """
   cfg = _stairs_v4_env_cfg(play, limb_contact_penalised=True)
   cfg.rewards["foot_clearance"] = replace(cfg.rewards["foot_clearance"], func=feet_clearance_relative)
+  return cfg
+
+
+def unitree_go2_spec_stairs_v5c_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v5c: v5a with the progress rule mixed 50/50 with uniformly drawn rows.
+
+  v5a (clearance removed) walks at ~68% of commanded speed but its rows settled at a mean of
+  ~3.7 and drifted down, with ~6% of robots on rows 6-7 and none on 8-9 by iteration 4,400, so
+  the 15-20 cm risers get almost no data. Here `terrain_levels_progress_mixed` applies the same
+  progress rule and then re-draws the row of half of the resetting robots uniformly over all ten
+  rows: 5% on each row at all times, the other half at the frontier. Everything else is v5a.
+  Meant to be warm-started from a v5a checkpoint (the train script defaults to the latest).
+  """
+  cfg = unitree_go2_spec_stairs_v5a_env_cfg(play=play)
+  if not play:
+    cfg.curriculum["terrain_levels"] = CurriculumTermCfg(
+      func=terrain_levels_progress_mixed,
+      params={"explore_frac": 0.5, "across_m": PROGRESS_ACROSS_M, "stall_m": PROGRESS_STALL_M, "stall_cmd": PROGRESS_STALL_CMD},
+    )
   return cfg
 
 

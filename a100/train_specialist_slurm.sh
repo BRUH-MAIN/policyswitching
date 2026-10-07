@@ -81,7 +81,7 @@
 
 set -euo pipefail
 
-: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
+: "${SPEC:?Set SPEC to one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, Gaps, GapsWarm, Generalist, GeneralistV2 (e.g. SPEC=Stairs sbatch ...)}"
 case "$SPEC" in
   Flat|Rough|Stairs|Gaps|GapsWarm)
     TASK="Unitree-Go2-Spec-${SPEC}"
@@ -111,6 +111,10 @@ case "$SPEC" in
     TASK="Unitree-Go2-Spec-StairsV5b"
     EXPERIMENT_NAME="go2_spec_stairs_v5b"
     ;;
+  StairsV5c)
+    TASK="Unitree-Go2-Spec-StairsV5c"
+    EXPERIMENT_NAME="go2_spec_stairs_v5c"
+    ;;
   Generalist)
     TASK="Unitree-Go2-Generalist"
     EXPERIMENT_NAME="go2_generalist"
@@ -119,7 +123,7 @@ case "$SPEC" in
     TASK="Unitree-Go2-GeneralistV2"
     EXPERIMENT_NAME="go2_generalist_v2"
     ;;
-  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
+  *) echo "[ERROR] SPEC must be one of Flat, Rough, Stairs, StairsV2, StairsV3, StairsV4a, StairsV4b, StairsV5a, StairsV5b, StairsV5c, Gaps, GapsWarm, Generalist, GeneralistV2 (got '$SPEC')" >&2; exit 1 ;;
 esac
 
 REPO_DIR="${REPO_DIR:-/dist_home/d_palmani/c-08/policyswitching}"
@@ -129,7 +133,7 @@ A100_DIR="$REPO_DIR/a100"
 EXPERIMENT_NAME="${EXPERIMENT_NAME}${EXPERIMENT_SUFFIX:-}"
 
 case "$SPEC" in
-  StairsV3|StairsV4a|StairsV4b|StairsV5a|StairsV5b) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
+  StairsV3|StairsV4a|StairsV4b|StairsV5a|StairsV5b|StairsV5c) KEEP_NORMALIZER="${KEEP_NORMALIZER:-1}" ;;
   *) KEEP_NORMALIZER="${KEEP_NORMALIZER:-0}" ;;
 esac
 
@@ -145,6 +149,11 @@ fi
 if { [ "$SPEC" = "StairsV3" ] || [ "$SPEC" = "StairsV4a" ] || [ "$SPEC" = "StairsV4b" ] || [ "$SPEC" = "StairsV5a" ] || [ "$SPEC" = "StairsV5b" ]; } && [ -z "${INIT_FROM:-}" ]; then
   # Loud failure (set -e + no match) rather than a silent cold start on hard terrain.
   INIT_FROM="$(ls "$MJLAB_DIR"/logs/rsl_rl/go2_spec_stairs_v2/*/model_9999.pt | head -1)"
+fi
+
+if [ "$SPEC" = "StairsV5c" ] && [ -z "${INIT_FROM:-}" ]; then
+  # Latest v5a checkpoint at job start (loud failure if none): v5c continues v5a's policy.
+  INIT_FROM="$(ls "$MJLAB_DIR"/logs/rsl_rl/go2_spec_stairs_v5a/*/model_*.pt | sort -V | tail -1)"
 fi
 
 NUM_ENVS="${NUM_ENVS:-8192}"
