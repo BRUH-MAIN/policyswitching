@@ -369,6 +369,9 @@ def main() -> None:
                   help="Each step, this fraction of scan cells gets no new value and keeps its last one.")
   ap.add_argument("--scan-bias", type=float, default=0.0,
                   help="Per-trial constant height error (m), uniform in +-this, added to the whole scan.")
+  ap.add_argument("--scan-terrain-only", action="store_true",
+                  help="Cast the height scan against terrain only (geom groups 0-1). As trained, the rays "
+                       "also hit the robot's own legs (visual meshes, group 2), which a real scan will not.")
   ap.add_argument("--step-height", type=float, default=None,
                   help="Override the riser height (m) of every stair segment of the course, e.g. 0.17 "
                        "for a real building stair. The level's own riser is used if omitted.")
@@ -413,7 +416,8 @@ def main() -> None:
     args.time_limit = 2.0 * (success_x - course.start_x) / args.leader_speed + 10.0
 
   conditions = {k: v for k, v in vars(args).items()
-                if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")}
+                if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")
+                and not (k == "scan_terrain_only" and not v)}  # absent when off: older files stay resumable
   out_path = Path(args.json_out)
   result = dict(conditions=conditions, course=asdict(course), layout=layout, arms={})
   if out_path.exists():
@@ -431,6 +435,10 @@ def main() -> None:
   )
   if args.obs_noise:
     cfg.observations["actor"].enable_corruption = True
+  if args.scan_terrain_only:
+    cfg.scene.sensors = tuple(
+      replace(s, include_geom_groups=(0, 1)) if s.name == "terrain_scan" else s for s in cfg.scene.sensors
+    )
   env = RslRlVecEnvWrapper(ManagerBasedRlEnv(cfg=cfg, device=device), clip_actions=load_rl_cfg(BASE_TASK).clip_actions)
   checkpoints = dict(default_checkpoints(args.ckpt_root))
   for item in args.extra_policy:

@@ -23,7 +23,11 @@ from mjlab.terrains.config import ALL_TERRAINS_CFG, ROUGH_TERRAINS_CFG
 from mjlab.utils.noise import UniformNoiseCfg as Unoise
 
 from src.tasks.velocity.mdp.pas import foot_friction
-from src.tasks.velocity.mdp.rewards import feet_clearance_relative
+from src.tasks.velocity.mdp.rewards import (
+  feet_clearance_relative,
+  feet_gait_gated,
+  variable_posture_gated,
+)
 from src.tasks.velocity.mdp.terrain_curriculum import (
   PROGRESS_ACROSS_M,
   PROGRESS_STALL_CMD,
@@ -662,6 +666,28 @@ def unitree_go2_spec_stairs_v5c_env_cfg(play: bool = False) -> ManagerBasedRlEnv
       cfg.curriculum[f"terrain_row_mean_{direction}"] = CurriculumTermCfg(
         func=terrain_row_mean_by_direction, params={"direction": direction}
       )
+  return cfg
+
+
+def unitree_go2_spec_stairs_v6a_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v6a: v5a with the posture and gait rewards paid only in proportion to progress.
+
+  Final v5a (model_9999) climbs 12 cm and refuses 15 cm and up, in both directions, by
+  stalling. Measured per reward term in its own training env at a pinned 15 cm riser
+  (scripts/diag_reward_terms.py): a robot commanded to move that stands on the platform
+  earns ~2.6 reward/s (pose 0.96 + angular tracking 0.97 + gait 0.45 + linear tracking 0.30),
+  a robot walking on flat ground ~3.0, and a robot on the flight ~1.8 (model_400, which still
+  crossed 15 cm going down). So the reward pays more for refusing a tall flight than for
+  crossing it, and neither the row rule nor uniform rows can change that.
+
+  Here `pose` and `foot_gait` are multiplied by `progress_gate` (achieved / commanded planar
+  velocity along the command, clamped to [0, 1]; 1 when told to stand). A stalled robot then
+  keeps ~1.3/s and a walking one loses nothing. Everything else is v5a. Meant to be
+  warm-started from v5a's final checkpoint with the normaliser kept.
+  """
+  cfg = unitree_go2_spec_stairs_v5a_env_cfg(play=play)
+  cfg.rewards["pose"] = replace(cfg.rewards["pose"], func=variable_posture_gated)
+  cfg.rewards["foot_gait"] = replace(cfg.rewards["foot_gait"], func=feet_gait_gated)
   return cfg
 
 

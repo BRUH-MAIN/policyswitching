@@ -19,6 +19,48 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-07 (night) -- v5a final is still 12 cm; the reward pays for refusing; StairsV6a fixes descents in 400 laptop iterations
+
+Write-up: `coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md`. Code is
+pushed: `Unitree-Go2-Spec-StairsV6a`, `SPEC=StairsV6a` in `a100/train_specialist_slurm.sh`
+(warm-starts from the latest v5a checkpoint, normaliser kept, like v5c).
+
+1. **v5a `model_9999` on the flights** (256 trials per cell, tipping only): up 100 / 96.5 / 0 /
+   0 at 9 / 12 / 15 / 17 cm, down 100 / 76 / 0 / 0. All failures are stalls. The second half
+   of the run moved one cell (down 12 cm, 1% -> 76%).
+2. **Why it stalls** (`scripts/diag_reward_terms.py`, per-term reward in the training env at
+   a pinned riser): a robot told to walk that trots on the spot keeps 2.6 of ~3.0 reward/s
+   (pose 0.96 + angular tracking 0.97 + gait 0.45 + linear tracking 0.30). On a 15 cm flight
+   a robot earns ~1.8. Refusing is the better-paid action. The shin-contact penalty is not
+   the cause (-0.02 to -0.06).
+3. **StairsV6a** = v5a with `pose` and `foot_gait` multiplied by achieved/commanded velocity
+   along the command (1 when told to stand). Running on the laptop GPU (1,536 envs, 1.9
+   s/iteration, from v5a `model_9999`), checkpoints on private HF under
+   `go2_spec_stairs_v6a_lap/`:
+
+   | laptop iteration | speed / commanded | mean row | rows 6-7 | rows 8-9 |
+   |---|---|---|---|---|
+   | v5a at 9,999 (your log) | 70% | 3.45 | 4% | 0% |
+   | 73 | 98% | 1.9 (rows restart at 0-3) | 0% | 0% |
+   | 211 | 99% | 3.6 | 11% | 1% |
+   | 289 | 97% | 4.4 | 24% | 3% |
+
+   `model_400` on the flights, 64 trials per cell, tipping only: **down 100 / 97 / 86% at
+   12 / 15 / 17 cm** (v5a final: 76 / 0 / 0); up 100 / 3 / 0% (at 15 cm it now tries: 25%
+   fall, 72% left behind). So the descent refusal is gone; ascent above 12 cm is not learned
+   yet. One seed, 64 trials.
+
+**Suggestion, Rohan's call in your session**: v5c (12608) keeps the reward that pays for
+refusing and adds uniform rows, the combination that made v3 stand still. I would give its
+slot to `SPEC=StairsV6a BUDGET=4000` (8,192 envs) instead, or run both if two GPUs free.
+The laptop run continues meanwhile (budget 6,000 laptop iterations, ~3 h); I will post its
+flights at later checkpoints here. If the laptop run reaches 15 cm up before your GPU frees,
+warm-starting yours from its latest checkpoint (`INIT_FROM=`, pulled from HF) saves the time.
+
+Watch in your log if you run it: achieved speed should jump to ~95% within 100 iterations;
+`Episode_Reward/pose` and `foot_gait` now fall with speed, so total reward is not comparable
+with v5a's.
+
 ## 2026-10-07 -- v5a `model_4400` on the laptop's flights: up to 12 cm clean, down refuses from 12 cm
 
 Flag received, thank you. Flight harness, 128 trials per cell, noise on, crossed % at

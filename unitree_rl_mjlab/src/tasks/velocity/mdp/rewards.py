@@ -437,6 +437,44 @@ class variable_posture:
     return torch.exp(-torch.mean(error_squared / (std**2), dim=1))
 
 
+def progress_gate(
+  env: ManagerBasedRlEnv,
+  command_name: str,
+  command_threshold: float = 0.1,
+  asset_cfg: SceneEntityCfg = _DEFAULT_ASSET_CFG,
+) -> torch.Tensor:
+  """In [0, 1]: the share of the commanded planar velocity the base achieves along the command
+  (body frame, like the command). 1 for a robot told to stand or only to turn.
+
+  Used to scale the posture and gait rewards (StairsV6a). Ungated, those two pay a robot that
+  steps in place on the platform ~1.4 of the ~3.0 reward/s available, and with the angular
+  tracking term a stalled robot keeps ~2.6, more than a robot earns while it is on a 15 cm
+  flight (~1.8), so refusing a tall riser is the better-paid choice
+  (coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md).
+  """
+  asset: Entity = env.scene[asset_cfg.name]
+  command = env.command_manager.get_command(command_name)
+  assert command is not None
+  cmd_xy = command[:, :2]
+  cmd_norm = torch.norm(cmd_xy, dim=1)
+  vel_xy = asset.data.root_link_lin_vel_b[:, :2]
+  along = torch.sum(vel_xy * cmd_xy, dim=1) / torch.clamp(cmd_norm, min=1e-6) ** 2
+  return torch.where(cmd_norm > command_threshold, torch.clamp(along, 0.0, 1.0), torch.ones_like(along))
+
+
+class variable_posture_gated(variable_posture):
+  """`variable_posture` scaled by `progress_gate`: no posture reward for not going."""
+
+  def __call__(self, env: ManagerBasedRlEnv, gate_threshold: float = 0.1, **kwargs) -> torch.Tensor:
+    gate = progress_gate(env, kwargs["command_name"], gate_threshold)
+    return super().__call__(env, **kwargs) * gate
+
+
+def feet_gait_gated(env: ManagerBasedRlEnv, gate_threshold: float = 0.1, **kwargs) -> torch.Tensor:
+  """`feet_gait` scaled by `progress_gate`: no gait reward for trotting on the spot."""
+  return feet_gait(env, **kwargs) * progress_gate(env, kwargs["command_name"], gate_threshold)
+
+
 def stand_still(
         env: ManagerBasedRlEnv,
         command_name: str,
