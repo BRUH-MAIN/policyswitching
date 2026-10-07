@@ -107,3 +107,42 @@ down 15 and 17 cm 100%. In its training env at a pinned 17 cm riser 57% of robot
 up-flight in one episode (v6a: 14-25%) and 83% the down-flight. Log at iteration ~1,640:
 speed 98-99% of commanded, up row mean 6.6, down 5.9, rows 8-9 at 32%. One checkpoint; the
 sweep over checkpoints and the 256-trial runs are what section 4's pass marks ask for.
+
+## 7. Added 05:00 IST: v7a through iteration 3,200. 15 cm is stable; 17 cm up tips over
+
+Up-flights, 64 trials per checkpoint, one seed, noise on, tipping only, leader at 0.5 m/s
+that does not wait (success / fall / lost %):
+
+| v7a iteration | up 15 cm | up 17 cm |
+|---|---|---|
+| 800 | 45 / 14 / 41 | 3 / 13 / 84 |
+| 1200 | 98 / 0 / 2 | 42 / 2 / 56 |
+| 1600 | 98 / 0 / 2 | 52 / 13 / 36 |
+| 2000 | 94 / 5 / 2 | 33 / 20 / 47 |
+| 2400 | 94 / 6 / 0 | 64 / 20 / 16 |
+| 2800 | 88 / 2 / 11 | 42 / 11 / 47 |
+| 3200 | 83 / 9 / 8 | 30 / 16 / 55 |
+
+Down 15 and 17 cm at iterations 1,600 and 3,200: 98-100%.
+
+- **15 cm going up no longer swings**: 83-98% at every checkpoint from 1,200 on (v6a: 0-98%).
+  That meets the stability mark set in section 4. It drifts down after 1,600, and falls
+  appear from 2,000 on; the early checkpoints (1,200, 1,600) are the candidates.
+- **17 cm going up is 30-64% and not rising after iteration 1,200.** The "lost" trials stop at
+  the foot of the flight for six seconds or more while the leader walks on (they end at the
+  first riser at ~10 s; successes take ~10 s in total).
+- **With a leader that cannot be lost** (60 s limit): iteration 2,400 crosses 73% and tips
+  over 27%; iteration 3,200 crosses 69% and tips over 31%; with a slow leader (0.25 m/s)
+  iteration 3,200 crosses 45% and tips over 55%. So given time it always attempts the 17 cm
+  flight, and **it tips over on about three attempts in ten** (more when commanded slowly).
+  "Tips over" here is the base tilting past 70 degrees. Falls come mid-flight, in every
+  direction.
+- In the training env at a pinned 17 cm riser, iteration 3,200: 79% of robots cross the
+  up-flight in one episode (v6a: 14-25%), 5% never pass the first step.
+
+Reading: the reward for height gained removed the refusal at 17 cm and made the 15 cm ascent
+dependable. What is left at 17 cm is not willingness but balance: a 0.6 s trot on a 30-degree
+staircase with risers over half the leg length. **v7a is a 15 cm policy. At 17 cm it would
+put the real robot on its back about one time in three.** The pass mark of section 4 for
+17 cm (50% on the standard flights) is not met on average and would not be good enough if it
+were. Full 256-trial runs on iterations 1,600, 2,400 and the last follow the end of the run.
