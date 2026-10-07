@@ -117,6 +117,13 @@ Checked on the laptop:
   starts the policy, walks and climbs a 12 cm flight, with the scan from exact ray casts and
   through `go2_scan.HeightMapScan` from a noisy gridded map with holes and vertical drift
   (median scan error 0.7 cm).
+- `scripts/sim_dds_robot.py`: the unmodified `go2_runner.py` process, talking DDS through
+  `unitree_sdk2py` to a pretend Go2 (MuJoCo behind `rt/lowstate` / `rt/lowcmd` on DDS domain 1,
+  scan over UDP), stood up, ran the policy, walked 6.4 m and climbed a 12 cm flight; the
+  pretend robot received 424 commands a second with no CRC errors, and the runner went
+  PASSIVE by itself 120 ms after the robot state stopped. This used the current SDK from
+  GitHub with cyclonedds 11 on the laptop; the robot has an older checkout with cyclonedds
+  0.10.2, so imports and the motion-service calls are still to be seen there.
 - Base height from leg kinematics: within 2 mm on average (worst 8 mm) of the truth while
   walking on flat ground in that test.
 

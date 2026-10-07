@@ -20,3 +20,4 @@ runs/
 
 # exported policy weights (regenerate with scripts/export_policy_numpy.py)
 deploy_numpy/*.npz
+deploy_numpy/*.f8

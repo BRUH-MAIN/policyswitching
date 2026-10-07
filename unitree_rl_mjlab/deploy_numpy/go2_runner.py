@@ -44,6 +44,7 @@ import os
 import socket
 import struct
 import sys
+import threading
 import time
 
 import numpy as np
@@ -76,6 +77,8 @@ LOOP_LATE_S = 0.10
 SCAN_STALE_S = 0.3
 CMD_STALE_S = 0.3
 GAIN_BLEND_STEPS = 25  # 0.5 s from stand gains to policy gains
+WRITE_PERIOD_S = 0.002  # the motor board is fed at 500 Hz, as in Unitree's own low-level example
+WRITER_STALE_S = 0.10  # if the control loop stops updating the target, the writer damps
 
 PASSIVE, STAND, POLICY = "PASSIVE", "STAND", "POLICY"
 
@@ -134,14 +137,16 @@ def base_height_from_legs(q_robot, quat_wxyz):
 # ---------------------------------------------------------------------------------------
 # Robot backend: unitree_sdk2py. Imported lazily so the file loads on a laptop without it.
 class Go2Backend(object):
-    def __init__(self, iface, dry_run):
+    def __init__(self, iface, dry_run, domain=0):
         from unitree_sdk2py.core.channel import ChannelFactoryInitialize, ChannelSubscriber
         from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowState_
 
         self.dry_run = dry_run
         self._state = None
         self._state_t = 0.0
-        ChannelFactoryInitialize(0, iface)
+        self._latest = None  # (q_des, kp, kd, time): what the writer thread keeps sending
+        self._stop = False
+        ChannelFactoryInitialize(domain, iface)
         self._sub = ChannelSubscriber("rt/lowstate", LowState_)
         self._sub.Init(self._on_state, 10)
         self._pub = None
@@ -168,6 +173,32 @@ class Go2Backend(object):
                 cmd.motor_cmd[i].kd = 0.0
                 cmd.motor_cmd[i].tau = 0.0
             self._cmd = cmd
+            self._writer = threading.Thread(target=self._write_loop, name="lowcmd-writer")
+            self._writer.daemon = True
+            self._writer.start()
+
+    def _write_loop(self):
+        """Send the latest target at 500 Hz. If the control loop has not refreshed it for
+        WRITER_STALE_S (it crashed or hung), send damping instead of a frozen stiff pose."""
+        while not self._stop:
+            latest = self._latest
+            if latest is not None:
+                q_des, kp, kd, t = latest
+                if time.time() - t > WRITER_STALE_S:
+                    kp, kd = np.zeros(12), np.full(12, PASSIVE_KD)
+                for i in range(12):
+                    m = self._cmd.motor_cmd[i]
+                    m.q = float(q_des[i])
+                    m.dq = 0.0
+                    m.kp = float(kp[i])
+                    m.kd = float(kd[i])
+                    m.tau = 0.0
+                self._cmd.crc = self._crc.Crc(self._cmd)
+                self._pub.Write(self._cmd)
+            time.sleep(WRITE_PERIOD_S)
+
+    def close(self):
+        self._stop = True
 
     def _on_state(self, msg):
         self._state = msg
@@ -190,15 +221,8 @@ class Go2Backend(object):
     def send(self, q_des, kp, kd):
         if self._pub is None:
             return
-        for i in range(12):
-            m = self._cmd.motor_cmd[i]
-            m.q = float(q_des[i])
-            m.dq = 0.0
-            m.kp = float(kp[i])
-            m.kd = float(kd[i])
-            m.tau = 0.0
-        self._cmd.crc = self._crc.Crc(self._cmd)
-        self._pub.Write(self._cmd)
+        self._latest = (np.array(q_des, dtype=np.float64), np.array(kp, dtype=np.float64),
+                        np.array(kd, dtype=np.float64), time.time())
 
     def release_motion_service(self):
         """Make the robot lie down and switch off its own controller. True if confirmed off."""
@@ -216,8 +240,12 @@ class Go2Backend(object):
             switcher.SetTimeout(5.0)
             switcher.Init()
             for _ in range(10):
-                _, result = switcher.CheckMode()
-                if not result or not result.get("name"):
+                code, result = switcher.CheckMode()
+                if code != 0 or result is None:
+                    print("  could not ask which motion service is active (code %s); retrying" % code)
+                    time.sleep(1.0)
+                    continue
+                if not result.get("name"):
                     return True
                 print("  motion service '%s' is active: lying down and releasing it" % result["name"])
                 sport.StandDown()
@@ -244,10 +272,10 @@ class Go2Backend(object):
         return ok
 
     @staticmethod
-    def restore_motion_service(iface):
+    def restore_motion_service(iface, domain=0):
         from unitree_sdk2py.core.channel import ChannelFactoryInitialize
 
-        ChannelFactoryInitialize(0, iface)
+        ChannelFactoryInitialize(domain, iface)
         try:
             from unitree_sdk2py.comm.motion_switcher.motion_switcher_client import MotionSwitcherClient
 
@@ -456,12 +484,17 @@ def run(runner, backend):
             if state is not None:
                 backend.send(state["q"], np.zeros(12), np.full(12, PASSIVE_KD))
             time.sleep(DT)
+        if hasattr(backend, "close"):
+            backend.close()
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--npz", help="Policy exported by scripts/export_policy_numpy.py.")
     ap.add_argument("--iface", default="eth0", help="Network interface that reaches the robot's motor board.")
+    ap.add_argument("--domain", type=int, default=0, help="DDS domain: 0 is the robot. Simulators use 1.")
+    ap.add_argument("--no-motion-service", action="store_true",
+                    help="Simulator only (refused on domain 0): there is no robot controller to release.")
     ap.add_argument("--dry-run", action="store_true", help="Send nothing. Print what the policy sees and would do.")
     ap.add_argument("--scan", choices=("flat", "udp"), default="flat",
                     help="flat: assume level ground at the height the legs report. udp: from go2_scan_node.py.")
@@ -480,15 +513,17 @@ def main():
     args = ap.parse_args()
 
     if args.restore_motion_service:
-        Go2Backend.restore_motion_service(args.iface)
+        Go2Backend.restore_motion_service(args.iface, args.domain)
         return
+    if args.no_motion_service and args.domain == 0:
+        ap.error("--no-motion-service is for a simulator on another DDS domain, never the robot (domain 0)")
     if not args.npz:
         ap.error("--npz is required")
     policy = NumpyPolicy(args.npz)
     if policy.obs_dim != go2_obs.OBS_DIM:
         raise SystemExit("policy expects %d inputs, this runner builds %d" % (policy.obs_dim, go2_obs.OBS_DIM))
 
-    backend = Go2Backend(args.iface, args.dry_run)
+    backend = Go2Backend(args.iface, args.dry_run, args.domain)
     print("waiting for robot state on %s ..." % args.iface)
     t0 = time.time()
     while backend.read() is None:
@@ -504,7 +539,7 @@ def main():
         print("clear of people, with someone holding the remote (L2+B = motors limp).")
         if not args.yes and input("Type 'yes' to continue: ").strip().lower() != "yes":
             raise SystemExit("not confirmed")
-        if not backend.release_motion_service():
+        if not args.no_motion_service and not backend.release_motion_service():
             raise SystemExit("could not confirm the robot's own controller is off: not sending anything")
         print("Robot's controller is off. PASSIVE. L2+Up: stand. Then R2+A: policy. L2+B: limp.")
 
