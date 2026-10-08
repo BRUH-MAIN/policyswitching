@@ -199,3 +199,36 @@ Training on the laptop from cluster v7a `model_1600` since 07:00 IST (unit `go2-
 flights, 256 trials, tipping only, at least 90% up and down at 15 cm with 5-step results not
 worse than the table above; 17 cm on 10 steps is the stretch. Given what batch size did for
 v7a, the laptop run is a first look and the 8,192-env version is the one to judge.
+
+## 10. Added 11:30 IST: StairsV8a passes the acceptance on 5- and 10-step flights (tipping only)
+
+The first laptop v8a launch (07:00) never trained: the 10-step terrain needs about a third
+more GPU memory per env, 1,536 envs ran out of memory on all 30 restarts, and I reported it
+as training after one iteration. Relaunched 09:17 at **1,024 envs** (5.5 GB peak), from
+cluster v7a `model_1600`.
+
+**v8a_lap `model_2400`**, `scripts/switch_follow_real_stairs.sh`, 256 trials per cell, noise
+on, leader at 0.5 m/s that does not wait. Success % at 9 / 12 / 15 / 17 cm:
+
+| flight | fall definition | up | down |
+|---|---|---|---|
+| 10 steps | tipping only | 100 / 100 / 99.6 / **95.3** | 100 / 100 / 100 / **99.6** |
+| 5 steps | tipping only | 100 / 100 / 100 / **100** | 100 / 100 / 100 / **100** |
+| 10 steps | shin contact counted | 94 / 88 / 49 / 14 | 65 / 52 / 5 / 5 |
+| 5 steps | shin contact counted | 93 / 97 / 70 / 34 | 75 / 68 / 31 / 31 |
+
+**This meets the acceptance bar of the plan (at least 90% up and down at 17 cm on 5- and
+10-step flights) with tipping over as the failure.** The remaining tip-overs are going up
+17 cm on 10 steps (3.9%). With any thigh or shin contact over 10 N counted as a failure it
+is far from it: on long 15-17 cm descents a shin touches a step on 19 flights in 20. The
+policy is trained with that contact penalised, not forbidden; whether it is acceptable on a
+real nosing is a question for the robot, not for this table.
+
+Quick looks along the run (10 steps, 64 trials, tipping only; up 15 / up 17 / down 15 / down
+17): iteration 800: 98 / 75 / 100 / 100; 1,600: 100 / 91 / 100 / 100; 2,400: 100 / 95 / 100 /
+100. **Cluster v8a** (job 12614, 8,192 envs, `go2_spec_stairs_v8a/`) `model_600`: 100 / 95 /
+100 / 100.
+
+Exported as `deploy_numpy/stairs_v8a_lap2400.npz`; through the robot's runner and the
+height-map sampler it climbs a 17 cm flight in plain CPU MuJoCo. Scan-fault runs (delay,
+missing cells, height bias) at 15 cm risers and on easy layouts are in progress.
