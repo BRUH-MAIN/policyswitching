@@ -388,6 +388,15 @@ def main() -> None:
   configure_torch_backends()
   device = "cuda:0"
   course = saro_courses(visual="plain", level=args.level)[args.course]
+  layout = None
+  if args.random_layout is not None:
+    course, layout = random_course(args.random_layout)
+    args.course, args.level = course.name, layout["level"]
+    args.leader_speed = round(float(np.random.default_rng(args.random_layout + 10_000).uniform(0.4, 0.7)), 3)
+    layout["leader_speed"] = args.leader_speed
+  # Applied AFTER the layout is chosen. Until 2026-10-08 this ran first and a random layout then
+  # replaced the course, so --step-height / --stair-steps were silently ignored with
+  # --random-layout (the file still recorded them in its conditions): findings.md #35.
   if args.step_height is not None or args.stair_steps is not None:
     def resized(g):
       if not g.kind.startswith("stairs"):
@@ -401,13 +410,7 @@ def main() -> None:
       steps = int(round(g.length / 0.3)) if g.kind.startswith("stairs") else 0
       z += steps * g.step_height * (1 if g.kind == "stairs_up" else -1 if g.kind == "stairs_down" else 0)
       lowest = min(lowest, z)
-    course = replace(course, segments=segments, base_height=-lowest)
-  layout = None
-  if args.random_layout is not None:
-    course, layout = random_course(args.random_layout)
-    args.course, args.level = course.name, layout["level"]
-    args.leader_speed = round(float(np.random.default_rng(args.random_layout + 10_000).uniform(0.4, 0.7)), 3)
-    layout["leader_speed"] = args.leader_speed
+    course = replace(course, segments=segments, base_height=max(course.base_height, -lowest))
   if args.extra_approach:
     first, *rest = course.segments
     course = replace(course, segments=(replace(first, length=first.length + args.extra_approach), *rest))
