@@ -7,6 +7,13 @@ the terrain under the robot from 0.30 m ahead of the base to 0.35 m behind it, n
 winning, so the stairs policy stays on until the hind feet are off the last step. It reads
 the course layout (ground truth), as the study's hard-switch arm did.
 
+With `--classifier` the robot chooses for itself instead: a small network reads the same
+187-point height scan the locomotion policies read (with its training noise) and predicts
+the terrain class; its output is smoothed and held (`SwitchFilter`) and drives the switch.
+Nothing about the course layout reaches the robot in that mode; the layout is drawn in the
+strip only so the viewer can compare. Train the classifier with `--record-scans` runs of
+`switch_follow.py` and `scripts/scan_classifier_train.py`.
+
 The frame shows which policy is active, and a strip along the bottom shows the course
 (coloured by terrain class), the robot's position, and which policy was active where.
 
@@ -48,6 +55,7 @@ from src.vlm_nav.controllers import FollowGains, follow_command  # noqa: E402
 from src.vlm_nav.course import DIFFICULTY_LEVELS, STEP_WIDTH, Segment, saro_courses  # noqa: E402
 from src.vlm_nav.leader import write_leader_pose  # noqa: E402
 from src.vlm_nav.policy_bank import PolicyBank  # noqa: E402
+from src.vlm_nav.scan_classifier import CLASSES, SwitchFilter, load_classifier, scan_slice  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, make_twin_env_cfg, set_velocity_command  # noqa: E402
 
 CLASS_RGB = {"flat": (150, 150, 150), "rough": (96, 150, 60), "stairs": (70, 110, 200)}
@@ -76,6 +84,10 @@ def main() -> None:
   ap.add_argument("--flat", default=None, help="Default: <ckpt-root>/go2_spec_flat/model_9999.pt")
   ap.add_argument("--rough", default=None, help="Default: <ckpt-root>/go2_spec_rough/model_9999.pt")
   ap.add_argument("--stairs", default=None, help="Default: <ckpt-root>/go2_spec_stairs_v8a/model_3999.pt")
+  ap.add_argument("--classifier", default=None,
+                  help="Scan-classifier weights: the robot picks the policy from its own height scan.")
+  ap.add_argument("--alpha", type=float, default=0.1, help="Classifier filter: weight of the newest scan.")
+  ap.add_argument("--hold", type=int, default=5, help="Classifier filter: steps a new class must persist.")
   ap.add_argument("--single", default=None, choices=("flat", "rough", "stairs"),
                   help="No switching: run this one policy over the whole course (for comparison).")
   ap.add_argument("--step-height", type=float, default=0.15)
@@ -117,6 +129,14 @@ def main() -> None:
   u = env.unwrapped
   robot = u.scene["robot"]
   dt = u.step_dt
+
+  clf = filt = scan_sl = None
+  probs_now = np.array([1.0, 0.0, 0.0])
+  if args.classifier:
+    clf = load_classifier(args.classifier, device)
+    filt = SwitchFilter(1, args.alpha, args.hold, device, initial=CLASSES.index("flat"))
+    scan_sl = scan_slice(env)
+  agree_steps = total_steps = 0
 
   x_off = course.length / 2
   centre_y = float(course.course_to_world(np.array([0.0, course.width / 2, 0.0]))[1])
@@ -163,24 +183,36 @@ def main() -> None:
     img = Image.fromarray(frame)
     d = ImageDraw.Draw(img, "RGBA")
     d.rectangle([0, 0, W, 40], fill=(0, 0, 0, 255))
-    title = (f"Go2 follows a leader over flat, rough and {args.step_height * 100:.0f} cm stairs  |  "
-             + ("one policy, no switching" if args.single else "policy switching"))
+    title = (f"Go2 following a leader: flat, rough, {args.step_height * 100:.0f} cm stairs  |  "
+             + ("one policy, no switching" if args.single
+                else "policy chosen from its own height scan" if clf is not None
+                else "policy switching"))
     d.text((14, 8), title, fill=(255, 255, 255), font=font)
     d.text((W - 262, 8), f"simulation  t = {t:5.1f} s", fill=(200, 200, 200), font=font)
     # Active-policy badge.
     d.rectangle([24, 58, 470, 122], fill=CLASS_RGB[active] + (235,), outline=(255, 255, 255, 255), width=2)
     d.text((40, 62), "ACTIVE POLICY", fill=(255, 255, 255), font=font_small)
     d.text((40, 80), LABEL[active], fill=(255, 255, 255), font=font_big)
-    if not args.single:
+    if clf is not None:
+      d.text((486, 60), f"switches so far: {n_switches}", fill=(230, 230, 230), font=font_small)
+      d.text((486, 80), "terrain classifier on the height scan:", fill=(190, 190, 190), font=font_small)
+      for i, c in enumerate(CLASSES):
+        bx = 486 + 150 * i
+        d.text((bx, 102), c, fill=(230, 230, 230), font=font_small)
+        d.rectangle([bx + 50, 104, bx + 130, 118], outline=(150, 150, 150, 255))
+        d.rectangle([bx + 50, 104, bx + 50 + 80 * float(probs_now[i]), 118], fill=CLASS_RGB[c] + (255,))
+    elif not args.single:
       d.text((486, 78), f"switches so far: {n_switches}", fill=(230, 230, 230), font=font_small)
       d.text((486, 100), "rule: terrain class under the robot's footprint", fill=(190, 190, 190), font=font_small)
     # Bottom strip: terrain along the course, then which policy was active where.
     y0 = H - 92
     d.rectangle([0, y0 - 26, W, H], fill=(0, 0, 0, 200))
-    d.text((strip_x0, y0 - 22), "terrain along the course", fill=(220, 220, 220), font=font_small)
+    d.text((strip_x0, y0 - 22), "terrain along the course" + (" (not given to the robot)" if clf is not None else ""),
+           fill=(220, 220, 220), font=font_small)
     for reg in regions:
       d.rectangle([px(reg.x0), y0, px(reg.x1), y0 + 18], fill=CLASS_RGB[reg.terrain] + (255,))
-    d.text((strip_x0, y0 + 24), "policy that was active there", fill=(220, 220, 220), font=font_small)
+    d.text((strip_x0, y0 + 24), "policy the robot chose there" if clf is not None else "policy that was active there",
+           fill=(220, 220, 220), font=font_small)
     for (xa, pol), (xb, _) in zip(history, history[1:] + [(x, active)]):
       d.rectangle([px(xa), y0 + 46, max(px(xb), px(xa) + 1), y0 + 64], fill=CLASS_RGB[pol] + (255,))
     d.rectangle([strip_x0, y0 + 46, strip_x1, y0 + 64], outline=(120, 120, 120, 255))
@@ -202,7 +234,17 @@ def main() -> None:
     write_leader_pose(env, np.array([lx - x_off, centre_y, ground_height(course, lx)]), 0.0)
     pos = robot.data.root_link_pos_w
     x = float(pos[0, 0]) + x_off
-    bank.select(args.single or course.required_terrain(x), step)
+    truth = course.required_terrain(x)
+    if clf is not None:
+      with torch.inference_mode():
+        sel = int(filt.step(torch.softmax(clf(obs["actor"][:, scan_sl]), dim=1))[0])
+      probs_now = filt.probs[0].cpu().numpy()
+      choice = CLASSES[sel]
+      agree_steps += int(choice == truth)
+      total_steps += 1
+    else:
+      choice = args.single or truth
+    bank.select(choice, step)
     leader_xy = torch.tensor([[lx - x_off, centre_y]], device=device, dtype=pos.dtype)
     leader_vel = torch.tensor([[args.leader_speed if moving else 0.0, 0.0]], device=device, dtype=pos.dtype)
     cmd, _ = follow_command(pos, robot.data.root_link_quat_w, leader_xy, args.gap, gains, leader_vel_w=leader_vel)
@@ -229,6 +271,9 @@ def main() -> None:
   imageio.mimsave(out, frames, fps=int(round(1 / (2 * dt))), macro_block_size=None)
   print(f"{out}: {len(frames) * 2 * dt:.1f} s, course {course.length:.1f} m, outcome: {outcome}; "
         f"{len(bank.switch_log)} switches; policies {dict((k, str(v)) for k, v in ckpts.items())}")
+  if clf is not None:
+    print(f"   classifier {args.classifier} (alpha {args.alpha}, hold {args.hold}): its choice matched the "
+          f"footprint rule on {100 * agree_steps / max(total_steps, 1):.1f}% of steps")
   for s, a, b in bank.switch_log:
     print(f"   t = {s * dt:5.1f} s: {a} -> {b}")
   env.close()
