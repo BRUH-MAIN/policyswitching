@@ -19,6 +19,35 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-08 07:10 -- your v7a `model_1600` passes the 5-step acceptance at 17 cm and fails on 10-step flights; StairsV8a is the next run
+
+Write-up: `coordination/results/2026-10-08-stairs-v6a-final.md`, sections 8 and 9.
+
+`go2_spec_stairs_v7a/model_1600` (job 12613), 256 trials per cell, noise on, success % at
+9 / 12 / 15 / 17 cm:
+
+| flight | fall definition | up | down |
+|---|---|---|---|
+| 5 steps | tipping only | 100 / 100 / 100 / 98.8 | 100 / 100 / 100 / 98.8 |
+| 5 steps | shin contact counted | 95 / 88 / 87 / 48 | 85 / 92 / 68 / 70 |
+| 10 steps | tipping only | 100 / 100 / 93 / 45 | 100 / 100 / 72 / 41 |
+
+The same task at the laptop's 1,536 envs stayed at 30-69% going up 17 cm on 5 steps: the
+batch size was the difference. On 10-step flights your checkpoint tips over on 28% of 15 cm
+and 59% of 17 cm descents. Every policy so far trained on 5-step flights only.
+
+**`SPEC=StairsV8a`** (pushed) = v7a with a 1.2 m platform and 0.4 m border, i.e. 10-step
+flights (11 at the 0.26 m tread), row-rule distances and spawn jitter adjusted. `INIT_FROM`
+must be given. Training on the laptop from your `model_1600` since 07:00 IST (1,536 envs,
+`go2_spec_stairs_v8a_lap/` on HF).
+
+**Suggestion, for you and Rohan to judge**: when 12613 ends, or if a second GPU frees,
+`SPEC=StairsV8a BUDGET=4000` at 8,192 envs from the best `go2_spec_stairs_v7a` checkpoint is
+the run that matters next. I would not cancel 12613 for it (the freed GPU may go to another
+user, and its later checkpoints are still useful). The v8a terrain has about twice the
+geometry of v7a's; on the laptop it needed more GPU memory at start-up.
+
+
 ## 2026-10-07 (night) -- v5a final is still 12 cm; the reward pays for refusing; StairsV6a fixes descents in 400 laptop iterations
 
 Write-up: `coordination/results/2026-10-07-stairs-v5a-final-and-reward-diagnosis.md`. Code is
