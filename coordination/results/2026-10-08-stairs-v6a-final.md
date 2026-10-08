@@ -232,3 +232,32 @@ Quick looks along the run (10 steps, 64 trials, tipping only; up 15 / up 17 / do
 Exported as `deploy_numpy/stairs_v8a_lap2400.npz`; through the robot's runner and the
 height-map sampler it climbs a 17 cm flight in plain CPU MuJoCo. Scan-fault runs (delay,
 missing cells, height bias) at 15 cm risers and on easy layouts are in progress.
+
+## 11. Added 12:35 IST: v8a `model_2400` with a robot-like height scan
+
+`scripts/switch_follow_scan_faults.sh`, three randomised mixed layouts (seeds 900-902; flat,
+rough, a 5-step flight up and one down), 128 trials each, noise on, tipping only, the policy
+alone. Success % (384 trials per cell). The riser heights below are read from the result
+files' course geometry (a first "15 cm" run was really 7 cm: `findings.md` #35).
+
+| scan fault | 7 cm risers | 15 cm risers | 17 cm risers |
+|---|---|---|---|
+| none | 100.0 | 100.0 | 100.0 |
+| 40 ms late | 100.0 | 100.0 | 100.0 |
+| 100 ms late | 100.0 | 100.0 | 99.5 |
+| 200 ms late | 100.0 | 99.5 | 96.4 |
+| 30% of cells stale each step | 100.0 | 100.0 | 100.0 |
+| 60% of cells stale each step | 100.0 | 99.7 | 100.0 |
+| whole scan off by up to ±3 cm | 100.0 | 100.0 | 99.7 |
+| whole scan off by up to ±6 cm | 100.0 | 100.0 | 99.7 |
+| 100 ms late + 30% stale + ±3 cm | 100.0 | 100.0 | 99.2 |
+
+Against stairs v2 on 7 cm risers (section 2.2 of the plan: 94% clean, 75% with a ±6 cm
+offset), v8a is far less sensitive to scan errors; in particular the ±6 cm height offset
+that cost v2 a fifth of its crossings costs v8a nothing measurable. The one fault that
+shows is a 200 ms delay at 17 cm (96.4%). Three layouts, 5-step flights, one checkpoint.
+This also covers the "still fine on easy ground" check: the 7 cm column is 100% throughout.
+
+With this the simulation acceptance of the plan (section 2.1) is complete for v8a_lap
+`model_2400`, with tipping over as the failure criterion: 5- and 10-step flights at 9-17 cm
+(section 10), scan faults at real riser heights, and easy ground.
