@@ -146,3 +146,24 @@ staircase with risers over half the leg length. **v7a is a 15 cm policy. At 17 c
 put the real robot on its back about one time in three.** The pass mark of section 4 for
 17 cm (50% on the standard flights) is not met on average and would not be good enough if it
 were. Full 256-trial runs on iterations 1,600, 2,400 and the last follow the end of the run.
+
+## 8. Added 05:45 IST: the cluster's v7a run at 8,192 envs goes up 17 cm; v5c closed
+
+**Cluster v7a** (job 12613, started 04:10, `go2_spec_stairs_v7a/` on HF): `SPEC=StairsV7a` at
+8,192 envs, warm start from the laptop's v7a `model_1600`. Its `model_1000`, quick flights,
+64 trials per cell, one seed, noise on, tipping only (success / fall / lost %):
+
+| | 15 cm | 17 cm |
+|---|---|---|
+| up | 100 / 0 / 0 | **98.4 / 1.6 / 0** |
+| down | 96.9 / 3.1 / 0 | **75.0 / 23.4 / 1.6** |
+
+Up 17 cm with a leader that cannot be lost: 100% cross, none tip over, median 9.7 s (the
+laptop run: 69-73% cross, 27-31% tip over). So with five times the batch the ascent at 17 cm
+is clean after 1,000 iterations, where the laptop's 1,536 envs sat at 30-64% for 3,000. At
+the same checkpoint going **down** 17 cm tips over on 23% of flights, which no v6a or laptop
+v7a checkpoint did (98-100%). One checkpoint, 64 trials per cell: later checkpoints and the
+256-trial runs decide whether the descent loss is real and whether it lasts.
+
+**v5c final** (`model_3999`, job 12608 finished): 0% at 12 / 15 / 17 cm up and down, all
+stalls, as at `model_800`. Closed.
