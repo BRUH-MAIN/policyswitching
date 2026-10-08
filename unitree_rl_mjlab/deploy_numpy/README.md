@@ -94,8 +94,11 @@ On flat ground the scan should read the same height everywhere, equal to "legs s
 range before walking at it.
 
 **5. One low step (under 10 cm), then one 12 cm step, then a short flight**, with a spotter
-and a tether or a hand on the handle. Use the riser heights the policy passes in simulation
-(table in `PROGRESS_REPORT.md`), not more.
+and a tether or a hand on the handle. Use the riser heights **and flight lengths** the policy
+passes in simulation (table in `PROGRESS_REPORT.md`), not more. As of 2026-10-08 the policy
+to use is `stairs_v7a_c1600.npz` (cluster v7a `model_1600`): short flights of up to 5 steps
+to 17 cm; flights of 10 steps only to 12 cm. Going down is where it tips over on long
+flights, so on the robot go up first, and bring it down by hand until descents are trusted.
 
 **6. Following a person**: `--cmd udp` on the robot, `follow_cmd.py` on the laptop, R1 held.
 
