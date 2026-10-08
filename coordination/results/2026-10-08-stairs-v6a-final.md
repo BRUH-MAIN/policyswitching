@@ -261,3 +261,28 @@ This also covers the "still fine on easy ground" check: the 7 cm column is 100% 
 With this the simulation acceptance of the plan (section 2.1) is complete for v8a_lap
 `model_2400`, with tipping over as the failure criterion: 5- and 10-step flights at 9-17 cm
 (section 10), scan faults at real riser heights, and easy ground.
+
+## 12. Added 14:20 IST: cluster v8a `model_2000` is the candidate
+
+`go2_spec_stairs_v8a/model_2000` (job 12614, 8,192 envs, still running to ~17:45), same
+acceptance runs as section 10, 256 trials per cell, success % at 9 / 12 / 15 / 17 cm:
+
+| flight | fall definition | up | down |
+|---|---|---|---|
+| 10 steps | tipping only | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 |
+| 5 steps | tipping only | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 |
+| 10 steps | shin contact counted | 93 / 97 / 90 / 48 | 83 / 49 / 28 / 31 |
+| 5 steps | shin contact counted | 94 / 98 / 97 / 78 | 89 / 72 / 48 / 51 |
+
+No tip-over and no robot left behind in 4,096 trials. Against the laptop's `model_2400`
+(section 10) it removes the last tip-overs going up 17 cm on long flights (95.3% -> 100%) and
+touches the steps much less: with shin contact counted, long 15 cm flights go from 49% to
+90% going up and from 5% to 28% going down. Shin contact on tall descents is still the
+common case (about 7 flights in 10 at 15-17 cm on 10 steps).
+
+Exported as `deploy_numpy/stairs_v8a_c2000.npz`: numpy and PyTorch agree to 2e-6, the
+robot-side observation matches the simulator's on a 17 cm flight, and through the runner and
+height-map sampler it climbs a 17 cm flight in plain CPU MuJoCo (the "tilted too far" at the
+end of two earlier runs of that test was the robot walking off the end of the course; the
+test now stops before the edge). Scan-fault runs on this checkpoint are in progress; the
+run's later checkpoints will be flown when it ends.

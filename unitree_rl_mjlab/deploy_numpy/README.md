@@ -95,9 +95,9 @@ range before walking at it.
 
 **5. One low step (under 10 cm), then one 12 cm step, then a short flight**, with a spotter
 and a tether or a hand on the handle. Use the riser heights **and flight lengths** the policy
-passes in simulation (table in `PROGRESS_REPORT.md`), not more. As of 2026-10-08 11:30 the
-policy to use is `stairs_v8a_lap2400.npz` (laptop v8a `model_2400`): in simulation, 5- and
-10-step flights to 17 cm, up and down, 95-100% without tipping over, at a 0.30 m tread. It
+passes in simulation (table in `PROGRESS_REPORT.md`), not more. As of 2026-10-08 14:20 the
+policy to use is `stairs_v8a_c2000.npz` (cluster v8a `model_2000`): in simulation, 5- and
+10-step flights to 17 cm, up and down, without a tip-over in 4,096 trials, at a 0.30 m tread. It
 touches steps with its shins on most tall descents; watch for that on real nosings. On the
 robot go up first, and bring it down by hand until descents are trusted.
 

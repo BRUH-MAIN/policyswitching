@@ -64,6 +64,8 @@ def build_model(step_height: float):
   model = env.sim.mj_model
   qpos0 = env.sim.data.qpos[0].cpu().numpy().copy()
   env.close()
+  # Distance from the spawn point to the far end of the course, where the floor stops.
+  build_model.run_out_m = sum(g.length for g in course.segments) - course.start_x
   return model, qpos0
 
 
@@ -269,6 +271,8 @@ def main() -> None:
     top_z = max(top_z, pos[2])
     if not modes or modes[-1][1] != runner.mode:
       modes.append((round(t, 2), runner.mode))
+    if pos[0] - start[0] > build_model.run_out_m - 0.8:
+      break  # close to the end of the course: stop before it walks off the edge
     if runner.fault and runner.mode == go2_runner.PASSIVE and t > 5.0:
       fell = True
       break

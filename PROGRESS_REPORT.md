@@ -1,6 +1,6 @@
 # Handoff / Progress Report
 
-**As of**: 2026-10-08, 11:30 IST · **Deadline (Rohan, 10-07)**: on the robot by Sunday 2026-10-11 · **Written for**: a fresh session (human or Claude) with no
+**As of**: 2026-10-08, 14:20 IST · **Deadline (Rohan, 10-07)**: on the robot by Sunday 2026-10-11 · **Written for**: a fresh session (human or Claude) with no
 memory of how this state was reached. This file is the entry point; where it needs more
 detail it names a file. Read that file rather than re-deriving it.
 
@@ -48,8 +48,9 @@ Stated by Rohan on 2026-10-05. The robot carries a Livox Mid-360. Plan and all d
 robot; `robot_info.md` there holds credentials and should not be printed).
 
 **A policy now passes the simulation acceptance: 5- and 10-step flights at 9-17 cm, up and
-down, at 95% or better with tipping over as the failure** (stairs v8a, laptop run,
-`model_2400`). It touches the steps with its shins on most tall descents. Nothing has run on
+down, 100% of 4,096 trials with tipping over as the failure** (stairs v8a, the cluster's
+8,192-env run, `model_2000`; the laptop's `model_2400` passes too at 95-100%). It touches the
+steps with its shins on most tall descents. Nothing has run on
 the robot. Rohan's deadline is Sunday 2026-10-11, and on 10-07 he gave the laptop session
 leave to do anything project-related here, training code included.
 
@@ -63,7 +64,7 @@ leave to do anything project-related here, training code included.
 | **Why it stalls: the reward pays for refusing** (`findings.md` #29) | In the training env a robot told to walk that trots on the spot keeps 2.6 of ~3.0 reward/s; on a 15 cm flight it earns ~1.8. Measured with `scripts/diag_reward_terms.py`, then tested by training. |
 | Stairs v6a (`Unitree-Go2-Spec-StairsV6a`), finished 10-08 02:30 | v5a with the posture and gait rewards multiplied by achieved/commanded speed; 6,000 laptop iterations from v5a final (`go2_spec_stairs_v6a_lap/` on HF). **Final checkpoint, 256 trials per cell, tipping only: up 100 / 99.6 / 85 / 3%, down 100 / 100 / 100 / 99% at 9 / 12 / 15 / 17 cm.** With shin contact counted as a fall: up 83 / 95 / 57 / 1%, down 27 / 39 / 29 / 34% (it brushes steps on two descents in three). **Its 15 cm ascent swings between 0% and 98% from checkpoint to checkpoint** (`findings.md` #31), so the checkpoint for the robot has to be chosen by full evaluation; `model_1600` is the first candidate (98% on 64 trials). `coordination/results/2026-10-08-stairs-v6a-final.md` |
 | **Stairs v7a** (`Unitree-Go2-Spec-StairsV7a`): v6a plus a reward for height gained on up-flights | Two runs. **Cluster, 8,192 envs (job 12613, `go2_spec_stairs_v7a/`, from the laptop's v7a `model_1600`; running to ~09:50 on 10-08): `model_1600` passes the 5-step acceptance**, 256 trials per cell, tipping only: up 100 / 100 / 100 / 98.8%, down 100 / 100 / 100 / 98.8% at 9 / 12 / 15 / 17 cm (shin contact counted: up 95 / 88 / 87 / 48, down 85 / 92 / 68 / 70). `model_2000` is 100% on the quick flights too. **On 10-step flights it fails above 12 cm**: up 100 / 100 / 93 / 45, down 100 / 100 / 72 / 41, tipping over on 28% of 15 cm and 59% of 17 cm descents. Laptop, 1,536 envs (`go2_spec_stairs_v7a_lap/`, finished): a 15 cm policy only (17 cm up 30-69%); the batch size was the difference. Exported for the robot as `deploy_numpy/stairs_v7a_c1600.npz` (not in git); through the runner and map sampler it climbs a 17 cm flight in plain MuJoCo. |
-| **Stairs v8a, the current candidate** (`Unitree-Go2-Spec-StairsV8a`): v7a on 10-step flights | Laptop run from cluster v7a `model_1600`, **1,024 envs** (1,536 does not fit this terrain; the 07:00 launch died 30 times), 4,000 iterations, ends ~11:35 on 10-08, HF `go2_spec_stairs_v8a_lap/`. **`model_2400`, 256 trials per cell, tipping only, at 9 / 12 / 15 / 17 cm: 10-step flights up 100 / 100 / 99.6 / 95.3%, down 100 / 100 / 100 / 99.6%; 5-step flights 100% in all eight cells.** With shin contact counted as a failure: 10-step down 65 / 52 / 5 / 5%. Exported as `deploy_numpy/stairs_v8a_lap2400.npz`; climbs a 17 cm flight through the runner in plain MuJoCo. **Scan faults at real risers** (3 random layouts, 384 trials per cell): 100 ms delay, 60% stale cells and a ±6 cm height offset each cost under 1 point at 15 and 17 cm; 200 ms delay costs 3.6 points at 17 cm. The laptop run finished 12:06. The cluster's 8,192-env v8a (job 12614, `go2_spec_stairs_v8a/`) is running; its `model_600` matches on the quick flights. `coordination/results/2026-10-08-stairs-v6a-final.md` section 10 |
+| **Stairs v8a, the current candidate** (`Unitree-Go2-Spec-StairsV8a`): v7a on 10-step flights | Laptop run from cluster v7a `model_1600`, **1,024 envs** (1,536 does not fit this terrain; the 07:00 launch died 30 times), 4,000 iterations, ends ~11:35 on 10-08, HF `go2_spec_stairs_v8a_lap/`. **`model_2400`, 256 trials per cell, tipping only, at 9 / 12 / 15 / 17 cm: 10-step flights up 100 / 100 / 99.6 / 95.3%, down 100 / 100 / 100 / 99.6%; 5-step flights 100% in all eight cells.** With shin contact counted as a failure: 10-step down 65 / 52 / 5 / 5%. Exported as `deploy_numpy/stairs_v8a_lap2400.npz`; climbs a 17 cm flight through the runner in plain MuJoCo. **Scan faults at real risers** (3 random layouts, 384 trials per cell): 100 ms delay, 60% stale cells and a ±6 cm height offset each cost under 1 point at 15 and 17 cm; 200 ms delay costs 3.6 points at 17 cm. The laptop run finished 12:06. **The cluster's 8,192-env v8a (job 12614, `go2_spec_stairs_v8a/`, running to ~17:45) is better: `model_2000` is 100% in all sixteen cells (5 and 10 steps, 9-17 cm, up and down, 256 trials each, tipping only), and with shin contact counted 10-step up 93 / 97 / 90 / 48%, down 83 / 49 / 28 / 31%. It is the candidate: `deploy_numpy/stairs_v8a_c2000.npz`.** `coordination/results/2026-10-08-stairs-v6a-final.md` section 10 |
 | Stairs v5c (cluster job 12608, finished) | v5a's reward with half the robots on uniform rows. **Closed: `model_800` and the final `model_3999` cross no flight at 12-17 cm in either direction.** |
 | Flight numbers depend on the commanded speed (`findings.md` #30) | v5a on a 12 cm up-flight at a constant command: 7 of 32 at 0.5 m/s, 28 of 32 at 0.8 m/s. The follow eval's controller speeds up when the robot lags, which is why it reports 96.5%. |
 | Warm start | Should keep the observation normaliser (`findings.md` #27); it is now the default for the stairs specs. |
@@ -88,10 +89,10 @@ leave to do anything project-related here, training code included.
 2. **Cluster**: v5c (12608) is still pending. Whether to replace it with
    `SPEC=StairsV6a BUDGET=4000` is yours to say in the cluster session (inbox entry of 10-07
    night has the evidence). The laptop run does not depend on it.
-3. **What can go on the robot today**: `deploy_numpy/stairs_v8a_lap2400.npz` (laptop v8a
-   `model_2400`; re-export it, weights are not in git). In simulation it crosses 5- and
-   10-step flights up to 17 cm, up and down, 95-100% of the time without tipping over. It
-   brushes steps with its shins on most tall descents. Tread in these tests is 0.30 m
+3. **What can go on the robot today**: `deploy_numpy/stairs_v8a_c2000.npz` (cluster v8a
+   `model_2000`, from HF `go2_spec_stairs_v8a/`; re-export it, weights are not in git). In
+   simulation it crosses 5- and 10-step flights up to 17 cm, up and down, in all 4,096
+   trials without tipping over. It brushes steps with its shins on most tall descents. Tread in these tests is 0.30 m
    (training also has 0.26 m). **Measure the demo staircase: riser, tread and steps per
    flight**, and stay inside what was tested.
 
