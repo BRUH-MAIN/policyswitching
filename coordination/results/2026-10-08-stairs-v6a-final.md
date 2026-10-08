@@ -309,3 +309,26 @@ Every cell is 96.9% or better. The fault that costs most is a ±6 cm height offs
 The scan node's job on the robot is therefore the same as before, with more margin: keep the
 height offset under about 3 cm and the delay under about 100 ms and nothing measurable is
 lost in simulation.
+
+## 14. Added 18:30 IST: cluster v8a across its run; the final checkpoint is the candidate
+
+Job 12614 finished (4,000 iterations at 8,192 envs). Acceptance runs, 256 trials per cell,
+noise on, success % at 9 / 12 / 15 / 17 cm.
+
+Tipping only: `model_2000` and `model_3999` are 100% in all sixteen cells (5 and 10 steps,
+up and down); `model_3000` (10 steps only) is 100% except 99.2% going up 17 cm.
+
+With any thigh or shin contact over 10 N counted as a failure:
+
+| checkpoint | 10 steps up | 10 steps down | 5 steps up | 5 steps down |
+|---|---|---|---|---|
+| `model_2000` | 93 / 97 / 90 / 48 | 83 / 49 / 28 / 31 | 94 / 98 / 97 / 78 | 89 / 72 / 48 / 51 |
+| `model_3000` | 99 / 98 / 94 / 71 | 72 / 79 / 53 / 33 | not run | not run |
+| **`model_3999`** | 99 / 90 / 88 / 69 | **84 / 82 / 66 / 69** | 98 / 95 / 90 / 90 | **87 / 83 / 85 / 79** |
+
+Shin contact fell through the run, most on the descents (10-step descent at 17 cm clean of
+contact: 31% -> 33% -> 69%; 5-step: 51% -> 79%). It is still there on roughly one tall
+flight in three. `model_3999` is the candidate: `deploy_numpy/stairs_v8a_final.npz`, numpy
+and PyTorch agree to 3e-6, robot-side observation parity on a 17 cm flight, and it climbs a
+17 cm flight through the runner and height-map sampler in plain CPU MuJoCo with no fault.
+Scan-fault runs on it are in progress.
