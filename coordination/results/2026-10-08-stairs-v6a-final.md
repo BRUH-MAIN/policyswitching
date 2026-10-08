@@ -332,3 +332,24 @@ flight in three. `model_3999` is the candidate: `deploy_numpy/stairs_v8a_final.n
 and PyTorch agree to 3e-6, robot-side observation parity on a 17 cm flight, and it climbs a
 17 cm flight through the runner and height-map sampler in plain CPU MuJoCo with no fault.
 Scan-fault runs on it are in progress.
+
+## 15. Added 18:40 IST: scan faults on the final candidate (cluster v8a `model_3999`)
+
+Same test as sections 11 and 13 (three random mixed layouts, 5-step flights, 384 trials per
+cell, tipping only; riser heights read from the result files). Success %:
+
+| scan fault | 15 cm risers | 17 cm risers |
+|---|---|---|
+| none | 100.0 | 100.0 |
+| 40 / 100 / 200 ms late | 100.0 / 100.0 / 100.0 | 100.0 / 100.0 / 100.0 |
+| 30% / 60% of cells stale each step | 99.7 / 100.0 | 100.0 / 100.0 |
+| whole scan off by up to ±3 cm | 99.2 | 99.7 |
+| whole scan off by up to ±6 cm | 97.7 | 95.6 |
+| 100 ms late + 30% stale + ±3 cm | 100.0 | 99.7 |
+
+Delay and missing cells cost nothing measurable. A height offset is the only fault that
+shows: ±3 cm under 1 point, ±6 cm 2-4 points, most of it robots stopping at the flight
+(left behind), under 1% tipping over. So on the robot the number to hold is the height
+offset, at about 3 cm, which is what the foot-anchored scan node is built to do.
+
+With this the simulation acceptance is complete for `model_3999`.
