@@ -722,6 +722,51 @@ def unitree_go2_spec_stairs_v7a_env_cfg(play: bool = False) -> ManagerBasedRlEnv
   return cfg
 
 
+# StairsV8a geometry: flights of 10 steps (11 at the 0.26 m tread) instead of 5, in the same
+# 8 m patch: a 1.2 m platform and a 0.4 m border, so the steps span Chebyshev 0.6-3.6 m from
+# the spawn point (0.6-3.46 m at the narrow tread).
+STAIRS_V8_PLATFORM_WIDTH = 1.2
+STAIRS_V8_BORDER_WIDTH = 0.4
+STAIRS_V8_ACROSS_M = 3.8  # clear of the last step
+STAIRS_V8_STALL_M = 1.0  # still on the platform or the first step
+STAIRS_V8_SPAWN_XY = 0.2  # the platform is 1.2 m wide: +-0.5 m would start robots on its edge
+
+
+def unitree_go2_spec_stairs_v8a_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v8a: v7a on 10-step flights.
+
+  Every stairs policy so far trained on 5-step flights (the stock pyramid: 3 m platform, 1 m
+  border). The cluster's v7a `model_1600` passes the 5-step acceptance (256 trials per cell,
+  tipping only: up 100 / 100 / 100 / 98.8%, down 100 / 100 / 100 / 98.8% at 9 / 12 / 15 / 17 cm)
+  and on 10-step flights goes up 100 / 100 / 93 / 45% and down 100 / 100 / 72 / 41%, tipping
+  over on 28% of 15 cm descents and 59% of 17 cm ones. A building flight is 8-12 steps.
+
+  Changes from v7a: platform 1.2 m and border 0.4 m on all four stairs sub-terrains (10 or 11
+  steps), the row rule's distances moved to match, and the spawn jitter cut to +-0.2 m so
+  robots start on the smaller platform. Rewards, observations, commands and rows (risers
+  5-20 cm) are v7a's. Warm-start from a v7a checkpoint.
+  """
+  cfg = unitree_go2_spec_stairs_v7a_env_cfg(play=play)
+  assert cfg.scene.terrain is not None and cfg.scene.terrain.terrain_generator is not None
+  gen = cfg.scene.terrain.terrain_generator
+  cfg.scene.terrain.terrain_generator = replace(
+    gen,
+    sub_terrains={
+      name: replace(sub, platform_width=STAIRS_V8_PLATFORM_WIDTH, border_width=STAIRS_V8_BORDER_WIDTH)
+      for name, sub in gen.sub_terrains.items()
+    },
+  )
+  pose_range = cfg.events["reset_base"].params["pose_range"]
+  pose_range["x"] = (-STAIRS_V8_SPAWN_XY, STAIRS_V8_SPAWN_XY)
+  pose_range["y"] = (-STAIRS_V8_SPAWN_XY, STAIRS_V8_SPAWN_XY)
+  if not play:
+    cfg.curriculum["terrain_levels"] = CurriculumTermCfg(
+      func=terrain_levels_progress,
+      params={"across_m": STAIRS_V8_ACROSS_M, "stall_m": STAIRS_V8_STALL_M, "stall_cmd": PROGRESS_STALL_CMD},
+    )
+  return cfg
+
+
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Gap specialist: stepping stones, blended with easier terrain during training.
 

@@ -167,3 +167,35 @@ v7a checkpoint did (98-100%). One checkpoint, 64 trials per cell: later checkpoi
 
 **v5c final** (`model_3999`, job 12608 finished): 0% at 12 / 15 / 17 cm up and down, all
 stalls, as at `model_800`. Closed.
+
+## 9. Added 07:05 IST: cluster v7a `model_1600` passes on 5-step flights and fails on 10-step ones; StairsV8a
+
+**Cluster v7a `model_1600`** (`go2_spec_stairs_v7a/`, job 12613), 256 trials per cell, noise
+on, leader at 0.5 m/s that does not wait. Success % at 9 / 12 / 15 / 17 cm:
+
+| flight | fall definition | up | down |
+|---|---|---|---|
+| 5 steps | tipping only | 100 / 100 / 100 / **98.8** | 100 / 100 / 100 / **98.8** |
+| 5 steps | shin contact counted | 95 / 88 / 87 / 48 | 85 / 92 / 68 / 70 |
+| 10 steps | tipping only | 100 / 100 / 93 / **45** | 100 / 100 / **72** / **41** |
+| 10 steps | shin contact counted | 95 / 75 / 58 / 9 | 84 / 73 / 9 / 3 |
+
+On 5-step flights this is the first checkpoint to meet the acceptance bar (90% up and down
+at 17 cm, tipping only). On 10-step flights it does not: going down it tips over on 28% of
+15 cm flights and 59% of 17 cm ones, and going up 17 cm it tips over on 32%. Every policy so
+far trained on 5-step flights only; a building flight is 8-12 steps. (The descent dip at
+`model_1000`, 75% at 17 cm, was gone by `model_1600`: 100% on the quick flights.)
+
+**Laptop v7a, three checkpoints in full** (5-step, tipping only, up then down at 9 / 12 / 15 /
+17 cm): iteration 1,600: 100 / 100 / 94.5 / 52.7 and 100 / 100 / 99.6 / 98.4; iteration 2,400:
+100 / 100 / 94.1 / 69.1 and 100 / 100 / 100 / 100; final: 100 / 99.6 / 89.5 / 30.5 and 100 / 100
+/ 100 / 100. So at 1,536 envs v7a is a 15 cm policy, as section 7 said; at 8,192 envs the
+same task reaches 17 cm. The batch size was the difference.
+
+**StairsV8a** = v7a on 10-step flights (platform 1.2 m, border 0.4 m in the same 8 m patch;
+11 steps at the 0.26 m tread), row-rule distances and spawn jitter adjusted to match.
+Training on the laptop from cluster v7a `model_1600` since 07:00 IST (unit `go2-v8a-lap`,
+1,536 envs, 4,000 iterations, HF `go2_spec_stairs_v8a_lap/`). Pass mark, set now: on 10-step
+flights, 256 trials, tipping only, at least 90% up and down at 15 cm with 5-step results not
+worse than the table above; 17 cm on 10 steps is the stretch. Given what batch size did for
+v7a, the laptop run is a first look and the 8,192-env version is the one to judge.
