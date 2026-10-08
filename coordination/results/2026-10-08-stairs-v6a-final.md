@@ -286,3 +286,26 @@ height-map sampler it climbs a 17 cm flight in plain CPU MuJoCo (the "tilted too
 end of two earlier runs of that test was the robot walking off the end of the course; the
 test now stops before the edge). Scan-fault runs on this checkpoint are in progress; the
 run's later checkpoints will be flown when it ends.
+
+## 13. Added 14:35 IST: scan faults on the candidate (cluster v8a `model_2000`)
+
+Same test as section 11 (three random mixed layouts, 5-step flights, 384 trials per cell,
+tipping only; riser heights read from the result files). Success %:
+
+| scan fault | 15 cm risers | 17 cm risers |
+|---|---|---|
+| none | 100.0 | 100.0 |
+| 40 ms late | 100.0 | 99.7 |
+| 100 ms late | 100.0 | 100.0 |
+| 200 ms late | 100.0 | 99.0 |
+| 30% of cells stale each step | 99.5 | 100.0 |
+| 60% of cells stale each step | 100.0 | 100.0 |
+| whole scan off by up to ±3 cm | 100.0 | 99.2 |
+| whole scan off by up to ±6 cm | 99.0 | 96.9 |
+| 100 ms late + 30% stale + ±3 cm | 99.7 | 99.7 |
+
+Every cell is 96.9% or better. The fault that costs most is a ±6 cm height offset at 17 cm
+(3.1 points, most of it robots left behind, 0.5% tipping over); a 200 ms delay costs 1 point.
+The scan node's job on the robot is therefore the same as before, with more margin: keep the
+height offset under about 3 cm and the delay under about 100 ms and nothing measurable is
+lost in simulation.
