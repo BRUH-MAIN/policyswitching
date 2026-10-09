@@ -55,10 +55,10 @@ Ctrl-C in the terminal also goes limp. Speeds are deliberately low by default (0
 forward at full stick, 0.15 m/s back and sideways, 0.5 rad/s turning, ramped over about a
 second); raise them with `--max-vx` etc. only after the slow runs are clean.
 
-**Motor temperature.** The program prints the hottest motor once a second and refuses to stand
-up or start the policy if any motor is above 60 C. On 2026-10-09 the robot's own controller
-went limp four times in 20 minutes with the rear hip motors at 65-69 C (others 36-42 C), and
-the Go2 lying powered loads its rear hips. Cool it with the robot switched off. The program goes limp by itself if the robot state
+**Motor temperature.** The program prints the hottest motor once a second and warns above
+70 C; it does not refuse to start or cut power on temperature. `go2_temps.py` shows all twelve
+live. On 2026-10-09 the robot's own controller went limp four times in 20 minutes with the
+rear hip motors at 65-69 C (others 36-42 C); cool it with the robot switched off. The program goes limp by itself if the robot state
 stops arriving, the body tilts past about 55 degrees, or a joint moves faster than 30 rad/s.
 
 ## Stages

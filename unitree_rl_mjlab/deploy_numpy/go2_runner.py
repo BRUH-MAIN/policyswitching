@@ -74,12 +74,9 @@ DT = go2_obs.CONTROL_DT
 STATE_TIMEOUT_S = 0.05
 MAX_TILT_GZ = -0.57  # projected gravity z above this means more than ~55 degrees of tilt
 MAX_JOINT_SPEED = 30.0
-# Motor temperature guard (deg C). On 2026-10-09 the robot went limp by itself four times in
-# 20 minutes, its own controller protecting the rear hip motors, read at 65 and 69 C while the
-# others were at 36-42 C. Standing up or starting the policy is refused above START_MAX_TEMP_C;
-# above WARN_TEMP_C every status line warns. It never goes limp on temperature by itself
-# (going limp mid-step is worse than finishing it): L2+B stays the operator's decision.
-START_MAX_TEMP_C = 60
+# Motor temperature: printed once a second, with a warning above WARN_TEMP_C. Nothing is
+# refused or cut on temperature (operator's decision, 2026-10-09). For reference, the robot's
+# own controller went limp by itself four times that day with the rear hips at 65-69 C.
 WARN_TEMP_C = 70
 LOOP_LATE_S = 0.10
 SCAN_STALE_S = 0.3
@@ -430,9 +427,7 @@ class Runner(object):
         action = self.last_action
         if self.mode == PASSIVE:
             self.b.send(state["q"], np.zeros(12), np.full(12, PASSIVE_KD))
-            if self.remote.down("L2", "up") and not self.args.dry_run and self._too_hot(state, "stand up"):
-                pass
-            elif self.remote.down("L2", "up") and not self.args.dry_run:
+            if self.remote.down("L2", "up") and not self.args.dry_run:
                 self.mode, self.mode_steps, self.stand_from = STAND, 0, state["q"].copy()
                 self.fault = None
                 print("[STAND] crouch, then stand")
@@ -446,9 +441,7 @@ class Runner(object):
             else:
                 target = STAND_POSE
             self.b.send(target, STAND_KP, STAND_KD)
-            if t >= 2 * ramp + 0.5 and self.remote.down("R2", "A") and self._too_hot(state, "start the policy"):
-                pass
-            elif t >= 2 * ramp + 0.5 and self.remote.down("R2", "A"):
+            if t >= 2 * ramp + 0.5 and self.remote.down("R2", "A"):
                 self.mode, self.mode_steps = POLICY, 0
                 self.cmd_now = np.zeros(3)
                 self.last_action = np.zeros(12, dtype=np.float32)
@@ -492,18 +485,6 @@ class Runner(object):
     def _to_passive(self, why):
         self.mode, self.mode_steps, self.fault = PASSIVE, 0, why
         print("[PASSIVE] %s" % why)
-
-    def _too_hot(self, state, what):
-        """True (and say so, at most once a second) if a motor is too hot to `what`."""
-        temp = state.get("temp")
-        if temp is None or float(np.max(temp)) <= START_MAX_TEMP_C:
-            return False
-        now = self.clock()
-        if now - getattr(self, "_hot_said", -1e9) >= 1.0:
-            self._hot_said = now
-            print("[REFUSED] will not %s: %s at %.0f C (limit %d C). Let it cool, with the robot off." % (
-                what, MOTOR_NAMES[int(np.argmax(temp))], float(np.max(temp)), START_MAX_TEMP_C))
-        return True
 
     def _print(self, state, grav, cmd, action, scan_m, scan_age):
         np.set_printoptions(precision=2, suppress=True, linewidth=160)
