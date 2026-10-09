@@ -276,6 +276,7 @@ class RawScan(CloudScan):
     Rerr = Rerr.dot(np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]]))  # and pitch
     self.raw = go2_scan.RawCloud(Rerr.dot(self.R_bl_true), self.t_bl_true + np.array([dt, dt, dt]))
     self.odo = go2_scan.LegOdometry()
+    self.sampler.anchor = 0.0  # as go2_scan_node.py --source raw does
 
   def poll(self):
     d, m = self.r.d, self.r.m

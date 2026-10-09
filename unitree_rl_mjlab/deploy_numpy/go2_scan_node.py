@@ -228,6 +228,13 @@ def run_raw(args):
     low = subscribe("rt/lowstate", LowState_)
     cl = subscribe(args.raw_topic, PointCloud2_)
     grid, sampler, odo = go2_scan.CloudGrid(), go2_scan.HeightMapScan(), go2_scan.LegOdometry()
+    # LegOdometry puts the floor under the feet at z = 0 when it starts, and the LiDAR points go
+    # into the same frame, so the map and the pose start aligned: anchor 0. Without a start
+    # value the anchor waited for mapped ground under a loaded foot, which a robot standing still
+    # never has (the cells under the body are hidden from the LiDAR and filtered as self-hits),
+    # and the scan stayed "flat" (robot, 2026-10-09). It is still refined once the feet walk
+    # onto mapped ground.
+    sampler.anchor = 0.0
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     target = ("127.0.0.1", args.port)
     seen, next_t, last_print, sent = 0, time.time(), 0.0, 0
