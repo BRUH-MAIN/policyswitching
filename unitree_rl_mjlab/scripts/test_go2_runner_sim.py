@@ -280,7 +280,8 @@ def main() -> None:
   ap.add_argument("--npz", required=True)
   ap.add_argument("--step-height", type=float, default=0.12)
   ap.add_argument("--speed", type=float, default=0.5)
-  ap.add_argument("--max-vx", type=float, default=1.0, help="Runner's forward speed limit (full stick).")
+  ap.add_argument("--max-vx", type=float, default=0.3, help="Runner's forward speed limit (full stick).")
+  ap.add_argument("--max-acc", type=float, default=0.3, help="Runner's acceleration limit (m/s per second).")
   ap.add_argument("--seconds", type=float, default=30.0)
   ap.add_argument("--scan", choices=("ray", "map", "cloud", "flat"), default="ray",
                   help="ray: exact terrain heights. map: through go2_scan.HeightMapScan from a noisy gridded "
@@ -290,7 +291,7 @@ def main() -> None:
   model, qpos0 = build_model(args.step_height)
   robot = SimRobot(model, qpos0)
   policy = NumpyPolicy(args.npz)
-  run_args = SimpleNamespace(dry_run=False, verbose=False, max_vx=args.max_vx, max_vx_back=0.3, max_vy=0.3, max_wz=0.8)
+  run_args = SimpleNamespace(dry_run=False, verbose=False, max_acc=args.max_acc, max_yaw_acc=0.6, max_vx=args.max_vx, max_vx_back=0.3, max_vy=0.3, max_wz=0.8)
   sim_t = [0.0]
   ray = RayScan(robot)
   runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "cloud": CloudScan, "flat": lambda _: None}[args.scan](robot),
@@ -306,10 +307,10 @@ def main() -> None:
     sim_t[0] = t
     if 0.5 <= t < 0.7:
       robot.set_remote(keys=("L2", "up"))
-    elif 4.0 <= t < 4.2:
+    elif 5.0 <= t < 5.2:
       robot.set_remote(keys=("R2", "A"))
-    elif t >= 5.0:
-      robot.set_remote(ly=args.speed / run_args.max_vx)
+    elif t >= 6.0:
+      robot.set_remote(ly=min(1.0, args.speed / run_args.max_vx))
     else:
       robot.set_remote()
     runner.step()

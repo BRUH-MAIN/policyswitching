@@ -11,7 +11,7 @@
 States and the remote's buttons (same layout as Unitree's own deploy code):
 
     PASSIVE   motors damped, no stiffness. Entered at start, on L2+B, on Ctrl-C, on any fault.
-    STAND     L2+Up from PASSIVE: crouch, then stand, over 2 s, and hold.
+    STAND     L2+Up from PASSIVE: crouch, then stand, over 3 s, and hold.
     POLICY    R2+A from STAND: the policy drives the joints at 50 Hz.
               Left stick: forward/back and sideways. Right stick: turn.
               With --cmd udp: velocity commands from the network are used only WHILE R1 IS
@@ -78,6 +78,7 @@ LOOP_LATE_S = 0.10
 SCAN_STALE_S = 0.3
 CMD_STALE_S = 0.3
 GAIN_BLEND_STEPS = 25  # 0.5 s from stand gains to policy gains
+STAND_RAMP_S = 1.5  # each half of the stand-up (fold, then stand) takes this long
 WRITE_PERIOD_S = 0.002  # the motor board is fed at 500 Hz, as in Unitree's own low-level example
 WRITER_STALE_S = 0.10  # if the control loop stops updating the target, the writer damps
 
@@ -354,6 +355,11 @@ class Runner(object):
         self.fault = None
         self.last_print = 0.0
         self.max_cmd = np.array([args.max_vx, args.max_vy, args.max_wz])
+        # Ramp limits for the velocity command (per control step): speeding up is gentle,
+        # slowing down is twice as quick, so letting go of the stick still stops it promptly.
+        self.cmd_now = np.zeros(3)
+        self.acc_step = np.array([args.max_acc, args.max_acc, args.max_yaw_acc]) * DT
+        self.dec_step = 2.0 * self.acc_step
 
     # -- inputs ---------------------------------------------------------------------------
     def command(self):
@@ -368,6 +374,14 @@ class Runner(object):
         elif self.cmd_udp is not None:
             self.cmd_udp.poll()  # keep the socket drained
         return np.zeros(3)
+
+    def _ramp(self, target):
+        """Move the command toward `target` no faster than the acceleration limits."""
+        delta = target - self.cmd_now
+        speeding_up = np.abs(target) > np.abs(self.cmd_now)
+        step = np.where(speeding_up, self.acc_step, self.dec_step)
+        self.cmd_now = self.cmd_now + np.clip(delta, -step, step)
+        return self.cmd_now.copy()
 
     def _limit(self, cmd):
         cmd = np.clip(cmd, -self.max_cmd, self.max_cmd)
@@ -413,15 +427,17 @@ class Runner(object):
                 print("[STAND] crouch, then stand")
         elif self.mode == STAND:
             t = self.mode_steps * DT
-            if t < 1.0:
-                target = self.stand_from + (CROUCH_POSE - self.stand_from) * t
-            elif t < 2.0:
-                target = CROUCH_POSE + (STAND_POSE - CROUCH_POSE) * (t - 1.0)
+            ramp = STAND_RAMP_S
+            if t < ramp:
+                target = self.stand_from + (CROUCH_POSE - self.stand_from) * (t / ramp)
+            elif t < 2 * ramp:
+                target = CROUCH_POSE + (STAND_POSE - CROUCH_POSE) * ((t - ramp) / ramp)
             else:
                 target = STAND_POSE
             self.b.send(target, STAND_KP, STAND_KD)
-            if t >= 2.5 and self.remote.down("R2", "A"):
+            if t >= 2 * ramp + 0.5 and self.remote.down("R2", "A"):
                 self.mode, self.mode_steps = POLICY, 0
+                self.cmd_now = np.zeros(3)
                 self.last_action = np.zeros(12, dtype=np.float32)
                 self.policy_steps = 0
                 print("[POLICY] running")
@@ -432,6 +448,7 @@ class Runner(object):
                 # Stand where it is on the last scan it had. Not PASSIVE: going limp on a
                 # staircase is worse than standing on one, and the ground has not moved.
                 cmd = np.zeros(3)
+            cmd = self._ramp(cmd)
             obs = go2_obs.build_obs(state["gyro"], state["quat"], cmd, self.policy_steps, state["q"],
                                     state["dq"], self.last_action, scan_m)
             action = self.policy.act(obs)
@@ -529,10 +546,15 @@ def main():
     ap.add_argument("--cmd", choices=("remote", "udp"), default="remote",
                     help="udp: also accept (vx, vy, wz) float32 datagrams, used only while R1 is held.")
     ap.add_argument("--cmd-port", type=int, default=9870)
-    ap.add_argument("--max-vx", type=float, default=0.6)
-    ap.add_argument("--max-vx-back", type=float, default=0.3)
-    ap.add_argument("--max-vy", type=float, default=0.3)
-    ap.add_argument("--max-wz", type=float, default=0.8)
+    # Deliberately slow defaults (2026-10-09, first runs on the robot). In simulation stairs v8b
+    # crosses single 15/17 cm steps and 10-step flights at 0.3 m/s, and stalls on some 10-step
+    # 17 cm descents at 0.2 m/s; the policies were trained up to 1.0 m/s.
+    ap.add_argument("--max-vx", type=float, default=0.3, help="Forward speed limit (m/s) at full stick.")
+    ap.add_argument("--max-vx-back", type=float, default=0.15)
+    ap.add_argument("--max-vy", type=float, default=0.15)
+    ap.add_argument("--max-wz", type=float, default=0.5, help="Turn rate limit (rad/s).")
+    ap.add_argument("--max-acc", type=float, default=0.3, help="Speeding up, m/s per second (slowing down: twice this).")
+    ap.add_argument("--max-yaw-acc", type=float, default=0.6, help="Turn-rate change, rad/s per second (slowing: twice).")
     ap.add_argument("--verbose", action="store_true")
     ap.add_argument("--yes", action="store_true", help="Skip the typed confirmation (not for first runs).")
     ap.add_argument("--restore-motion-service", action="store_true",
