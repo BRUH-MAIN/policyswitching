@@ -41,6 +41,7 @@ from __future__ import print_function
 
 import argparse
 import os
+import signal
 import socket
 import struct
 import sys
@@ -473,8 +474,19 @@ class Runner(object):
             print("    action, FL FR RL RR:           %s" % np.asarray(action).reshape(4, 3).round(2).tolist())
 
 
+def _interrupt(signum, frame):
+    raise KeyboardInterrupt
+
+
 def run(runner, backend):
-    """50 Hz loop until Ctrl-C. Always ends damped."""
+    """50 Hz loop until Ctrl-C. Always ends damped.
+
+    A dropped SSH session sends SIGHUP and `kill` sends SIGTERM; both would otherwise end the
+    process without the damping below, leaving the motors on their last stiff command. Both
+    are treated as Ctrl-C. (Still start it inside tmux or screen on the robot, so a dropped
+    cable does not stop a run that is going well.)"""
+    signal.signal(signal.SIGHUP, _interrupt)
+    signal.signal(signal.SIGTERM, _interrupt)
     next_t = time.time()
     try:
         while True:

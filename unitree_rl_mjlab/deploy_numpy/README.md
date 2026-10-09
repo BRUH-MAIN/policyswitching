@@ -31,6 +31,16 @@ existing on the robot is edited), and add them to the list of files created on t
 scp go2_runner.py go2_scan_node.py go2_obs.py go2_scan.py policy_numpy.py <name>.npz unitree@<robot>:~/go2_policy/
 ```
 
+Check the copy arrived whole (compare with `md5sum` of the same files on the laptop):
+
+```
+ssh unitree@<robot> 'cd ~/go2_policy && md5sum *.py *.npz'
+```
+
+Start the runner inside `tmux` or `screen` on the robot, so a dropped SSH session does not end
+a run. If the session does drop without them, the runner treats the hang-up like Ctrl-C and
+goes limp (it used to stop without damping).
+
 ## The remote
 
 | buttons | effect |
