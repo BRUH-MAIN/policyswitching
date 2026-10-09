@@ -238,6 +238,7 @@ def run_raw(args):
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     target = ("127.0.0.1", args.port)
     seen, next_t, last_print, sent = 0, time.time(), 0.0, 0
+    drift_removed = [0.0]
     print("scan -> udp %s:%d; waiting for lowstate and the raw LiDAR cloud ..." % target)
     while True:
         next_t += go2_obs.CONTROL_DT
@@ -257,7 +258,18 @@ def run_raw(args):
         pos, R_wb = odo.update(feet_b, quat, stance)
         if cl.msg is not None and cl.count != seen:
             seen = cl.count
-            grid.add_points(raw.to_world(cloud_xyz(cl.msg), pos, R_wb), pos)
+            pts_l = cloud_xyz(cl.msg)
+            pts = raw.to_world(pts_l, pos, R_wb)
+            # Vertical drift correction: leg odometry gains height step by step (11 cm per metre of
+            # flat walking on the robot, 2026-10-09). The mapped ground cannot move, so how far the
+            # new points sit above it is drift; take it out of the odometry before mapping them.
+            dz = grid.z_offset(pts)
+            if dz is not None:
+                odo.shift_z(-dz)
+                pos = pos - np.array([0.0, 0.0, dz])
+                pts = pts - np.array([0.0, 0.0, dz])
+                drift_removed[0] += dz
+            grid.add_points(pts, pos)
             sampler.set_map(*grid.as_map())
         yaw = go2_obs.yaw_of(quat)
         fallback = base_height_from_legs(q, quat)
@@ -271,11 +283,11 @@ def run_raw(args):
         if now - last_print >= 1.0:
             last_print = now
             if fresh:
-                print("scan %.2f..%.2f m (legs say %.2f) | empty %.0f%% | anchor %s | odometry %s | cloud age %.0f ms "
-                      "| foot force %s | sent %d" % (
+                print("scan %.2f..%.2f m (legs say %.2f) | empty %.0f%% | anchor %s | odometry %s | drift removed %+.2f m "
+                      "| cloud age %.0f ms | foot force %s | sent %d" % (
                           float(scan.min()), float(scan.max()), fallback, 100 * empty,
                           "%.3f" % sampler.anchor if sampler.anchor is not None else "none (no loaded foot yet)",
-                          np.round(pos, 2).tolist(), 1000 * cl.age(), force.astype(int).tolist(), sent))
+                          np.round(pos, 2).tolist(), drift_removed[0], 1000 * cl.age(), force.astype(int).tolist(), sent))
             else:
                 print("NOT SENDING: cloud age %.2f s, lowstate age %.2f s" % (cl.age(), low.age()))
 

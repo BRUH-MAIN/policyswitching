@@ -215,6 +215,33 @@ class CloudGrid(object):
         g[hit] = est[hit]
         return int(hit.sum())
 
+    def z_offset(self, pts_world, max_abs_m=0.06, min_points=150, flat_m=0.03):
+        """Median height of new points above the mapped cells they fall in (cells with an estimate,
+        points within `max_abs_m` of it: edges, phantoms and new terrain excluded), or None.
+
+        A static world cannot move, so this is the vertical drift of the pose the points were
+        placed with since those cells were mapped."""
+        if self.origin is None or len(pts_world) == 0:
+            return None
+        pts = np.asarray(pts_world, dtype=np.float64)
+        ix = np.floor((pts[:, 0] - self.origin[0]) / self.res).astype(np.int64)
+        iy = np.floor((pts[:, 1] - self.origin[1]) / self.res).astype(np.int64)
+        inside = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
+        # Only cells inside flat patches (3 x 3 neighbourhood spans < flat_m): at a step edge a cell
+        # first mapped from below gets points from the step's top, which is terrain, not drift.
+        g = self.grid
+        pad = np.pad(g, 1, mode="constant", constant_values=np.nan)
+        stack = np.stack([pad[1 + a:self.n + 1 + a, 1 + b:self.n + 1 + b] for a in (-1, 0, 1) for b in (-1, 0, 1)])
+        with np.errstate(invalid="ignore"):
+            span = np.max(stack, axis=0) - np.min(stack, axis=0)
+        flat = np.isfinite(span) & (span < flat_m)
+        cell = np.where(flat, g, np.nan)[iy[inside], ix[inside]]
+        d = pts[inside, 2] - cell
+        ok = np.isfinite(d) & (np.abs(d) < max_abs_m)
+        if ok.sum() < min_points:
+            return None
+        return float(np.median(d[ok]))
+
     def as_map(self):
         """(data, width, height, resolution, origin) in the layout HeightMapScan.set_map takes."""
         data = np.where(np.isfinite(self.grid), self.grid, 1.0e9).astype(np.float32)
@@ -269,6 +296,11 @@ class LegOdometry(object):
         if est:
             self.pos = np.mean(est, axis=0)
         return self.pos.copy(), R
+
+    def shift_z(self, dz):
+        """Move the whole odometry frame's estimate up by dz (pins too), e.g. to remove drift."""
+        self.pos[2] += dz
+        self.pins = [None if p is None else p + np.array([0.0, 0.0, dz]) for p in self.pins]
 
 
 class RawCloud(object):

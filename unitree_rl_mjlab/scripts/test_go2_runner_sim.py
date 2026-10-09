@@ -264,8 +264,11 @@ class RawScan(CloudScan):
   pose) and go2_scan.RawCloud, then the same CloudGrid and HeightMapScan. `calib_err` perturbs
   the extrinsic the pipeline is given (metres, degrees), to see what a calibration error costs."""
 
-  def __init__(self, robot: SimRobot, noise=0.015, seed=0, calib_err=(0.0, 0.0)):
+  def __init__(self, robot: SimRobot, noise=0.015, seed=0, calib_err=(0.0, 0.0), odo_drift=0.0, drift_fix=True):
     super().__init__(robot, noise=noise, drift=0.0, seed=seed)
+    self.odo_drift, self.drift_fix = odo_drift, drift_fix  # injected odometry climb, metres per metre walked
+    self.last_xy = None
+    self.drift_injected = self.drift_removed = 0.0
     import go2_scan
 
     self.R_bl_true = np.diag([1.0, -1.0, -1.0])  # upside down: lidar z points at the floor
@@ -287,6 +290,12 @@ class RawScan(CloudScan):
     stance = np.array([g in touching for g in self.feet_geoms])
     feet_b = go2_runner.foot_positions_base(state["q"])
     pos, R_wb = self.odo.update(feet_b, state["quat"], stance)
+    if self.odo_drift and self.last_xy is not None:  # the robot's leg odometry gained ~11 cm per metre
+      dz = self.odo_drift * float(np.linalg.norm(pos[:2] - self.last_xy))
+      self.odo.shift_z(dz)
+      pos = pos + np.array([0.0, 0.0, dz])
+      self.drift_injected += dz
+    self.last_xy = pos[:2].copy()
     if self.k % 3 == 0:
       base = self.r.base_pos()
       rot = d.xmat[self.r.base_id].reshape(3, 3)
@@ -299,7 +308,14 @@ class RawScan(CloudScan):
           hit_w = head + dw * (dist + self.rng.normal(0.0, self.noise))
           pts_l.append(self.R_bl_true.T.dot(rot.T.dot(hit_w - head)))  # into the lidar's own frame
       if pts_l:
-        self.grid.add_points(self.raw.to_world(np.array(pts_l), pos, R_wb), pos)
+        pts = self.raw.to_world(np.array(pts_l), pos, R_wb)
+        dz = self.grid.z_offset(pts) if self.drift_fix else None  # as go2_scan_node.py does
+        if dz is not None:
+          self.odo.shift_z(-dz)
+          pos = pos - np.array([0.0, 0.0, dz])
+          pts = pts - np.array([0.0, 0.0, dz])
+          self.drift_removed += dz
+        self.grid.add_points(pts, pos)
         self.sampler.set_map(*self.grid.as_map())
     self.k += 1
     yaw = go2_obs.yaw_of(state["quat"])
@@ -335,6 +351,8 @@ def main() -> None:
   ap.add_argument("--max-vx", type=float, default=0.3, help="Runner's forward speed limit (full stick).")
   ap.add_argument("--max-acc", type=float, default=0.3, help="Runner's acceleration limit (m/s per second).")
   ap.add_argument("--seconds", type=float, default=30.0)
+  ap.add_argument("--odo-drift", type=float, default=0.0, help="--scan raw: inject odometry climb, m per m walked.")
+  ap.add_argument("--no-drift-fix", action="store_true", help="--scan raw: skip the scan-to-map height correction.")
   ap.add_argument("--calib-err", type=float, nargs=2, default=(0.0, 0.0), metavar=("M", "DEG"),
                   help="--scan raw: offset (m, on each axis) and tilt (deg, roll and pitch) error in the LiDAR calibration.")
   ap.add_argument("--scan", choices=("ray", "map", "cloud", "raw", "flat"), default="ray",
@@ -349,7 +367,8 @@ def main() -> None:
   sim_t = [0.0]
   ray = RayScan(robot)
   runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "cloud": CloudScan, "flat": lambda _: None,
-                                       "raw": lambda r: RawScan(r, calib_err=tuple(args.calib_err))}[args.scan](robot),
+                                       "raw": lambda r: RawScan(r, calib_err=tuple(args.calib_err), odo_drift=args.odo_drift,
+                                                               drift_fix=not args.no_drift_fix)}[args.scan](robot),
                              clock=lambda: sim_t[0])
 
   fk_worst = 0.0
@@ -401,6 +420,9 @@ def main() -> None:
     print(f"map scan vs exact terrain height: median error {np.median(e):.1f} cm, 90th percentile "
           f"{np.percentile(e, 90):.1f} cm, cells off by more than 6 cm {100 * (e > 6).mean():.1f}%; "
           f"sampler {runner.scan_udp.sampler.stats}")
+    if isinstance(runner.scan_udp, RawScan):
+      print(f"odometry drift injected {runner.scan_udp.drift_injected:+.3f} m, removed by the scan-to-map fix "
+            f"{runner.scan_udp.drift_removed:+.3f} m")
   print(f"walked {end[0] - start[0]:.2f} m forward, {abs(end[1] - start[1]):.2f} m sideways; "
         f"climbed {top_z - start[2]:.2f} m (the flight is {5 * args.step_height:.2f} m); "
         f"{'FAULT: ' + str(runner.fault) if fell else 'no fault'}")
