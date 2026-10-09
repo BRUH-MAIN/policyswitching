@@ -216,14 +216,76 @@ def run(args):
                 print("NOT SENDING: pose age %.2f s, map age %.2f s, lowstate age %.2f s" % (pose.age(), hm.age(), low.age()))
 
 
+def run_raw(args):
+    """--source raw: the LiDAR's raw cloud plus our own leg odometry. For low-level control,
+    when the robot's motion service (and with it its odometry and corrected cloud) is off."""
+    from unitree_sdk2py.idl.sensor_msgs.msg.dds_ import PointCloud2_
+    from unitree_sdk2py.idl.unitree_go.msg.dds_ import LowState_
+
+    cal = np.load(args.calib)
+    raw = go2_scan.RawCloud(cal["R_bl"], cal["t_bl"])
+    print("LiDAR calibration %s: t_bl %s" % (args.calib, np.round(cal["t_bl"], 3).tolist()))
+    low = subscribe("rt/lowstate", LowState_)
+    cl = subscribe(args.raw_topic, PointCloud2_)
+    grid, sampler, odo = go2_scan.CloudGrid(), go2_scan.HeightMapScan(), go2_scan.LegOdometry()
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    target = ("127.0.0.1", args.port)
+    seen, next_t, last_print, sent = 0, time.time(), 0.0, 0
+    print("scan -> udp %s:%d; waiting for lowstate and the raw LiDAR cloud ..." % target)
+    while True:
+        next_t += go2_obs.CONTROL_DT
+        delay = next_t - time.time()
+        if delay > 0:
+            time.sleep(delay)
+        else:
+            next_t = time.time()
+        if low.msg is None:
+            continue
+        lm = low.msg
+        q = np.array([lm.motor_state[i].q for i in range(12)])
+        quat = np.array(lm.imu_state.quaternion, dtype=np.float64)
+        force = np.array(lm.foot_force, dtype=np.float64)
+        stance = force > args.stance_force
+        feet_b = foot_positions_base(q)
+        pos, R_wb = odo.update(feet_b, quat, stance)
+        if cl.msg is not None and cl.count != seen:
+            seen = cl.count
+            grid.add_points(raw.to_world(cloud_xyz(cl.msg), pos, R_wb), pos)
+            sampler.set_map(*grid.as_map())
+        yaw = go2_obs.yaw_of(quat)
+        fallback = base_height_from_legs(q, quat)
+        fresh = cl.age() < args.max_map_age and low.age() < 0.1
+        if fresh:
+            sampler.update_anchor(pos, yaw, feet_b, stance, -go2_obs.projected_gravity(quat).astype(np.float64))
+            scan, empty = sampler.scan(pos, yaw, fallback)
+            sock.sendto(scan.astype("<f4").tobytes(), target)
+            sent += 1
+        now = time.time()
+        if now - last_print >= 1.0:
+            last_print = now
+            if fresh:
+                print("scan %.2f..%.2f m (legs say %.2f) | empty %.0f%% | anchor %s | odometry %s | cloud age %.0f ms "
+                      "| foot force %s | sent %d" % (
+                          float(scan.min()), float(scan.max()), fallback, 100 * empty,
+                          "%.3f" % sampler.anchor if sampler.anchor is not None else "none (no loaded foot yet)",
+                          np.round(pos, 2).tolist(), 1000 * cl.age(), force.astype(int).tolist(), sent))
+            else:
+                print("NOT SENDING: cloud age %.2f s, lowstate age %.2f s" % (cl.age(), low.age()))
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--iface", default="eth0")
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--probe-seconds", type=float, default=5.0)
-    ap.add_argument("--source", choices=("cloud", "map"), default="cloud",
-                    help="cloud: build the map from the LiDAR point cloud (this robot publishes no height "
-                         "map, probe of 2026-10-09). map: use rt/utlidar/height_map_array.")
+    ap.add_argument("--source", choices=("raw", "cloud", "map"), default="raw",
+                    help="raw (default): the LiDAR's raw cloud and our own leg odometry; works with the "
+                         "robot's motion service off, as it is under go2_runner.py. cloud: the robot's "
+                         "corrected cloud and odometry (only while its own controller runs). map: "
+                         "rt/utlidar/height_map_array (not published on this robot).")
+    ap.add_argument("--raw-topic", default="rt/utlidar/cloud", help="PointCloud2 in the LiDAR's own frame.")
+    ap.add_argument("--calib", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "go2_lidar_calib.npz"),
+                    help="LiDAR pose on the body (R_bl, t_bl), from scripts/calib_go2_lidar.py on the laptop.")
     ap.add_argument("--cloud-topic", default="rt/utlidar/cloud_deskewed", help="PointCloud2 in the pose's frame.")
     ap.add_argument("--map-topic", default="rt/utlidar/height_map_array")
     ap.add_argument("--pose-topic", default="rt/utlidar/robot_odom")
@@ -241,7 +303,7 @@ def main():
         probe(args)
     else:
         try:
-            run(args)
+            run_raw(args) if args.source == "raw" else run(args)
         except KeyboardInterrupt:
             pass
 

@@ -257,6 +257,57 @@ class CloudScan:
     return scan, 0.0
 
 
+class RawScan(CloudScan):
+  """As the scan node builds it with the robot's own controller off (`--source raw`): the
+  LiDAR's raw points in its own frame (here mounted upside down at `t_bl` on the base, as the
+  robot's is), moved into a world frame by go2_scan.LegOdometry (legs + IMU, no simulator
+  pose) and go2_scan.RawCloud, then the same CloudGrid and HeightMapScan. `calib_err` perturbs
+  the extrinsic the pipeline is given (metres, degrees), to see what a calibration error costs."""
+
+  def __init__(self, robot: SimRobot, noise=0.015, seed=0, calib_err=(0.0, 0.0)):
+    super().__init__(robot, noise=noise, drift=0.0, seed=seed)
+    import go2_scan
+
+    self.R_bl_true = np.diag([1.0, -1.0, -1.0])  # upside down: lidar z points at the floor
+    self.t_bl_true = np.array([0.28, 0.0, -0.05])
+    dt, dang = calib_err
+    a = np.radians(dang)
+    Rerr = np.array([[1, 0, 0], [0, np.cos(a), -np.sin(a)], [0, np.sin(a), np.cos(a)]])  # roll error
+    Rerr = Rerr.dot(np.array([[np.cos(a), 0, np.sin(a)], [0, 1, 0], [-np.sin(a), 0, np.cos(a)]]))  # and pitch
+    self.raw = go2_scan.RawCloud(Rerr.dot(self.R_bl_true), self.t_bl_true + np.array([dt, dt, dt]))
+    self.odo = go2_scan.LegOdometry()
+
+  def poll(self):
+    d, m = self.r.d, self.r.m
+    state = self.r.read()
+    touching = set()
+    for c in d.contact[:d.ncon]:
+      touching.update((c.geom1, c.geom2))
+    stance = np.array([g in touching for g in self.feet_geoms])
+    feet_b = go2_runner.foot_positions_base(state["q"])
+    pos, R_wb = self.odo.update(feet_b, state["quat"], stance)
+    if self.k % 3 == 0:
+      base = self.r.base_pos()
+      rot = d.xmat[self.r.base_id].reshape(3, 3)
+      head = base + rot.dot(self.t_bl_true)
+      pts_l = []
+      for v in self.dirs:
+        dw = rot.dot(v)
+        dist = mujoco.mj_ray(m, d, head, dw, self.groups, 1, -1, self.geomid)
+        if self.geomid[0] >= 0 and dist < 4.0:
+          hit_w = head + dw * (dist + self.rng.normal(0.0, self.noise))
+          pts_l.append(self.R_bl_true.T.dot(rot.T.dot(hit_w - head)))  # into the lidar's own frame
+      if pts_l:
+        self.grid.add_points(self.raw.to_world(np.array(pts_l), pos, R_wb), pos)
+        self.sampler.set_map(*self.grid.as_map())
+    self.k += 1
+    yaw = go2_obs.yaw_of(state["quat"])
+    up_b = -go2_obs.projected_gravity(state["quat"]).astype(np.float64)
+    self.sampler.update_anchor(pos, yaw, feet_b, stance, up_b)
+    scan, _ = self.sampler.scan(pos, yaw, go2_runner.base_height_from_legs(state["q"], state["quat"]))
+    return scan, 0.0
+
+
 def _exists(model, kind, name) -> bool:
   return mujoco.mj_name2id(model, kind, name) >= 0
 
@@ -283,7 +334,9 @@ def main() -> None:
   ap.add_argument("--max-vx", type=float, default=0.3, help="Runner's forward speed limit (full stick).")
   ap.add_argument("--max-acc", type=float, default=0.3, help="Runner's acceleration limit (m/s per second).")
   ap.add_argument("--seconds", type=float, default=30.0)
-  ap.add_argument("--scan", choices=("ray", "map", "cloud", "flat"), default="ray",
+  ap.add_argument("--calib-err", type=float, nargs=2, default=(0.0, 0.0), metavar=("M", "DEG"),
+                  help="--scan raw: offset (m, on each axis) and tilt (deg, roll and pitch) error in the LiDAR calibration.")
+  ap.add_argument("--scan", choices=("ray", "map", "cloud", "raw", "flat"), default="ray",
                   help="ray: exact terrain heights. map: through go2_scan.HeightMapScan from a noisy gridded "
                        "map with holes and vertical drift. flat: the leg-kinematics flat-ground scan.")
   args = ap.parse_args()
@@ -294,7 +347,8 @@ def main() -> None:
   run_args = SimpleNamespace(dry_run=False, verbose=False, max_acc=args.max_acc, max_yaw_acc=0.6, max_vx=args.max_vx, max_vx_back=0.3, max_vy=0.3, max_wz=0.8)
   sim_t = [0.0]
   ray = RayScan(robot)
-  runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "cloud": CloudScan, "flat": lambda _: None}[args.scan](robot),
+  runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "cloud": CloudScan, "flat": lambda _: None,
+                                       "raw": lambda r: RawScan(r, calib_err=tuple(args.calib_err))}[args.scan](robot),
                              clock=lambda: sim_t[0])
 
   fk_worst = 0.0
@@ -314,7 +368,7 @@ def main() -> None:
     else:
       robot.set_remote()
     runner.step()
-    if args.scan in ("map", "cloud") and runner.mode == go2_runner.POLICY and k % 5 == 0:
+    if args.scan in ("map", "cloud", "raw") and runner.mode == go2_runner.POLICY and k % 5 == 0:
       scan_err.append(np.abs(runner.scan(robot.read())[0] - ray.poll()[0]))
     robot.advance()
     if k % 10 == 0:

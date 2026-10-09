@@ -219,3 +219,75 @@ class CloudGrid(object):
         """(data, width, height, resolution, origin) in the layout HeightMapScan.set_map takes."""
         data = np.where(np.isfinite(self.grid), self.grid, 1.0e9).astype(np.float32)
         return data.reshape(-1), self.n, self.n, self.res, self.origin
+
+
+def quat_to_rot(quat_wxyz):
+    """Body-to-world rotation matrix from a (w, x, y, z) quaternion."""
+    w, x, y, z = [float(v) for v in quat_wxyz]
+    n = (w * w + x * x + y * y + z * z) ** 0.5
+    w, x, y, z = w / n, x / n, y / n, z / n
+    return np.array([
+        [1 - 2 * (y * y + z * z), 2 * (x * y - w * z), 2 * (x * z + w * y)],
+        [2 * (x * y + w * z), 1 - 2 * (x * x + z * z), 2 * (y * z - w * x)],
+        [2 * (x * z - w * y), 2 * (y * z + w * x), 1 - 2 * (x * x + y * y)],
+    ])
+
+
+class LegOdometry(object):
+    """Base position from the legs: a foot that carries load is assumed not to slide.
+
+    For when the robot's own odometry is not published (it stops with its motion service,
+    which low-level control has to switch off). Orientation comes from the IMU quaternion;
+    position from the stance feet: each loaded foot is pinned where it touched down, and the
+    base is where those pins say it must be. Drifts by a few per cent of the distance walked,
+    which is fine for a height scan that only needs the last couple of metres, and whose
+    vertical offset is re-anchored on the feet anyway (HeightMapScan.update_anchor).
+    """
+
+    def __init__(self):
+        self.pos = np.zeros(3)
+        self.pins = [None] * 4  # world position of each stance foot, or None in swing
+        self.started = False
+
+    def update(self, feet_base, quat_wxyz, stance):
+        """feet_base (4, 3) foot centres in the base frame; stance (4,) bool. Returns (pos, R)."""
+        R = quat_to_rot(quat_wxyz)
+        feet_w = np.asarray(feet_base, dtype=np.float64).dot(R.T)  # base -> world-aligned, relative to the base
+        if not self.started:
+            # Start with the base above the origin at its leg height, so z = 0 is the floor.
+            self.pos = np.array([0.0, 0.0, -float(np.min(feet_w[:, 2])) + FOOT_R])
+            self.started = True
+        est = []
+        for i in range(4):
+            if stance[i]:
+                if self.pins[i] is None:
+                    self.pins[i] = self.pos + feet_w[i]
+                else:
+                    est.append(self.pins[i] - feet_w[i])
+            else:
+                self.pins[i] = None
+        if est:
+            self.pos = np.mean(est, axis=0)
+        return self.pos.copy(), R
+
+
+class RawCloud(object):
+    """Points of the firmware LiDAR's raw cloud (its own frame) moved into the odometry frame.
+
+    `R_bl`, `t_bl`: the LiDAR's pose in the base frame (calibrated: go2_lidar_calib.npz).
+    Points on the robot itself, and within `min_range_m` of the sensor, are dropped: a box of
+    `body_half_x` by `body_half_y` around the base, at every height (the floor under the body is
+    hidden from the LiDAR anyway; the grid remembers it from when it was ahead).
+    """
+
+    def __init__(self, R_bl, t_bl, body_half_x=0.45, body_half_y=0.28, min_range_m=0.12):
+        self.R_bl = np.asarray(R_bl, dtype=np.float64)
+        self.t_bl = np.asarray(t_bl, dtype=np.float64)
+        self.hx, self.hy, self.rmin = body_half_x, body_half_y, min_range_m
+
+    def to_world(self, pts_lidar, base_pos, R_wb):
+        p = np.asarray(pts_lidar, dtype=np.float64)
+        p = p[np.all(np.isfinite(p), axis=1) & (np.linalg.norm(p, axis=1) > self.rmin)]
+        b = p.dot(self.R_bl.T) + self.t_bl  # base frame
+        b = b[~((np.abs(b[:, 0]) < self.hx) & (np.abs(b[:, 1]) < self.hy))]
+        return b.dot(R_wb.T) + base_pos
