@@ -91,3 +91,25 @@ preferred. Single steps (one riser) with 20 ms delay, `model_600`: up and down, 
 f0be1404569cd331be59368ba0c26a3c); numpy/PyTorch parity and robot-side observation parity
 pass. **It replaces v8a final as the robot candidate.** The run continues to 2,000
 iterations (~17:00); its last checkpoints get the same table before a final choice.
+
+
+## Update 17:30 IST: cluster v8b final (`model_1999`) is the robot candidate
+
+10-step flights, 128 trials, tipping only, success %, up 15 / down 15 / up 17 / down 17 cm:
+
+| condition | `model_600` | `model_1800` | **`model_1999`** |
+|---|---|---|---|
+| nominal | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 |
+| 20 ms | 100 / 100 / 98.4 / 100 | 100 / 100 / 97.7 / 100 | 100 / 100 / 98.4 / 100 |
+| 40 ms | 81.2 / 94.5 / 64.1 / 85.2 | 92.2 / 99.2 / 80.5 / 93.0 | 89.1 / 97.7 / 75.8 / 95.3 |
+| motors 80% | 100 / 100 / 100 / 95.3 | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 95.3 |
+| motors 120% | 100 / 100 / 100 / 100 | 99.2 / 96.9 / 100 / 90.6 | 100 / 100 / 100 / 99.2 |
+| +1 kg | 100 / 100 / 99.2 / 100 | 100 / 100 / 100 / 99.2 | 100 / 100 / 100 / 97.7 |
+| +2 kg | 100 / 99.2 / 98.4 / 97.7 | 100 / 99.2 / 100 / 100 | 100 / 94.5 / 100 / 96.1 |
+| 20 ms + 85% + 1 kg | 99.2 / 100 / 97.7 / 96.9 | 97.7 / 100 / 97.7 / 99.2 | 100 / 100 / 100 / 96.9 |
+
+`model_1999` passes the mark and is clearly better than `model_600` at 40 ms (up 17 cm 76% vs
+64%); its one weaker cell is +2 kg going down 15 cm (94.5%, all tip-overs counted). The
+descent refusal seen at `model_1200` (stiffer motors) is gone at the end. Single steps with
+20 ms delay and a 0.3 m/s leader: 100% up and down at 15 and 17 cm. Exported as
+`deploy_numpy/stairs_v8b_final.npz` (md5 ddfb6633715ce6758d37a7b9a20cc90e); parity checks pass.
