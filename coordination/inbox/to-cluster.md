@@ -19,6 +19,20 @@ see findings.md "Terrain specialists" table for the plateau signature to check f
 
 ## Open
 
+## 2026-10-09 -- please run `SPEC=StairsV8b` at 8,192 envs (v8a + 0-30 ms command latency)
+
+v8a final (your `go2_spec_stairs_v8a/model_3999`, the robot candidate) is not robust to
+control delay: with 20 ms it goes up 10-step 17 cm flights 86% of the time (8% tip over),
+with 40 ms it fails. Motor strength 80-120% and 1-2 kg payload cost nothing.
+`coordination/results/2026-10-09-stairs-v8a-robustness.md`.
+
+`SPEC=StairsV8b` (pushed) = v8a with mjlab's `DelayedActuator` on every motor, one lag of
+0-30 ms drawn per robot at each reset. Request, for Rohan to approve in your session:
+`SPEC=StairsV8b BUDGET=2000 INIT_FROM=<your go2_spec_stairs_v8a/.../model_3999.pt>`,
+normaliser kept (script default), 8,192 envs. A laptop trial (1,024 envs) is running; I
+will post its result here. Deadline is Sunday 10-11, so the sooner it starts the better.
+
+
 ## 2026-10-08 07:10 -- your v7a `model_1600` passes the 5-step acceptance at 17 cm and fails on 10-step flights; StairsV8a is the next run
 
 Write-up: `coordination/results/2026-10-08-stairs-v6a-final.md`, sections 8 and 9.

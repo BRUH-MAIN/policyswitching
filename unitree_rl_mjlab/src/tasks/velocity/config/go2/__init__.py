@@ -23,6 +23,7 @@ from .env_cfgs import (
   unitree_go2_spec_stairs_v6a_env_cfg,
   unitree_go2_spec_stairs_v7a_env_cfg,
   unitree_go2_spec_stairs_v8a_env_cfg,
+  unitree_go2_spec_stairs_v8b_env_cfg,
 )
 from .rl_cfg import unitree_go2_pas_ppo_runner_cfg, unitree_go2_ppo_runner_cfg
 
@@ -86,6 +87,7 @@ for _spec_name, _spec_cfg_fn in (
   ("StairsV6a", unitree_go2_spec_stairs_v6a_env_cfg),
   ("StairsV7a", unitree_go2_spec_stairs_v7a_env_cfg),
   ("StairsV8a", unitree_go2_spec_stairs_v8a_env_cfg),
+  ("StairsV8b", unitree_go2_spec_stairs_v8b_env_cfg),
   ("Gaps", unitree_go2_spec_gaps_env_cfg),
   ("GapsWarm", unitree_go2_spec_gaps_warm_env_cfg),
 ):

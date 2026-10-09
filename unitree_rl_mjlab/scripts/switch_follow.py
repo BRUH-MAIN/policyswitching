@@ -48,6 +48,9 @@ import torch
 os.environ.setdefault("MUJOCO_GL", "egl")
 
 from mjlab.envs import ManagerBasedRlEnv  # noqa: E402
+from mjlab.envs.mdp import dr  # noqa: E402
+from mjlab.managers.event_manager import EventTermCfg  # noqa: E402
+from mjlab.managers.scene_entity_config import SceneEntityCfg  # noqa: E402
 from mjlab.rl import RslRlVecEnvWrapper  # noqa: E402
 from mjlab.tasks.registry import load_rl_cfg  # noqa: E402
 from mjlab.utils.torch import configure_torch_backends  # noqa: E402
@@ -123,6 +126,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   # policy in this arm sees; the simulator's own scan is untouched.
   scan_faults = args.scan_delay > 0 or args.scan_dropout > 0 or args.scan_bias > 0
   scan_history: list[torch.Tensor] = []
+  action_queue: list[torch.Tensor] = []
   scan_held = None
   scan_scale = 1.0 / u.scene["terrain_scan"].cfg.max_distance
   scan_bias = (torch.rand(n, 1, device=device) * 2 - 1) * args.scan_bias * scan_scale
@@ -221,7 +225,11 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
       policy_obs["actor"] = blind_actor
     else:
       policy_obs = obs
-    obs, _, dones, extras = env.step(bank.act_blend(policy_obs, weights))
+    action = bank.act_blend(policy_obs, weights)
+    if args.action_delay > 0:  # the policy still sees its own latest action as "last action"
+      action_queue.append(action)
+      action = action_queue.pop(0) if len(action_queue) > args.action_delay else torch.zeros_like(action)
+    obs, _, dones, extras = env.step(action)
 
     done = dones.bool()
     timeouts = extras.get("time_outs", torch.zeros_like(done)).bool()
@@ -372,6 +380,12 @@ def main() -> None:
   ap.add_argument("--scan-terrain-only", action="store_true",
                   help="Cast the height scan against terrain only (geom groups 0-1). As trained, the rays "
                        "also hit the robot's own legs (visual meshes, group 2), which a real scan will not.")
+  ap.add_argument("--action-delay", type=int, default=0,
+                  help="Apply each action this many control steps (20 ms each) late (robustness test).")
+  ap.add_argument("--motor-strength", type=float, default=1.0,
+                  help="Scale every motor's stiffness, damping and torque limit by this (robustness test).")
+  ap.add_argument("--payload", type=float, default=0.0,
+                  help="Extra mass (kg) added to the trunk as a point mass at its COM (robustness test).")
   ap.add_argument("--step-height", type=float, default=None,
                   help="Override the riser height (m) of every stair segment of the course, e.g. 0.17 "
                        "for a real building stair. The level's own riser is used if omitted.")
@@ -420,7 +434,9 @@ def main() -> None:
 
   conditions = {k: v for k, v in vars(args).items()
                 if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")
-                and not (k == "scan_terrain_only" and not v)}  # absent when off: older files stay resumable
+                and not (k == "scan_terrain_only" and not v)  # absent when off: older files stay resumable
+                and not (k == "action_delay" and v == 0) and not (k == "motor_strength" and v == 1.0)
+                and not (k == "payload" and v == 0.0)}
   out_path = Path(args.json_out)
   result = dict(conditions=conditions, course=asdict(course), layout=layout, arms={})
   if out_path.exists():
@@ -438,6 +454,18 @@ def main() -> None:
   )
   if args.obs_noise:
     cfg.observations["actor"].enable_corruption = True
+  if args.motor_strength != 1.0:
+    s_ = args.motor_strength
+    motors = SceneEntityCfg("robot")  # default actuator_ids = every actuator group (hip, thigh, calf)
+    cfg.events["motor_gains"] = EventTermCfg(func=dr.pd_gains, mode="startup",
+                                             params={"kp_range": (s_, s_), "kd_range": (s_, s_), "asset_cfg": motors})
+    cfg.events["motor_limits"] = EventTermCfg(func=dr.effort_limits, mode="startup",
+                                              params={"effort_limit_range": (s_, s_), "asset_cfg": motors})
+  if args.payload:
+    cfg.events["payload"] = EventTermCfg(
+      func=dr.body_mass, mode="startup",
+      params={"ranges": (args.payload, args.payload), "operation": "add",
+              "asset_cfg": SceneEntityCfg("robot", body_names=("base_link",))})
   if args.scan_terrain_only:
     cfg.scene.sensors = tuple(
       replace(s, include_geom_groups=(0, 1)) if s.name == "terrain_scan" else s for s in cfg.scene.sensors

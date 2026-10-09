@@ -767,6 +767,37 @@ def unitree_go2_spec_stairs_v8a_env_cfg(play: bool = False) -> ManagerBasedRlEnv
   return cfg
 
 
+# StairsV8b: command latency, in physics steps of 5 ms, drawn per robot at every reset.
+STAIRS_V8B_LAG_RANGE = (0, 6)  # 0-30 ms
+
+
+def unitree_go2_spec_stairs_v8b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Stairs v8b: v8a with the motor commands delayed by 0-30 ms, drawn per robot per episode.
+
+  Final v8a crosses 10-step 15-17 cm flights 99-100% of the time with no delay, and with
+  every joint target applied one control step (20 ms) late, up 17 cm drops to 86% (8% tip
+  over); at 40 ms up-flights fail almost entirely. Motor strength 80-120% and 1-2 kg of
+  payload cost nothing (eval_results/switch_follow/robustness/). The real robot has a
+  Python control loop and DDS between the policy and the motors, so its latency is not
+  zero. Training never varied it. Here every actuator is wrapped in mjlab's
+  `DelayedActuator` and `sync_actuator_delays` draws one lag for all joints of a robot at
+  each reset. Everything else is v8a. Warm-start from v8a.
+  """
+  from mjlab.actuator.delayed_actuator import DelayedActuatorCfg
+  from mjlab.envs.mdp import dr as _dr
+
+  cfg = unitree_go2_spec_stairs_v8a_env_cfg(play=play)
+  robot = cfg.scene.entities["robot"]
+  art = robot.articulation
+  lo, hi = STAIRS_V8B_LAG_RANGE
+  robot = replace(robot, articulation=replace(art, actuators=tuple(
+    DelayedActuatorCfg(base_cfg=a, delay_min_lag=lo, delay_max_lag=hi) for a in art.actuators)))
+  cfg.scene.entities = {**cfg.scene.entities, "robot": robot}
+  cfg.events["actuator_lag"] = EventTermCfg(
+    func=_dr.sync_actuator_delays, mode="reset", params={"lag_range": STAIRS_V8B_LAG_RANGE})
+  return cfg
+
+
 def unitree_go2_spec_gaps_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Gap specialist: stepping stones, blended with easier terrain during training.
 
