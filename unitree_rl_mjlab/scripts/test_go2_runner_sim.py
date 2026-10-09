@@ -201,6 +201,62 @@ class MapScan:
     return scan, 0.0
 
 
+class CloudScan:
+  """The scan as go2_scan_node.py --source cloud builds it on this robot: a head-mounted LiDAR
+  looking forward and down returns points (here ray casts against the terrain, with range
+  noise, ~16 scans a second, everything in a drifting "odom" frame), go2_scan.CloudGrid grids
+  them, and HeightMapScan reads the grid, anchored on the loaded feet."""
+
+  def __init__(self, robot: SimRobot, noise=0.015, drift=0.002, seed=0):
+    import go2_scan
+
+    self.r = robot
+    self.rng = np.random.default_rng(seed)
+    az = np.radians(np.linspace(-70, 70, 29))
+    el = np.radians(np.linspace(-12, -80, 18))
+    A, E = np.meshgrid(az, el)
+    self.dirs = np.stack([np.cos(E) * np.cos(A), np.cos(E) * np.sin(A), np.sin(E)], axis=-1).reshape(-1, 3)
+    self.noise, self.drift, self.z_err = noise, drift, 0.0
+    self.odom_off = np.array([1.7, -0.6, 0.37])  # the odom frame is not the world frame
+    self.grid = go2_scan.CloudGrid()
+    self.sampler = go2_scan.HeightMapScan()
+    self.groups = np.array([1, 1, 0, 0, 0, 0], dtype=np.uint8)
+    self.geomid = np.zeros(1, dtype=np.int32)
+    self.k = 0
+    m = robot.m
+    self.feet_geoms = [m.geom(("robot/" if not _exists(m, mujoco.mjtObj.mjOBJ_GEOM, f"{f}_foot_collision") else "")
+                              + f"{f}_foot_collision").id for f in ROBOT_FEET]
+
+  def poll(self):
+    d, m = self.r.d, self.r.m
+    state = self.r.read()
+    self.z_err += self.drift * go2_runner.DT
+    base = self.r.base_pos()
+    rot = d.xmat[self.r.base_id].reshape(3, 3)
+    pose = base + self.odom_off + np.array([0.0, 0.0, self.z_err])
+    if self.k % 3 == 0:
+      head = base + rot.dot(np.array([0.28, 0.0, 0.05]))
+      pts = []
+      for v in self.dirs:
+        dw = rot.dot(v)
+        dist = mujoco.mj_ray(m, d, head, dw, self.groups, 1, -1, self.geomid)
+        if self.geomid[0] >= 0 and dist < 4.0:
+          pts.append(head + dw * (dist + self.rng.normal(0.0, self.noise)))
+      if pts:
+        self.grid.add_points(np.array(pts) + self.odom_off + np.array([0.0, 0.0, self.z_err]), pose)
+        self.sampler.set_map(*self.grid.as_map())
+    self.k += 1
+    yaw = go2_obs.yaw_of(state["quat"])
+    touching = set()
+    for c in d.contact[:d.ncon]:
+      touching.update((c.geom1, c.geom2))
+    stance = np.array([g in touching for g in self.feet_geoms])
+    up_b = -go2_obs.projected_gravity(state["quat"]).astype(np.float64)
+    self.sampler.update_anchor(pose, yaw, go2_runner.foot_positions_base(state["q"]), stance, up_b)
+    scan, _ = self.sampler.scan(pose, yaw, go2_runner.base_height_from_legs(state["q"], state["quat"]))
+    return scan, 0.0
+
+
 def _exists(model, kind, name) -> bool:
   return mujoco.mj_name2id(model, kind, name) >= 0
 
@@ -226,7 +282,7 @@ def main() -> None:
   ap.add_argument("--speed", type=float, default=0.5)
   ap.add_argument("--max-vx", type=float, default=1.0, help="Runner's forward speed limit (full stick).")
   ap.add_argument("--seconds", type=float, default=30.0)
-  ap.add_argument("--scan", choices=("ray", "map", "flat"), default="ray",
+  ap.add_argument("--scan", choices=("ray", "map", "cloud", "flat"), default="ray",
                   help="ray: exact terrain heights. map: through go2_scan.HeightMapScan from a noisy gridded "
                        "map with holes and vertical drift. flat: the leg-kinematics flat-ground scan.")
   args = ap.parse_args()
@@ -237,7 +293,7 @@ def main() -> None:
   run_args = SimpleNamespace(dry_run=False, verbose=False, max_vx=args.max_vx, max_vx_back=0.3, max_vy=0.3, max_wz=0.8)
   sim_t = [0.0]
   ray = RayScan(robot)
-  runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "flat": lambda _: None}[args.scan](robot),
+  runner = go2_runner.Runner(robot, policy, run_args, scan_udp={"ray": RayScan, "map": MapScan, "cloud": CloudScan, "flat": lambda _: None}[args.scan](robot),
                              clock=lambda: sim_t[0])
 
   fk_worst = 0.0
@@ -257,7 +313,7 @@ def main() -> None:
     else:
       robot.set_remote()
     runner.step()
-    if args.scan == "map" and runner.mode == go2_runner.POLICY and k % 5 == 0:
+    if args.scan in ("map", "cloud") and runner.mode == go2_runner.POLICY and k % 5 == 0:
       scan_err.append(np.abs(runner.scan(robot.read())[0] - ray.poll()[0]))
     robot.advance()
     if k % 10 == 0:

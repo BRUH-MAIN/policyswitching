@@ -1,3 +1,5 @@
+# Created by Claude (policyswitching repo, deploy_numpy/go2_obs.py).
+# Purpose: build the locomotion policy's 234-number observation from the Go2's reported state.
 """Build the policy's observation from what the robot reports. Numpy only, Python 3.8.
 
 Everything here mirrors the simulator's observation terms exactly

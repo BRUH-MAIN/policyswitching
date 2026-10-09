@@ -119,3 +119,74 @@ class HeightMapScan(object):
         self.stats["empty"] = int(empty.sum())
         out[empty] = fallback_height
         return np.clip(out, -1.0, go2_obs.SCAN_MISS).astype(np.float32), float(empty.mean())
+
+
+class CloudGrid(object):
+    """A robot-centred 2.5-D height grid built from LiDAR points in a fixed (odometry) frame.
+
+    For when the robot publishes a point cloud but no height map (the Go2 here: its firmware
+    LiDAR publishes `rt/utlidar/cloud_deskewed` in the `odom` frame and `height_map_array`
+    stays silent). Each cell keeps a running mean of the heights of the points that fall in
+    it; a point more than `jump_m` away from the cell's value replaces it (the ground there
+    changed, or the cell was wrong). The grid scrolls with the robot. `HeightMapScan` then
+    reads it exactly as it would read a firmware height map (`set_map`).
+    """
+
+    def __init__(self, resolution=0.05, size_m=6.0, jump_m=0.08, new_weight=0.3, max_above_base_m=0.3):
+        self.res = float(resolution)
+        self.n = int(round(size_m / resolution))
+        self.jump = jump_m
+        self.w = new_weight
+        self.max_above = max_above_base_m
+        self.grid = np.full((self.n, self.n), np.nan, dtype=np.float64)  # [iy, ix]
+        self.origin = None  # world xy of cell (0, 0)
+
+    def _recentre(self, base_xy):
+        half = self.n * self.res / 2.0
+        if self.origin is None:
+            self.origin = np.floor((np.asarray(base_xy) - half) / self.res) * self.res
+            return
+        centre = self.origin + half
+        shift = np.round((np.asarray(base_xy) - centre) / self.res).astype(int)
+        if np.all(np.abs(shift) * self.res < 1.0):
+            return
+        sx, sy = int(shift[0]), int(shift[1])
+        g = np.full_like(self.grid, np.nan)
+        src_x = slice(max(sx, 0), self.n + min(sx, 0))
+        dst_x = slice(max(-sx, 0), self.n + min(-sx, 0))
+        src_y = slice(max(sy, 0), self.n + min(sy, 0))
+        dst_y = slice(max(-sy, 0), self.n + min(-sy, 0))
+        if src_x.start < src_x.stop and src_y.start < src_y.stop:
+            g[dst_y, dst_x] = self.grid[src_y, src_x]
+        self.grid = g
+        self.origin = self.origin + np.array([sx, sy]) * self.res
+
+    def add_points(self, xyz, base_xyz):
+        """xyz (N, 3) in the odometry frame; (0, 0, 0) rows (no return) are ignored."""
+        self._recentre(base_xyz[:2])
+        pts = np.asarray(xyz, dtype=np.float64)
+        keep = np.all(np.isfinite(pts), axis=1) & np.any(pts != 0.0, axis=1)
+        keep &= pts[:, 2] < base_xyz[2] + self.max_above  # nothing above the body is ground
+        pts = pts[keep]
+        if len(pts) == 0:
+            return 0
+        ix = np.floor((pts[:, 0] - self.origin[0]) / self.res).astype(np.int64)
+        iy = np.floor((pts[:, 1] - self.origin[1]) / self.res).astype(np.int64)
+        inside = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
+        ix, iy, z = ix[inside], iy[inside], pts[inside, 2]
+        flat = iy * self.n + ix
+        sums = np.bincount(flat, weights=z, minlength=self.n * self.n)
+        counts = np.bincount(flat, minlength=self.n * self.n)
+        hit = counts > 0
+        new = np.zeros(self.n * self.n)
+        new[hit] = sums[hit] / counts[hit]
+        g = self.grid.reshape(-1)
+        old = g[hit]
+        fresh = ~np.isfinite(old) | (np.abs(new[hit] - old) > self.jump)
+        g[hit] = np.where(fresh, new[hit], (1.0 - self.w) * old + self.w * new[hit])
+        return int(hit.sum())
+
+    def as_map(self):
+        """(data, width, height, resolution, origin) in the layout HeightMapScan.set_map takes."""
+        data = np.where(np.isfinite(self.grid), self.grid, 1.0e9).astype(np.float32)
+        return data.reshape(-1), self.n, self.n, self.res, self.origin

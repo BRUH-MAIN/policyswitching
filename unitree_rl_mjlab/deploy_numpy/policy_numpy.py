@@ -1,3 +1,5 @@
+# Created by Claude (policyswitching repo, deploy_numpy/policy_numpy.py).
+# Purpose: evaluate an exported locomotion policy (MLP + normaliser) with numpy only.
 """Run a trained Go2 locomotion policy with numpy only (no torch, no onnxruntime).
 
 For the robot's Jetson, which has Python 3.8 and numpy 1.17 and neither torch

@@ -7,7 +7,11 @@
     python3 go2_scan_node.py --probe            # what is published, how fast, what it holds
     python3 go2_scan_node.py                    # run: scan to 127.0.0.1:9871 at 50 Hz
 
-NOT YET RUN ON THE ROBOT. What it assumes, and --probe exists to check:
+Probe on the robot, 2026-10-09: `rt/utlidar/height_map_array` is silent, so the default source
+is now `cloud`: the firmware LiDAR's `rt/utlidar/cloud_deskewed` (odom frame, ~15 Hz) gridded
+by go2_scan.CloudGrid, with the pose from `rt/utlidar/robot_odom` (150 Hz, same frame).
+
+What the map source assumed, kept for reference:
   * rt/utlidar/height_map_array carries a HeightMap (128 x 128 cells of 6 cm, heights in a
     fixed odometry frame, 1e9 where empty), and
   * a pose in the same frame is published on rt/utlidar/robot_pose (or robot_odom, or
@@ -139,6 +143,12 @@ def probe(args):
     print("\nsaved a sample to %s (copy it to the laptop)" % out)
 
 
+def cloud_xyz(msg):
+    """(N, 3) float32 x, y, z of a PointCloud2 whose first three fields are float32 x, y, z."""
+    raw = np.frombuffer(bytes(msg.data), dtype=np.uint8).reshape(-1, msg.point_step)
+    return raw[:, :12].copy().view("<f4").reshape(-1, 3)
+
+
 def run(args):
     from unitree_sdk2py.idl.geometry_msgs.msg.dds_ import PoseStamped_
     from unitree_sdk2py.idl.nav_msgs.msg.dds_ import Odometry_
@@ -146,7 +156,14 @@ def run(args):
 
     pose_type = {"pose": PoseStamped_, "odom": Odometry_, "sport": SportModeState_}[args.pose_kind]
     low = subscribe("rt/lowstate", LowState_)
-    hm = subscribe(args.map_topic, HeightMap_)
+    if args.source == "cloud":
+        from unitree_sdk2py.idl.sensor_msgs.msg.dds_ import PointCloud2_
+
+        hm = subscribe(args.cloud_topic, PointCloud2_)  # same interface: .msg, .count, .age()
+        cloud = go2_scan.CloudGrid()
+    else:
+        hm = subscribe(args.map_topic, HeightMap_)
+        cloud = None
     pose = subscribe(args.pose_topic, pose_type)
     sampler = go2_scan.HeightMapScan()
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -163,10 +180,14 @@ def run(args):
             next_t = time.time()
         if low.msg is None or hm.msg is None or pose.msg is None:
             continue
-        if hm.count != seen_map:
+        if hm.count != seen_map and (cloud is None or pose.msg is not None):
             seen_map = hm.count
             m = hm.msg
-            sampler.set_map(m.data, m.width, m.height, m.resolution, m.origin)
+            if cloud is None:
+                sampler.set_map(m.data, m.width, m.height, m.resolution, m.origin)
+            else:
+                cloud.add_points(cloud_xyz(m), pose_of(args.pose_kind, pose.msg)[0])
+                sampler.set_map(*cloud.as_map())
         lm = low.msg
         q = np.array([lm.motor_state[i].q for i in range(12)])
         quat_imu = np.array(lm.imu_state.quaternion, dtype=np.float64)
@@ -200,9 +221,13 @@ def main():
     ap.add_argument("--iface", default="eth0")
     ap.add_argument("--probe", action="store_true")
     ap.add_argument("--probe-seconds", type=float, default=5.0)
+    ap.add_argument("--source", choices=("cloud", "map"), default="cloud",
+                    help="cloud: build the map from the LiDAR point cloud (this robot publishes no height "
+                         "map, probe of 2026-10-09). map: use rt/utlidar/height_map_array.")
+    ap.add_argument("--cloud-topic", default="rt/utlidar/cloud_deskewed", help="PointCloud2 in the pose's frame.")
     ap.add_argument("--map-topic", default="rt/utlidar/height_map_array")
-    ap.add_argument("--pose-topic", default="rt/utlidar/robot_pose")
-    ap.add_argument("--pose-kind", choices=("pose", "odom", "sport"), default="pose")
+    ap.add_argument("--pose-topic", default="rt/utlidar/robot_odom")
+    ap.add_argument("--pose-kind", choices=("pose", "odom", "sport"), default="odom")
     ap.add_argument("--stance-force", type=float, default=20.0, help="Foot force above this means the foot carries load.")
     ap.add_argument("--max-pose-age", type=float, default=0.3)
     ap.add_argument("--max-map-age", type=float, default=2.0)
