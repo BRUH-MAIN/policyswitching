@@ -66,3 +66,28 @@ the one that decides. Watch its descents, not only its delay tolerance.
 **Single steps** (one riser, the demo Rohan asked about), v8a final, 128 trials: up and down,
 15 and 17 cm, with and without 20 ms delay: 100% in all eight cells, no falls
 (`eval_results/switch_follow/single_step/`).
+
+
+## Update 15:50 IST: cluster v8b (8,192 envs, job 12747) passes at iteration 600
+
+Same table (10-step flights, 128 trials, tipping only, success %; corrected delay test):
+
+| condition | v8a final up 17 / down 17 | **v8b `model_600`** up 15 / down 15 / up 17 / down 17 | v8b `model_1200` up 15 / down 15 / up 17 / down 17 |
+|---|---|---|---|
+| nominal | 99.2 / 100 | 100 / 100 / 100 / 100 | 100 / 100 / 100 / 100 |
+| 20 ms | 87.5 / 100 | 100 / 100 / **98.4** / 100 | 100 / 100 / 98.4 / 100 |
+| 40 ms | 2.3 / 9.4 | 81.2 / 94.5 / **64.1** / 85.2 | 87.5 / 97.7 / 72.7 / 95.3 |
+| motors 80% | 100 / 99.2 | 100 / 100 / 100 / 95.3 | 100 / 98.4 / 99.2 / 100 |
+| motors 120% | 100 / 96.9 | 100 / 100 / 100 / 100 | 100 / **83.6** / 96.1 / **68.0** (stops at the top) |
+| +1 kg / +2 kg | 100 / 100 | 100-98.4 | 96.9-100 |
+| 20 ms + 85% + 1 kg | 87.5 / 96.9 | 99.2 / 100 / **97.7** / 96.9 | 97.7 / 100 / 96.1 / 100 |
+
+**`model_600` meets the pass mark** set before the run (20 ms and combined rows at 95% or
+better at 17 cm, nominal not worse) and has no weak cell below 95% outside the 40 ms row.
+`model_1200` is better at 40 ms but has begun refusing tall descents when the motors are
+stiffer than simulated (the laptop v8b's failure mode, at a smaller scale), so it is not
+preferred. Single steps (one riser) with 20 ms delay, `model_600`: up and down, 15 and 17 cm,
+100% (128 trials each). Exported as `deploy_numpy/stairs_v8b_c600.npz` (md5
+f0be1404569cd331be59368ba0c26a3c); numpy/PyTorch parity and robot-side observation parity
+pass. **It replaces v8a final as the robot candidate.** The run continues to 2,000
+iterations (~17:00); its last checkpoints get the same table before a final choice.
