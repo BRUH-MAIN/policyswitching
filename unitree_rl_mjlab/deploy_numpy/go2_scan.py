@@ -126,17 +126,34 @@ class CloudGrid(object):
 
     For when the robot publishes a point cloud but no height map (the Go2 here: its firmware
     LiDAR publishes `rt/utlidar/cloud_deskewed` in the `odom` frame and `height_map_array`
-    stays silent). Each cell keeps a running mean of the heights of the points that fall in
-    it; a point more than `jump_m` away from the cell's value replaces it (the ground there
-    changed, or the cell was wrong). The grid scrolls with the robot. `HeightMapScan` then
-    reads it exactly as it would read a firmware height map (`set_map`).
+    stays silent). The grid scrolls with the robot. `HeightMapScan` reads it exactly as it
+    would read a firmware height map (`set_map`).
+
+    Each cell tracks a low quantile (`quantile`, default 0.2) of the heights of all the points
+    that have fallen in it, by stochastic quantile tracking: every point moves the estimate
+    up by `step_m * quantile` if it is above it and down by `step_m * (1 - quantile)` if
+    below. A cell starts at the lowest point of the first scan that reaches it. When a scan
+    has a point more than `drop_m` below the estimate, the estimate drops at once to that
+    point plus `drop_margin_m` (phantoms are never below the floor, so a low point is real;
+    the margin allows for range noise); it is reset to a scan's lowest point when that is more
+    than `reset_m` above the estimate (the terrain there is not what the cell says).
+
+    Why a low quantile and not a mean: on the robot (2026-10-09, standing on a flat, clear
+    floor, confirmed by its camera) the firmware cloud returns, 0.4-0.8 m ahead, real floor
+    points and almost as many phantom points 6-11 cm above them, with the same intensity and
+    range. A per-cell mean put a 4-5 cm bump on clear floor. The phantoms are always above
+    the floor, never below, so a low quantile reads through them. A scan carries one or two
+    points per cell, so the quantile has to be tracked across scans, not taken within one.
     """
 
-    def __init__(self, resolution=0.05, size_m=6.0, jump_m=0.08, new_weight=0.3, max_above_base_m=0.3):
+    def __init__(self, resolution=0.05, size_m=6.0, quantile=0.2, step_m=0.004, reset_m=0.12,
+                 drop_m=0.03, drop_margin_m=0.015, max_above_base_m=0.3):
         self.res = float(resolution)
         self.n = int(round(size_m / resolution))
-        self.jump = jump_m
-        self.w = new_weight
+        self.q = quantile
+        self.step = step_m
+        self.reset = reset_m
+        self.drop, self.drop_margin = drop_m, drop_margin_m
         self.max_above = max_above_base_m
         self.grid = np.full((self.n, self.n), np.nan, dtype=np.float64)  # [iy, ix]
         self.origin = None  # world xy of cell (0, 0)
@@ -173,17 +190,29 @@ class CloudGrid(object):
         ix = np.floor((pts[:, 0] - self.origin[0]) / self.res).astype(np.int64)
         iy = np.floor((pts[:, 1] - self.origin[1]) / self.res).astype(np.int64)
         inside = (ix >= 0) & (ix < self.n) & (iy >= 0) & (iy < self.n)
-        ix, iy, z = ix[inside], iy[inside], pts[inside, 2]
-        flat = iy * self.n + ix
-        sums = np.bincount(flat, weights=z, minlength=self.n * self.n)
-        counts = np.bincount(flat, minlength=self.n * self.n)
-        hit = counts > 0
-        new = np.zeros(self.n * self.n)
-        new[hit] = sums[hit] / counts[hit]
+        flat, z = (iy * self.n + ix)[inside], pts[inside, 2]
+        if len(flat) == 0:
+            return 0
         g = self.grid.reshape(-1)
-        old = g[hit]
-        fresh = ~np.isfinite(old) | (np.abs(new[hit] - old) > self.jump)
-        g[hit] = np.where(fresh, new[hit], (1.0 - self.w) * old + self.w * new[hit])
+        size = self.n * self.n
+        count = np.bincount(flat, minlength=size)
+        zmin = np.full(size, np.inf)
+        np.minimum.at(zmin, flat, z)
+        hit = count > 0
+        est = g.copy()
+        with np.errstate(invalid="ignore"):
+            # New cells, and cells whose terrain is clearly higher than they say: the scan's lowest point.
+            restart = hit & (~np.isfinite(est) | (zmin > est + self.reset))
+            # A point well below the estimate is real ground: drop to it (plus the noise margin).
+            drop = hit & ~restart & (zmin < est - self.drop)
+        est[restart] = zmin[restart]
+        est[drop] = zmin[drop] + self.drop_margin
+        restart = restart | drop
+        # Quantile tracking against the (possibly restarted) estimate.
+        below = np.bincount(flat, weights=(z < est[flat]).astype(np.float64), minlength=size)
+        move = hit & ~restart
+        est[move] += self.step * (self.q * count[move] - below[move])
+        g[hit] = est[hit]
         return int(hit.sum())
 
     def as_map(self):
