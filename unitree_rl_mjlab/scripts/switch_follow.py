@@ -126,7 +126,6 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
   # policy in this arm sees; the simulator's own scan is untouched.
   scan_faults = args.scan_delay > 0 or args.scan_dropout > 0 or args.scan_bias > 0
   scan_history: list[torch.Tensor] = []
-  action_queue: list[torch.Tensor] = []
   scan_held = None
   scan_scale = 1.0 / u.scene["terrain_scan"].cfg.max_distance
   scan_bias = (torch.rand(n, 1, device=device) * 2 - 1) * args.scan_bias * scan_scale
@@ -225,11 +224,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
       policy_obs["actor"] = blind_actor
     else:
       policy_obs = obs
-    action = bank.act_blend(policy_obs, weights)
-    if args.action_delay > 0:  # the policy still sees its own latest action as "last action"
-      action_queue.append(action)
-      action = action_queue.pop(0) if len(action_queue) > args.action_delay else torch.zeros_like(action)
-    obs, _, dones, extras = env.step(action)
+    obs, _, dones, extras = env.step(bank.act_blend(policy_obs, weights))
 
     done = dones.bool()
     timeouts = extras.get("time_outs", torch.zeros_like(done)).bool()
@@ -381,7 +376,9 @@ def main() -> None:
                   help="Cast the height scan against terrain only (geom groups 0-1). As trained, the rays "
                        "also hit the robot's own legs (visual meshes, group 2), which a real scan will not.")
   ap.add_argument("--action-delay", type=int, default=0,
-                  help="Apply each action this many control steps (20 ms each) late (robustness test).")
+                  help="Apply every motor command this many control steps (20 ms each) late (robustness test). "
+                       "Done inside the actuators, as on the robot: the policy's last-action input is its "
+                       "own latest output, not the delayed one.")
   ap.add_argument("--motor-strength", type=float, default=1.0,
                   help="Scale every motor's stiffness, damping and torque limit by this (robustness test).")
   ap.add_argument("--payload", type=float, default=0.0,
@@ -454,6 +451,14 @@ def main() -> None:
   )
   if args.obs_noise:
     cfg.observations["actor"].enable_corruption = True
+  if args.action_delay > 0:
+    from mjlab.actuator.delayed_actuator import DelayedActuatorCfg  # noqa: PLC0415
+    lag = args.action_delay * cfg.decimation  # physics steps
+    robot_cfg = cfg.scene.entities["robot"]
+    art = robot_cfg.articulation
+    cfg.scene.entities = {**cfg.scene.entities, "robot": replace(robot_cfg, articulation=replace(art, actuators=tuple(
+      DelayedActuatorCfg(base_cfg=a, delay_min_lag=lag, delay_max_lag=lag, delay_per_env_phase=False)
+      for a in art.actuators)))}
   if args.motor_strength != 1.0:
     s_ = args.motor_strength
     motors = SceneEntityCfg("robot")  # default actuator_ids = every actuator group (hip, thigh, calf)
