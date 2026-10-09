@@ -34,3 +34,35 @@ measure the loop. The delay here is whole control steps; real latency is likely 
 Pass mark, set now: the robustness table above with the 20 ms and combined rows at 95% or
 better at 17 cm, and the nominal row not worse. The 8,192-env version is requested of the
 cluster (inbox, 10-09).
+
+
+## Update 13:15 IST: corrected delay test, v8a rows remeasured; laptop v8b fails
+
+The first delay test applied the delay to the action fed to the environment, so the policy's
+"last action" input was the delayed one, which will not happen on the robot. `--action-delay`
+now delays inside the actuators (mjlab `DelayedActuator`, fixed lag) as on the robot and as
+v8b trains; motor strength now scales the actuator settings directly (mjlab's
+`effort_limits` event rejects delayed actuators). Same table, 10-step flights, 128 trials,
+tipping only, success / fall / lost %:
+
+| condition | v8a up 17 | v8a down 17 | v8b laptop up 17 | v8b laptop down 17 | v8a up 15 | v8b laptop up 15 |
+|---|---|---|---|---|---|---|
+| nominal | 99.2 / 0 / 0.8 | 100 / 0 / 0 | 94.5 / 3.9 / 1.6 | **68.8 / 1.6 / 29.7** | 100 | 100 |
+| 20 ms | 87.5 / 7.8 / 4.7 | 100 / 0 / 0 | 88.3 / 7.0 / 4.7 | 94.5 / 0 / 5.5 | 96.1 | 97.7 |
+| 40 ms | 2.3 / 89.1 / 8.6 | 9.4 / 90.6 / 0 | 41.4 / 40.6 / 18.0 | 79.7 / 19.5 / 0.8 | 1.6 | 63.3 |
+| motors 120% | 100 / 0 / 0 | 96.9 / 0 / 3.1 | 96.1 / 3.1 / 0.8 | **5.5 / 0 / 94.5** | 100 | 100 |
+| 20 ms + 85% + 1 kg | 87.5 / 8.6 / 3.9 | 96.9 / 3.1 / 0 | 85.2 / 10.2 / 4.7 | 96.9 / 3.1 / 0 | 89.1 | 96.9 |
+
+(v8b down 15 cm with motors at 120%: 16.4% success, 83.6% lost.) v8a with the corrected
+test: 20 ms costs 12 points going up 17 cm and nothing going down; 40 ms makes it fall
+everywhere (89-91%).
+
+**Laptop v8b (1,024 envs, 1,600 iterations) fails the pass mark.** It is more tolerant of
+40 ms, no better at 20 ms, and it has **started refusing tall descents**: down 17 cm with no
+delay 69% (30% stopped at the top), with stiffer motors 5%. Small-batch laptop runs have
+under-trained before (findings #33); the 8,192-env v8b (cluster job 12747, ends ~17:00) is
+the one that decides. Watch its descents, not only its delay tolerance.
+
+**Single steps** (one riser, the demo Rohan asked about), v8a final, 128 trials: up and down,
+15 and 17 cm, with and without 20 ms delay: 100% in all eight cells, no falls
+(`eval_results/switch_follow/single_step/`).

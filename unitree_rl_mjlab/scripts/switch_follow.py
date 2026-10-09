@@ -451,21 +451,22 @@ def main() -> None:
   )
   if args.obs_noise:
     cfg.observations["actor"].enable_corruption = True
-  if args.action_delay > 0:
-    from mjlab.actuator.delayed_actuator import DelayedActuatorCfg  # noqa: PLC0415
-    lag = args.action_delay * cfg.decimation  # physics steps
+  # Motor strength first, on the actuator configs themselves (mjlab's effort_limits event
+  # rejects delayed actuators), then the delay wrapper around them.
+  if args.motor_strength != 1.0 or args.action_delay > 0:
     robot_cfg = cfg.scene.entities["robot"]
     art = robot_cfg.articulation
-    cfg.scene.entities = {**cfg.scene.entities, "robot": replace(robot_cfg, articulation=replace(art, actuators=tuple(
-      DelayedActuatorCfg(base_cfg=a, delay_min_lag=lag, delay_max_lag=lag, delay_per_env_phase=False)
-      for a in art.actuators)))}
-  if args.motor_strength != 1.0:
-    s_ = args.motor_strength
-    motors = SceneEntityCfg("robot")  # default actuator_ids = every actuator group (hip, thigh, calf)
-    cfg.events["motor_gains"] = EventTermCfg(func=dr.pd_gains, mode="startup",
-                                             params={"kp_range": (s_, s_), "kd_range": (s_, s_), "asset_cfg": motors})
-    cfg.events["motor_limits"] = EventTermCfg(func=dr.effort_limits, mode="startup",
-                                              params={"effort_limit_range": (s_, s_), "asset_cfg": motors})
+    acts = tuple(art.actuators)
+    if args.motor_strength != 1.0:
+      s_ = args.motor_strength
+      acts = tuple(replace(a, stiffness=a.stiffness * s_, damping=a.damping * s_, effort_limit=a.effort_limit * s_)
+                   for a in acts)
+    if args.action_delay > 0:
+      from mjlab.actuator.delayed_actuator import DelayedActuatorCfg  # noqa: PLC0415
+      lag = args.action_delay * cfg.decimation  # physics steps
+      acts = tuple(DelayedActuatorCfg(base_cfg=a, delay_min_lag=lag, delay_max_lag=lag, delay_per_env_phase=False)
+                   for a in acts)
+    cfg.scene.entities = {**cfg.scene.entities, "robot": replace(robot_cfg, articulation=replace(art, actuators=acts))}
   if args.payload:
     cfg.events["payload"] = EventTermCfg(
       func=dr.body_mass, mode="startup",
