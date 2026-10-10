@@ -1,0 +1,83 @@
+{
+  "label": "stairs_v5a_it9999_h9_w26",
+  "task": "Unitree-Go2-Spec-StairsV5a",
+  "checkpoint": "/dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v5a/2026-10-06_23-12-52/model_9999.pt",
+  "num_envs": 1024,
+  "steps": 1200,
+  "conditions": {
+    "keep_curricula": false,
+    "seed": 0,
+    "terrain": "stairs",
+    "difficulty": null,
+    "step_height": 0.09,
+    "step_width": 0.26,
+    "lin_vel_x": [
+      -0.5,
+      1.0
+    ],
+    "lin_vel_y": [
+      -0.5,
+      0.5
+    ],
+    "ang_vel_z": [
+      -1.0,
+      1.0
+    ]
+  },
+  "survival": {
+    "episodes": 1024,
+    "survival_pct": 99.90234375,
+    "fall_pct": 0.09765625,
+    "mean_ep_len": 999.7802734375,
+    "mean_return": 59.645049534738064,
+    "terminations": {
+      "time_out": 1023,
+      "fell_over": 1,
+      "illegal_contact": 0
+    }
+  },
+  "by_terrain": {
+    "pyramid_stairs": {
+      "envs": 513,
+      "episodes": 513,
+      "time_out": 513,
+      "terminations": {
+        "time_out": 513,
+        "fell_over": 0,
+        "illegal_contact": 0
+      },
+      "distance_m": 4602.89208984375,
+      "falls_per_100m": 0.0,
+      "survival_pct": 100.0
+    },
+    "pyramid_stairs_inv": {
+      "envs": 511,
+      "episodes": 511,
+      "time_out": 510,
+      "terminations": {
+        "time_out": 510,
+        "fell_over": 1,
+        "illegal_contact": 0
+      },
+      "distance_m": 4484.8984375,
+      "falls_per_100m": 0.022297048950732232,
+      "survival_pct": 99.80430528375734
+    }
+  },
+  "locomotion": {
+    "mean_cmd_speed": 0.5017910769912564,
+    "mean_actual_speed": 0.37290540076307743,
+    "achieved_pct_of_cmd": 74.31487283492991,
+    "lin_vel_error_per_step": 0.19161764666486844,
+    "ang_vel_error_per_step": 0.07460425313959948,
+    "distance_rate": 0.3700905668603834,
+    "stalled_pct": 2.115060619792695,
+    "total_distance_m": 9087.76631635148,
+    "falls_per_100m": 0.01100380407230229
+  },
+  "smoothness": {
+    "action_rate_l2": 1.0419946730465304,
+    "actuator_force_rate": 256.29246947336117,
+    "actuator_force_rate_p99": 676.3022462464652
+  }
+}

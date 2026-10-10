@@ -1,0 +1,650 @@
+{
+ "saro": {
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019,
+   1020,
+   1021,
+   1022,
+   1023
+  ],
+  "success": [
+   {
+    "arm": "A  oracle switch",
+    "mean": 99.43033854166667,
+    "lo": 99.08854166666667,
+    "hi": 99.70703125
+   },
+   {
+    "arm": "B  onboard-scan switch",
+    "mean": 84.9609375,
+    "lo": 73.843994140625,
+    "hi": 94.970703125
+   },
+   {
+    "arm": "C  soft blend",
+    "mean": 99.49544270833333,
+    "lo": 99.10481770833333,
+    "hi": 99.8046875
+   },
+   {
+    "arm": "Matched generalist (V3)",
+    "mean": 99.169921875,
+    "lo": 98.71419270833333,
+    "hi": 99.560546875
+   },
+   {
+    "arm": "Stairs v8b alone",
+    "mean": 99.8046875,
+    "lo": 99.54427083333333,
+    "hi": 99.98372395833333
+   },
+   {
+    "arm": "Generalist v2 (old)",
+    "mean": 23.177083333333332,
+    "lo": 7.747395833333333,
+    "hi": 42.106119791666664
+   }
+  ],
+  "paired": [
+   {
+    "comparison": "oracle switch \u2212 matched generalist",
+    "mean": 0.2604166666666667,
+    "lo": -0.06510416666666667,
+    "hi": 0.6184895833333334,
+    "ahead": 9,
+    "behind": 7
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 matched generalist",
+    "mean": -14.208984375,
+    "lo": -24.886474609375,
+    "hi": -4.573567708333333,
+    "ahead": 6,
+    "behind": 10
+   },
+   {
+    "comparison": "soft blend \u2212 matched generalist",
+    "mean": 0.3255208333333333,
+    "lo": 0.032552083333333336,
+    "hi": 0.634765625,
+    "ahead": 11,
+    "behind": 3
+   },
+   {
+    "comparison": "oracle switch \u2212 stairs v8b alone",
+    "mean": -0.3743489583333333,
+    "lo": -0.6998697916666666,
+    "hi": -0.09765625,
+    "ahead": 1,
+    "behind": 12
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 stairs v8b alone",
+    "mean": -14.84375,
+    "lo": -25.5859375,
+    "hi": -4.899088541666667,
+    "ahead": 1,
+    "behind": 14
+   },
+   {
+    "comparison": "soft blend \u2212 stairs v8b alone",
+    "mean": -0.3092447916666667,
+    "lo": -0.5045572916666666,
+    "hi": -0.146484375,
+    "ahead": 1,
+    "behind": 11
+   }
+  ],
+  "by_height": {
+   "A  oracle switch": [
+    99.67447916666667,
+    99.93489583333333,
+    99.28385416666667,
+    98.828125
+   ],
+   "B  onboard-scan switch": [
+    99.73958333333333,
+    99.86979166666667,
+    99.4140625,
+    40.8203125
+   ],
+   "C  soft blend": [
+    99.86979166666667,
+    99.8046875,
+    99.67447916666667,
+    98.6328125
+   ],
+   "Matched generalist (V3)": [
+    99.609375,
+    99.93489583333333,
+    99.47916666666667,
+    97.65625
+   ],
+   "Stairs v8b alone": [
+    100.0,
+    100.0,
+    99.93489583333333,
+    99.28385416666667
+   ],
+   "Generalist v2 (old)": [
+    92.70833333333333,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "outcomes": {
+   "A  oracle switch": {
+    "success": 99.43033854166667,
+    "fall": 0.439453125,
+    "lost": 0.1302083333333286
+   },
+   "B  onboard-scan switch": {
+    "success": 84.9609375,
+    "fall": 2.24609375,
+    "lost": 12.79296875
+   },
+   "C  soft blend": {
+    "success": 99.49544270833333,
+    "fall": 0.4069010416666667,
+    "lost": 0.09765625000000472
+   },
+   "Matched generalist (V3)": {
+    "success": 99.169921875,
+    "fall": 0.5696614583333334,
+    "lost": 0.26041666666666663
+   },
+   "Stairs v8b alone": {
+    "success": 99.8046875,
+    "fall": 0.16276041666666666,
+    "lost": 0.03255208333333334
+   },
+   "Generalist v2 (old)": {
+    "success": 23.177083333333332,
+    "fall": 15.413411458333334,
+    "lost": 61.409505208333336
+   }
+  },
+  "failure_location": {
+   "A  oracle switch": {
+    "flat": 0.13020833333333334,
+    "rough": 0.1953125,
+    "stairs_up": 0.032552083333333336,
+    "stairs_down": 0.21158854166666666
+   },
+   "B  onboard-scan switch": {
+    "flat": 14.436848958333334,
+    "rough": 0.16276041666666666,
+    "stairs_up": 0.2604166666666667,
+    "stairs_down": 0.17903645833333334
+   },
+   "C  soft blend": {
+    "flat": 0.06510416666666667,
+    "rough": 0.1953125,
+    "stairs_up": 0.032552083333333336,
+    "stairs_down": 0.21158854166666666
+   },
+   "Matched generalist (V3)": {
+    "flat": 0.11393229166666667,
+    "rough": 0.11393229166666667,
+    "stairs_up": 0.5859375,
+    "stairs_down": 0.016276041666666668
+   },
+   "Stairs v8b alone": {
+    "flat": 0.016276041666666668,
+    "rough": 0.032552083333333336,
+    "stairs_up": 0.048828125,
+    "stairs_down": 0.09765625
+   },
+   "Generalist v2 (old)": {
+    "flat": 57.047526041666664,
+    "rough": 0.016276041666666668,
+    "stairs_up": 13.069661458333334,
+    "stairs_down": 6.689453125
+   }
+  },
+  "quality": {
+   "ar_entry": {
+    "A  oracle switch": 2.08861,
+    "B  onboard-scan switch": 2.368935,
+    "C  soft blend": 1.94676,
+    "Matched generalist (V3)": 1.98099,
+    "Stairs v8b alone": 2.0663850000000004,
+    "Generalist v2 (old)": 1.680535
+   },
+   "ar_exit": {
+    "A  oracle switch": 1.7138,
+    "B  onboard-scan switch": 1.759265,
+    "C  soft blend": 1.71333,
+    "Matched generalist (V3)": 1.60124,
+    "Stairs v8b alone": 1.7662499999999999,
+    "Generalist v2 (old)": 1.748305
+   },
+   "gap_rms": {
+    "A  oracle switch": 0.17886,
+    "B  onboard-scan switch": 0.177415,
+    "C  soft blend": 0.17537,
+    "Matched generalist (V3)": 0.14722,
+    "Stairs v8b alone": 0.16115,
+    "Generalist v2 (old)": 0.36851500000000004
+   },
+   "time_s": {
+    "A  oracle switch": 34.2599983215332,
+    "B  onboard-scan switch": 34.79999923706055,
+    "C  soft blend": 34.2599983215332,
+    "Matched generalist (V3)": 34.220001220703125,
+    "Stairs v8b alone": 34.170000076293945,
+    "Generalist v2 (old)": 33.29999923706055
+   }
+  },
+  "classifier": {
+   "spec": "clf:/dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab/logs/switch_follow/clf_v8b.pt:0.1:5",
+   "val_accuracy": 0.8990500569343567,
+   "val_recall": {
+    "flat": 0.9069402813911438,
+    "rough": 0.7095947265625,
+    "stairs": 0.9950754642486572
+   },
+   "agree_median": 0.9250546395778656,
+   "never_switched_pct_by_height": {
+    "9": 0.2604166666666667,
+    "12": 0.0,
+    "15": 0.3255208333333333,
+    "17": 44.7265625
+   }
+  }
+ },
+ "training": {
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019,
+   1020,
+   1021,
+   1022,
+   1023
+  ],
+  "success": [
+   {
+    "arm": "A  oracle switch",
+    "mean": 49.967447916666664,
+    "lo": 41.715087890625,
+    "hi": 57.958984375
+   },
+   {
+    "arm": "B  onboard-scan switch",
+    "mean": 13.997395833333334,
+    "lo": 8.219401041666666,
+    "hi": 20.442708333333332
+   },
+   {
+    "arm": "C  soft blend",
+    "mean": 38.899739583333336,
+    "lo": 32.12890625,
+    "hi": 45.817057291666664
+   },
+   {
+    "arm": "Matched generalist (V3)",
+    "mean": 19.661458333333332,
+    "lo": 15.364583333333334,
+    "hi": 24.12150065104166
+   },
+   {
+    "arm": "Stairs v8b alone",
+    "mean": 45.947265625,
+    "lo": 38.378499348958336,
+    "hi": 53.27189127604166
+   },
+   {
+    "arm": "Generalist v2 (old)",
+    "mean": 0.390625,
+    "lo": 0.06510416666666667,
+    "hi": 0.8626302083333334
+   }
+  ],
+  "paired": [
+   {
+    "comparison": "oracle switch \u2212 matched generalist",
+    "mean": 30.305989583333332,
+    "lo": 23.241780598958332,
+    "hi": 37.56551106770833,
+    "ahead": 24,
+    "behind": 0
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 matched generalist",
+    "mean": -5.6640625,
+    "lo": -12.744547526041666,
+    "hi": 2.392578125,
+    "ahead": 6,
+    "behind": 18
+   },
+   {
+    "comparison": "soft blend \u2212 matched generalist",
+    "mean": 19.23828125,
+    "lo": 12.255452473958334,
+    "hi": 26.62801106770833,
+    "ahead": 21,
+    "behind": 3
+   },
+   {
+    "comparison": "oracle switch \u2212 stairs v8b alone",
+    "mean": 4.020182291666667,
+    "lo": 0.3092447916666667,
+    "hi": 7.828776041666667,
+    "ahead": 16,
+    "behind": 8
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 stairs v8b alone",
+    "mean": -31.949869791666668,
+    "lo": -39.632568359375,
+    "hi": -24.51171875,
+    "ahead": 1,
+    "behind": 23
+   },
+   {
+    "comparison": "soft blend \u2212 stairs v8b alone",
+    "mean": -7.047526041666667,
+    "lo": -12.907307942708332,
+    "hi": -1.953125,
+    "ahead": 7,
+    "behind": 16
+   }
+  ],
+  "by_height": {
+   "A  oracle switch": [
+    64.97395833333333,
+    68.42447916666667,
+    43.1640625,
+    23.307291666666668
+   ],
+   "B  onboard-scan switch": [
+    24.348958333333332,
+    11.588541666666666,
+    19.856770833333332,
+    0.1953125
+   ],
+   "C  soft blend": [
+    51.7578125,
+    45.833333333333336,
+    35.091145833333336,
+    22.916666666666668
+   ],
+   "Matched generalist (V3)": [
+    14.518229166666666,
+    33.463541666666664,
+    19.140625,
+    11.5234375
+   ],
+   "Stairs v8b alone": [
+    66.92708333333333,
+    57.03125,
+    34.244791666666664,
+    25.5859375
+   ],
+   "Generalist v2 (old)": [
+    1.5625,
+    0.0,
+    0.0,
+    0.0
+   ]
+  },
+  "outcomes": {
+   "A  oracle switch": {
+    "success": 49.967447916666664,
+    "fall": 49.983723958333336,
+    "lost": 0.048828125
+   },
+   "B  onboard-scan switch": {
+    "success": 13.997395833333334,
+    "fall": 85.23763020833333,
+    "lost": 0.7649739583333428
+   },
+   "C  soft blend": {
+    "success": 38.899739583333336,
+    "fall": 61.083984375,
+    "lost": 0.016276041666664298
+   },
+   "Matched generalist (V3)": {
+    "success": 19.661458333333332,
+    "fall": 80.33854166666667,
+    "lost": 0.0
+   },
+   "Stairs v8b alone": {
+    "success": 45.947265625,
+    "fall": 54.052734375,
+    "lost": 0.0
+   },
+   "Generalist v2 (old)": {
+    "success": 0.390625,
+    "fall": 61.051432291666664,
+    "lost": 38.557942708333336
+   }
+  },
+  "failure_location": {
+   "A  oracle switch": {
+    "flat": 4.557291666666667,
+    "rough": 0.8463541666666666,
+    "stairs_up": 7.12890625,
+    "stairs_down": 37.5
+   },
+   "B  onboard-scan switch": {
+    "flat": 67.25260416666667,
+    "rough": 1.318359375,
+    "stairs_up": 3.02734375,
+    "stairs_down": 14.404296875
+   },
+   "C  soft blend": {
+    "flat": 21.207682291666668,
+    "rough": 1.0416666666666667,
+    "stairs_up": 6.34765625,
+    "stairs_down": 32.503255208333336
+   },
+   "Matched generalist (V3)": {
+    "flat": 6.591796875,
+    "rough": 1.513671875,
+    "stairs_up": 14.16015625,
+    "stairs_down": 58.072916666666664
+   },
+   "Stairs v8b alone": {
+    "flat": 4.052734375,
+    "rough": 1.0416666666666667,
+    "stairs_up": 6.038411458333333,
+    "stairs_down": 42.919921875
+   },
+   "Generalist v2 (old)": {
+    "flat": 81.81966145833333,
+    "rough": 0.4231770833333333,
+    "stairs_up": 11.018880208333334,
+    "stairs_down": 6.34765625
+   }
+  },
+  "quality": {
+   "ar_entry": {
+    "A  oracle switch": 2.0412749999999997,
+    "B  onboard-scan switch": 2.19028,
+    "C  soft blend": 1.9007749999999999,
+    "Matched generalist (V3)": 1.9664199999999998,
+    "Stairs v8b alone": 2.03482,
+    "Generalist v2 (old)": 1.6181999999999999
+   },
+   "ar_exit": {
+    "A  oracle switch": 1.70477,
+    "B  onboard-scan switch": 1.7315,
+    "C  soft blend": 1.70512,
+    "Matched generalist (V3)": 1.59213,
+    "Stairs v8b alone": 1.77208,
+    "Generalist v2 (old)": 1.70785
+   },
+   "gap_rms": {
+    "A  oracle switch": 0.168495,
+    "B  onboard-scan switch": 0.170705,
+    "C  soft blend": 0.16752499999999998,
+    "Matched generalist (V3)": 0.142925,
+    "Stairs v8b alone": 0.14295,
+    "Generalist v2 (old)": 0.287555
+   },
+   "time_s": {
+    "A  oracle switch": 34.15999984741211,
+    "B  onboard-scan switch": 33.68000030517578,
+    "C  soft blend": 33.79999923706055,
+    "Matched generalist (V3)": 34.099998474121094,
+    "Stairs v8b alone": 33.599998474121094,
+    "Generalist v2 (old)": 30.550000190734863
+   }
+  }
+ },
+ "saro_d20": {
+  "seeds": [
+   1000,
+   1001,
+   1002,
+   1003,
+   1004,
+   1005,
+   1006,
+   1007,
+   1008,
+   1009,
+   1010,
+   1011,
+   1012,
+   1013,
+   1014,
+   1015,
+   1016,
+   1017,
+   1018,
+   1019,
+   1020,
+   1021,
+   1022,
+   1023
+  ],
+  "success": [
+   {
+    "arm": "A  oracle switch",
+    "mean": 93.76627604166667,
+    "lo": 92.49674479166667,
+    "hi": 94.970703125
+   },
+   {
+    "arm": "B  onboard-scan switch",
+    "mean": 78.62955729166667,
+    "lo": 68.57096354166667,
+    "hi": 87.66276041666667
+   },
+   {
+    "arm": "C  soft blend",
+    "mean": 93.47330729166667,
+    "lo": 92.15494791666667,
+    "hi": 94.69401041666667
+   },
+   {
+    "arm": "Matched generalist (V3)",
+    "mean": 98.486328125,
+    "lo": 97.59114583333333,
+    "hi": 99.28385416666667
+   },
+   {
+    "arm": "Stairs v8b alone",
+    "mean": 99.755859375,
+    "lo": 99.560546875,
+    "hi": 99.91861979166667
+   },
+   {
+    "arm": "Generalist v2 (old)",
+    "mean": 10.823567708333334,
+    "lo": 3.6295572916666665,
+    "hi": 19.173583984374993
+   }
+  ],
+  "paired": [
+   {
+    "comparison": "oracle switch \u2212 matched generalist",
+    "mean": -4.720052083333333,
+    "lo": -6.315104166666667,
+    "hi": -3.0110677083333335,
+    "ahead": 2,
+    "behind": 22
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 matched generalist",
+    "mean": -19.856770833333332,
+    "lo": -29.215494791666668,
+    "hi": -11.653645833333334,
+    "ahead": 0,
+    "behind": 24
+   },
+   {
+    "comparison": "soft blend \u2212 matched generalist",
+    "mean": -5.013020833333333,
+    "lo": -6.656901041666667,
+    "hi": -3.4012858072916727,
+    "ahead": 3,
+    "behind": 20
+   },
+   {
+    "comparison": "oracle switch \u2212 stairs v8b alone",
+    "mean": -5.989583333333333,
+    "lo": -7.243245442708333,
+    "hi": -4.768880208333333,
+    "ahead": 1,
+    "behind": 23
+   },
+   {
+    "comparison": "onboard-scan switch \u2212 stairs v8b alone",
+    "mean": -21.126302083333332,
+    "lo": -30.778401692708336,
+    "hi": -12.158203125,
+    "ahead": 0,
+    "behind": 24
+   },
+   {
+    "comparison": "soft blend \u2212 stairs v8b alone",
+    "mean": -6.282552083333333,
+    "lo": -7.600911458333333,
+    "hi": -5.029296875,
+    "ahead": 0,
+    "behind": 24
+   }
+  ]
+ }
+}

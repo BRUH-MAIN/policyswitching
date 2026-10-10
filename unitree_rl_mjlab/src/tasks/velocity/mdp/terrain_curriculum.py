@@ -168,6 +168,32 @@ def terrain_row_mean_by_direction(
   return torch.mean(terrain.terrain_levels[mask].float())
 
 
+def terrain_row_mean_by_names(
+  env: ManagerBasedRlEnv,
+  env_ids: torch.Tensor,
+  names: tuple[str, ...],
+) -> torch.Tensor:
+  """Mean row of the envs on the listed sub-terrains (by generator name).
+
+  For a generalist's mixed terrain, where `terrain_row_mean_by_direction("down")` would count
+  every non-inverted column (flat and rough included) as a down-flight."""
+  del env_ids
+  terrain = env.scene.terrain
+  assert terrain is not None
+  gen = terrain.cfg.terrain_generator
+  sub_names = list(gen.sub_terrains)
+  props = torch.tensor([s.proportion for s in gen.sub_terrains.values()], dtype=torch.float)
+  cum = torch.cumsum(props / props.sum(), dim=0)
+  col_type = [
+    int(torch.nonzero(c / gen.num_cols + 0.001 < cum)[0]) for c in range(gen.num_cols)
+  ]
+  col_ok = torch.tensor([sub_names[t] in names for t in col_type], device=env.device)
+  mask = col_ok[terrain.terrain_types]
+  if not mask.any():
+    return torch.zeros((), device=env.device)
+  return torch.mean(terrain.terrain_levels[mask].float())
+
+
 def terrain_row_mean(
   env: ManagerBasedRlEnv,
   env_ids: torch.Tensor,

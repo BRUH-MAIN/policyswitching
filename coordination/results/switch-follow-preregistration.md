@@ -261,3 +261,34 @@ deployment-like condition), 128 trials per layout, 20 layouts (seeds 900-919).
   against each generalist; (2) switch 0.3 against stairs v2 alone; (3) early against on-time,
   with stairs v2 and with the as-trained specialist; (4) late against on-time; (5) stairs v2
   with and without its scan. Everything is reported; nothing is selected.
+
+## Addendum 8, 2026-10-10: three switching controllers on the v8b bank against a matched generalist (written before any is run)
+
+Question: on courses with real stairs, does switching between the specialists flat + rough +
+stairs v8b beat one generalist trained on the same terrain with the same recipe? Addendum 7
+found switching no better than the best single policy and every generalist far behind, but
+that gap was a training gap: no generalist had the stairs work (v3-v8b). So the generalist
+here is **GeneralistV3** = StairsV8b's config on flat + rough + stairs at equal class weight,
+warm-started from v8b `model_1999` and trained 4,000 more iterations (job 12816): v8b's
+lineage, more compute, differs only in terrain breadth.
+
+- Layouts: seeds 1000-1023 via `random_course` (obstacle order, flat lengths, L1/L2 rough
+  relief, leader speed 0.4-0.7 m/s as in Addendum 7). Risers pinned per layout,
+  `[0.09, 0.12, 0.15, 0.17][(seed - 1000) % 4]` m (six layouts per height), 10-step flights
+  (`--stair-steps 10`). Training observation noise on, 256 trials per layout.
+- Bank: flat `go2_spec_flat/model_9999`, rough `go2_spec_rough/model_9999`, stairs
+  `go2_spec_stairs_v8b/model_1999`.
+- Arms: (A) `hard:0.8:label` oracle switch, 0.8 m lead (inside the onboard scan horizon);
+  (B) `clf:<clf_v8b>:0.1:5` switch from a classifier on the robot's own height scan, retrained
+  on scans from layouts 2000-2011 (never the test layouts) because the old one saw only
+  5-7 cm risers; (C) `soft:0.8:0.0:label` cross-fade; `fixed:genv3`; `fixed:stairs` (v8b
+  alone); `fixed:gen2` (generalist v2, reference only). genv3 is written to its own file per
+  layout (it is trained after the other arms start); the analysis joins by layout.
+- Fall definitions: primary tipping-only (`--terminations saro`, v8b's task definition and the
+  robot acceptance criterion); secondary strict (`training`: any non-foot contact). Robustness:
+  every arm again at 20 ms actuator delay (`--action-delay 1`), primary definition only.
+- Analysis: layout is the unit. Mean success with a bootstrap 95% interval over layouts;
+  paired per-layout differences with bootstrap intervals. Primary claims (one per controller):
+  A - genv3, B - genv3, C - genv3. Secondary: A, B, C - v8b alone; each arm by riser height;
+  the strict-definition and 20 ms repeats. Everything is reported; nothing is selected. If
+  switching does not beat genv3, that is the result.

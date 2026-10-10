@@ -1,0 +1,47 @@
+{
+ "files": [
+  "logs/switch_follow/clf_v8b_scans/scans_L2000.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2001.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2002.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2003.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2004.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2005.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2006.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2007.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2008.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2009.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2010.pt",
+  "logs/switch_follow/clf_v8b_scans/scans_L2011.pt"
+ ],
+ "samples": 1985748,
+ "trials": 3072,
+ "val_trials": 460,
+ "val_accuracy": 0.8990500569343567,
+ "val_recall": {
+  "flat": 0.9069402813911438,
+  "rough": 0.7095947265625,
+  "stairs": 0.9950754642486572
+ },
+ "val_confusion_rows_true_cols_pred": [
+  [
+   121569,
+   11740,
+   734
+  ],
+  [
+   17073,
+   41793,
+   31
+  ],
+  [
+   468,
+   50,
+   104670
+  ]
+ ],
+ "train_class_counts": [
+  758372.0,
+  333465.0,
+  595783.0
+ ]
+}

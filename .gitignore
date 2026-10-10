@@ -220,6 +220,10 @@ __marimo__/
 # SLURM job logs (this project)
 go2-*.out
 go2-*.err
+sf-present-*.out
+sf-present-*.err
+present-video-*.out
+present-video-*.err
 
 # Checkpoint/eval artifacts (this project) -- large binaries, no diff value, and
 # PAS checkpoints are already mirrored to HF (see findings.md); specialists and

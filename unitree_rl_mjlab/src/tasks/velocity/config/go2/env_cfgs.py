@@ -43,6 +43,7 @@ from src.tasks.velocity.mdp.terrain_curriculum import (
   terrain_row_fraction,
   terrain_row_mean,
   terrain_row_mean_by_direction,
+  terrain_row_mean_by_names,
 )
 from src.tasks.velocity.velocity_env_cfg import make_velocity_env_cfg
 
@@ -857,6 +858,55 @@ def unitree_go2_generalist_v2_env_cfg(play: bool = False) -> ManagerBasedRlEnvCf
   v2, evaluate at `--lin-vel-x -0.5 1.0 --lin-vel-y -0.5 0.5`.
   """
   return _hold_command_range_at_stage0(unitree_go2_generalist_env_cfg(play=play))
+
+
+# GeneralistV3 terrain grid: 24 columns so the class split is whole columns (2 per stairs
+# sub-terrain, 8 flat, 4 per rough sub-terrain) instead of 20 columns rounding one stairs
+# sub-terrain down to a single column.
+GENERALIST_V3_NUM_COLS = 24
+
+
+def unitree_go2_generalist_v3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Generalist v3: StairsV8b on the union of the switching bank's terrain classes.
+
+  The matched baseline for the switching bank flat + rough + stairs v8b. Everything is
+  StairsV8b's (rewards incl. progress-gated pose/gait and `climb_progress`, progress-gated
+  rows, 0-30 ms actuator delay, observations, runner) except the terrain: v8b's four 10-step
+  stairs sub-terrains (risers 5-20 cm, treads 0.30/0.26 m) plus the flat and rough classes, the
+  three classes at equal weight. `climb_progress` keys on "inv" sub-terrain names and the row
+  rule is distance-based, so both carry over to mixed terrain unchanged. Gaps are left out
+  because the bank has no gaps specialist.
+
+  Meant to be warm-started from stairs v8b's final checkpoint, so it has the specialist's
+  lineage and strictly more training than it: the only thing that differs is terrain breadth,
+  the definition `unitree_go2_generalist_env_cfg` used.
+  """
+  cfg = unitree_go2_spec_stairs_v8b_env_cfg(play=play)
+  assert cfg.scene.terrain is not None and cfg.scene.terrain.terrain_generator is not None
+  gen = cfg.scene.terrain.terrain_generator
+  stairs = dict(gen.sub_terrains)
+  available = _available_sub_terrains()
+  stairs_w = (1.0 / 3.0) / len(stairs)
+  sub_terrains = {name: replace(sub, proportion=stairs_w) for name, sub in stairs.items()}
+  for cls in ("flat", "rough"):
+    for name in TERRAIN_CLASSES[cls]:
+      sub_terrains[name] = replace(available[name], proportion=(1.0 / 3.0) / len(TERRAIN_CLASSES[cls]))
+  cfg.scene.terrain.terrain_generator = replace(gen, sub_terrains=sub_terrains, num_cols=GENERALIST_V3_NUM_COLS)
+  if not play:
+    # v7a's down/up row means would count flat and rough columns as down-flights.
+    for k in ("terrain_row_mean_down", "terrain_row_mean_up"):
+      cfg.curriculum.pop(k, None)
+    groups = {
+      "stairs_down": tuple(n for n in stairs if "inv" not in n),
+      "stairs_up": tuple(n for n in stairs if "inv" in n),
+      "flat": TERRAIN_CLASSES["flat"],
+      "rough": TERRAIN_CLASSES["rough"],
+    }
+    for label, names in groups.items():
+      cfg.curriculum[f"terrain_row_mean_{label}"] = CurriculumTermCfg(
+        func=terrain_row_mean_by_names, params={"names": names}
+      )
+  return cfg
 
 
 def unitree_go2_pas_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:

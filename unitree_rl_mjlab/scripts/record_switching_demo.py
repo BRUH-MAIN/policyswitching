@@ -58,8 +58,9 @@ from src.vlm_nav.policy_bank import PolicyBank  # noqa: E402
 from src.vlm_nav.scan_classifier import CLASSES, SwitchFilter, load_classifier, scan_slice  # noqa: E402
 from src.vlm_nav.twin_env import BASE_TASK, make_twin_env_cfg, set_velocity_command  # noqa: E402
 
-CLASS_RGB = {"flat": (150, 150, 150), "rough": (96, 150, 60), "stairs": (70, 110, 200)}
-LABEL = {"flat": "FLAT specialist", "rough": "ROUGH specialist", "stairs": "STAIRS specialist"}
+CLASS_RGB = {"flat": (150, 150, 150), "rough": (96, 150, 60), "stairs": (70, 110, 200), "generalist": (205, 140, 20)}
+LABEL = {"flat": "FLAT specialist", "rough": "ROUGH specialist", "stairs": "STAIRS specialist",
+         "generalist": "GENERALIST (one policy)"}
 
 
 def build_course(riser: float, long_steps: int, short_steps: int, level: str):
@@ -88,8 +89,9 @@ def main() -> None:
                   help="Scan-classifier weights: the robot picks the policy from its own height scan.")
   ap.add_argument("--alpha", type=float, default=0.1, help="Classifier filter: weight of the newest scan.")
   ap.add_argument("--hold", type=int, default=5, help="Classifier filter: steps a new class must persist.")
-  ap.add_argument("--single", default=None, choices=("flat", "rough", "stairs"),
+  ap.add_argument("--single", default=None, choices=("flat", "rough", "stairs", "generalist"),
                   help="No switching: run this one policy over the whole course (for comparison).")
+  ap.add_argument("--generalist", default=None, help="Checkpoint for --single generalist (e.g. GeneralistV3).")
   ap.add_argument("--step-height", type=float, default=0.15)
   ap.add_argument("--long-steps", type=int, default=10)
   ap.add_argument("--short-steps", type=int, default=5)
@@ -114,6 +116,10 @@ def main() -> None:
     "rough": Path(args.rough or root / "go2_spec_rough/model_9999.pt"),
     "stairs": Path(args.stairs or root / "go2_spec_stairs_v8a/model_3999.pt"),
   }
+  if args.single == "generalist":
+    if not args.generalist:
+      ap.error("--single generalist needs --generalist <checkpoint>")
+    ckpts["generalist"] = Path(args.generalist)
   course = build_course(args.step_height, args.long_steps, args.short_steps, args.level)
 
   cfg = make_twin_env_cfg(None, terrain_generator=course.generator_cfg(seed=args.seed), num_envs=1, seed=args.seed,

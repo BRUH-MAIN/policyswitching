@@ -1,0 +1,83 @@
+{
+  "label": "stairs_v5a_it9999_h12_w30",
+  "task": "Unitree-Go2-Spec-StairsV5a",
+  "checkpoint": "/dist_home/d_palmani/c-08/policyswitching/unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v5a/2026-10-06_23-12-52/model_9999.pt",
+  "num_envs": 1024,
+  "steps": 1200,
+  "conditions": {
+    "keep_curricula": false,
+    "seed": 0,
+    "terrain": "stairs",
+    "difficulty": null,
+    "step_height": 0.12,
+    "step_width": 0.3,
+    "lin_vel_x": [
+      -0.5,
+      1.0
+    ],
+    "lin_vel_y": [
+      -0.5,
+      0.5
+    ],
+    "ang_vel_z": [
+      -1.0,
+      1.0
+    ]
+  },
+  "survival": {
+    "episodes": 1024,
+    "survival_pct": 100.0,
+    "fall_pct": 0.0,
+    "mean_ep_len": 1000.0,
+    "mean_return": 58.75550079345703,
+    "terminations": {
+      "time_out": 1024,
+      "fell_over": 0,
+      "illegal_contact": 0
+    }
+  },
+  "by_terrain": {
+    "pyramid_stairs": {
+      "envs": 513,
+      "episodes": 513,
+      "time_out": 513,
+      "terminations": {
+        "time_out": 513,
+        "fell_over": 0,
+        "illegal_contact": 0
+      },
+      "distance_m": 4053.62890625,
+      "falls_per_100m": 0.0,
+      "survival_pct": 100.0
+    },
+    "pyramid_stairs_inv": {
+      "envs": 511,
+      "episodes": 511,
+      "time_out": 511,
+      "terminations": {
+        "time_out": 511,
+        "fell_over": 0,
+        "illegal_contact": 0
+      },
+      "distance_m": 4185.49755859375,
+      "falls_per_100m": 0.0,
+      "survival_pct": 100.0
+    }
+  },
+  "locomotion": {
+    "mean_cmd_speed": 0.49783167536304435,
+    "mean_actual_speed": 0.3386857494540214,
+    "achieved_pct_of_cmd": 68.03218160175012,
+    "lin_vel_error_per_step": 0.2265112252161839,
+    "ang_vel_error_per_step": 0.076485339660909,
+    "distance_rate": 0.33552996197936674,
+    "stalled_pct": 3.081394891274978,
+    "total_distance_m": 8239.11269198358,
+    "falls_per_100m": 0.0
+  },
+  "smoothness": {
+    "action_rate_l2": 1.0297854164788,
+    "actuator_force_rate": 254.0778735040523,
+    "actuator_force_rate_p99": 687.0320588560431
+  }
+}

@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-07T02:20:25Z",
+  "last_updated_utc": "2026-10-10T20:40:30Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -212,11 +212,11 @@
       "hf_repo": "RohanRamesh/go2-specialists",
       "hf_stage": "go2_spec_stairs_v5a",
       "path_on_cluster": null,
-      "iteration": 599,
+      "iteration": 9999,
       "sha256": null,
-      "status": "trial_complete",
-      "slurm_job_id": "12589",
-      "notes": "600-iteration trial; model_400 and model_599 on HF. v5a continues as job 12594. Not evaluated."
+      "status": "complete",
+      "slurm_job_id": "12594",
+      "notes": "Full run complete (job 12594, 10,000 iterations, exit 0, 16h54m). Newest checkpoint on private HF: go2_spec_stairs_v5a/model_9999.pt (upload confirmed in the job log; model_9200 was also uploaded mid-run). Also model_400/model_599 from the trial. Not evaluated beyond the laptop's model_4400 flight test."
     },
     "go2_spec_stairs_v5b": {
       "task": "Unitree-Go2-Spec-StairsV5b",
@@ -355,20 +355,73 @@
       "headline": "Both pass: v5a speed 67-72% of commanded, mean row 1.4 -> 3.4; v5b 65-67%, 1.4 -> 3.0 (v4b: 26-30%, row 0). The world-z foot_clearance term was the cause. Training logs only; no eval yet. coordination/results/2026-10-06-stairs-v5-clearance-trials.md"
     },
     "stairs_v5a_full": {
-      "status": "running",
+      "status": "completed",
       "slurm_job_id": "12594",
       "command": "BUDGET=10000 SPEC=StairsV5a sbatch --gres=gpu:1 (HF_TOKEN exported)",
       "notes": "Resumes v5a from model_599 to 10,000 iterations. No free GPU as of 22:20 IST 10-06; scheduler worst-case estimate 2026-10-08 17:03. Submitted by cluster-sess under Rohan's 'do what accelerates completion'. Still PENDING at 22:58 IST 10-06 (no GPU free; held by other users' jobs and 12578 csasr-abl). Watcher expired with no start. 23:10 IST 10-06: Rohan requeued 12578 (csasr-abl, other project) to free an A100; the freed A100 was taken within a second by another user's higher-priority job 12591 (saranyad, jupyter), NOT by 12594. 12594 priority 10151, behind 12593 (11173); scheduler worst-case start now 2026-10-07 17:08. 12578 is pending again (priority 10101, behind 12594).",
       "started_ist": "2026-10-06 23:12:07",
       "node": "asaicomputenode02 (A100)",
-      "progress": "07:00 IST 10-07: iteration 4372 of 10000, 7.3 s/iteration (A100 shared; est. finish ~18:30 IST 10-07, inside the 24 h walltime). Speed 68-69% of commanded and holding, stalled 3%, tracking reward rising 0.72 -> 0.74. BUT mean row plateaued at ~3.7 from iteration ~1100 and is drifting down (3.5): rows 4-5 hold 48%, rows 6-7 fell 16% -> 6%, rows 8-9 0%. The 15-20 cm risers get almost no data. (The requeue of 12578 did free the A100 12594 got, one minute after I wrongly reported it had not.)"
+      "progress": "Finished iteration 9999/10000, exit 0:0, elapsed 16:54:35. Final (iteration 9999): terrain_row_mean 3.45 (plateau ~3.7 at it 1100-4400 drifted down), rows 0-1 9.0%, 2-3 38.5%, 4-5 48.6%, 6-7 3.9%, 8-9 0.01%. Speed 0.352 of 0.4985 commanded = 70.5%, mean_action_acc 0.739, no fell_over/illegal_contact terminations. Mean row did NOT move off the plateau; rows 8-9 are empty. per-direction row split not available (v5a was started before terrain_row_mean_down/_up existed).",
+      "ended_ist": "2026-10-07 ~16:06"
     },
     "stairs_v5c": {
-      "status": "pending",
+      "status": "completed_failed_run",
       "task": "Unitree-Go2-Spec-StairsV5c",
       "experiment": "go2_spec_stairs_v5c",
       "budget": 4000,
-      "notes": "v5a + progress rule mixed 50/50 with uniform rows; warm start from the latest v5a checkpoint at job start (model_4400 when built), normalizer kept. Queued 07:05 IST 10-07 behind 12578; starts when a GPU frees. Cancel with scancel if not wanted. 07:50 IST: added Curriculum/terrain_row_mean_down and _up (descending vs ascending populations), CPU-checked; job still pending. Watch achieved speed in the first few hundred iterations (v3 with all-uniform rows stopped walking; half-uniform is the same pressure at half strength)."
+      "notes": "v5a + progress rule mixed 50/50 with uniform rows; warm start from the latest v5a checkpoint at job start (model_4400 when built), normalizer kept. Queued 07:05 IST 10-07 behind 12578; starts when a GPU frees. Cancel with scancel if not wanted. 07:50 IST: added Curriculum/terrain_row_mean_down and _up (descending vs ascending populations), CPU-checked; job still pending. Watch achieved speed in the first few hundred iterations (v3 with all-uniform rows stopped walking; half-uniform is the same pressure at half strength). STATUS 22:15 IST 10-07: NOT STARTED. Job 12602 PENDING (Reason=Resources), scheduler estimate start 2026-10-08 17:09 IST. It warm-starts from the newest v5a checkpoint when it starts (ls ... | sort -V | tail -1) -> now model_9999 from 2026-10-06_23-12-52, not model_4400. No training metrics exist yet. UPDATE 10-07 night IST, on Rohan's instruction: 12602 cancelled and resubmitted as 12608 with INIT_FROM=go2_spec_stairs_v5a/2026-10-06_23-12-52/model_4400.pt (the plateau drifted down after 4400), BUDGET=4000, --gres=gpu:1, HF_TOKEN exported, KEEP_NORMALIZER default 1. Replaces the earlier note that v5c would start from model_9999. 23:50 IST 10-07: 12608 RUNNING since 22:35, iteration 848/4000, speed ~62% of commanded, mean row up/down 3.97/4.31, rows 6-7 19%, rows 8-9 14%. 00:00 IST 10-08: laptop flights on model_800 cross nothing (0% up and down at 12/15/17 cm; model_4400 climbed 12 cm 100%). 12608's own log agrees: row means flat since iteration 100 (up ~4.0, down ~4.3), speed flat ~62%, rows 8-9 14% from the uniform re-draw. Judged a v3-style regression. NOT cancelled: it holds an A100 on node02 and the pending A100 jobs ahead of 12611 by priority (12610 jupyter, 10156) would take the freed GPU, so cancelling would not start v6a. 12608 COMPLETED 4000 iterations, exit 0 (5h34m). Laptop flights on final model_3999: 0% at 12/15/17 cm up and down, all stalls (same as model_800). Failed run; do not use.",
+      "slurm_job_id": "12608"
+    },
+    "stairs_v6a_cluster": {
+      "status": "cancelled_while_pending",
+      "slurm_job_id": "12612",
+      "task": "Unitree-Go2-Spec-StairsV6a",
+      "experiment": "go2_spec_stairs_v6a",
+      "submit_command": "BUDGET=4000 SPEC=StairsV6a INIT_FROM=unitree_rl_mjlab/logs/warmstart_src/v6a_lap/go2_spec_stairs_v6a_lap/model_3200.pt sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "Queued 23:50 IST 10-07 on Rohan's blanket go-ahead, ADDITIVE to v5c (nothing cancelled): all 6 GPUs busy, v5c holds ours. Warm start = laptop's go2_spec_stairs_v6a_lap model_1600 pulled from HF. Normaliser kept (script default). Expect speed ~95% of commanded within 100 iterations. 00:55 IST 10-08: 12611 (still pending) cancelled and resubmitted as 12612 from laptop v6a_lap model_3200 (laptop flights: up 15 cm 75%, 17 cm 2% by the 0.5 m/s leader test but 48% crossed with an unloseable leader; down 100/100). 03:47 IST: 12612 cancelled; superseded by jobs.stairs_v7a_cluster (12613)."
+    },
+    "stairs_v7a_cluster": {
+      "status": "pending",
+      "slurm_job_id": "12613",
+      "task": "Unitree-Go2-Spec-StairsV7a",
+      "experiment": "go2_spec_stairs_v7a",
+      "submit_command": "BUDGET=4000 SPEC=StairsV7a INIT_FROM=unitree_rl_mjlab/logs/warmstart_src/v7a_lap/go2_spec_stairs_v7a_lap/model_1600.pt sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "03:47 IST 10-08: replaces pending 12612 (v6a from model_3200; cancelled), per the laptop's v7a verdict (up 17 cm 52% vs v6a ~1-3%, 15 cm up 98%, down 100%; one checkpoint, 64 trials). Warm start = laptop v7a_lap model_1600, normaliser kept. Judge by flights on several checkpoints, not row means. 09:16 IST: iteration 3621/4000, ETA ~31 min; laptop: model_1600 passes 5-step flights at 17 cm both ways (256 trials), fails 10-step flights (up 100/100/93/45, down 100/100/72/41 at 9/12/15/17 cm). Current robot candidate."
+    },
+    "stairs_v8a_cluster": {
+      "status": "completed",
+      "slurm_job_id": "12614",
+      "task": "Unitree-Go2-Spec-StairsV8a",
+      "experiment": "go2_spec_stairs_v8a",
+      "submit_command": "BUDGET=4000 SPEC=StairsV8a INIT_FROM=unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v7a/2026-10-08_04-11-05/model_1600.pt sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "09:16 IST 10-08: queued at the laptop's request under Rohan's standing 'run anything that accelerates completion' (Rohan has not reviewed this specific job). v7a on 10-step flights; 8,192 envs (script default) is UNTESTED on this terrain: the laptop OOMed at 1,536 envs. Watch memory at start-up; if it OOMs, resubmit with NUM_ENVS=<fewer>. Warm start = cluster v7a model_1600 (laptop full acceptance 5-step: 100/100/100/98.8 up and down). COMPLETED 4000 iterations. Laptop full acceptance of go2_spec_stairs_v8a/model_3999 (256 trials/cell, noise on): tipping-only 100% in all 16 cells (5 and 10 steps, up and down, 9/12/15/17 cm); with shin contact counted 10-step up 99/90/88/69, down 84/82/66/69; 5-step up 98/95/90/90, down 87/83/85/79. Current robot candidate. model_2000 was also 100% tipping-only but worse on shin contact."
+    },
+    "stairs_v8b_cluster": {
+      "status": "completed",
+      "slurm_job_id": "12747",
+      "task": "Unitree-Go2-Spec-StairsV8b",
+      "experiment": "go2_spec_stairs_v8b",
+      "submit_command": "BUDGET=2000 SPEC=StairsV8b INIT_FROM=unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v8a/2026-10-08_09-48-21/model_3999.pt sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "2026-10-09 (submitted before 12:48 IST start): queued at the laptop session's request under Rohan's standing 'run anything that accelerates completion' (this specific job not reviewed by him). v8a + DelayedActuator 0-30 ms per robot per reset, because v8a model_3999 is latency-fragile (10-step 17 cm up: 99% at 0 ms, 88% at 20, 0% at 40). GitHub unreachable from the cluster, so the V8b change (3 files: a100/train_specialist_slurm.sh, env_cfgs.py, __init__.py) was applied by hand from a patch the laptop sent; sha256 prefixes match its git-show values; config builds on CPU (3 DelayedActuatorCfg, lag_range (0,6)). Uncommitted; a later git pull needs `git checkout` of those 3 files first. UPDATE: GitHub reachable again; cluster checkout fast-forwarded to 6cb1fee and the 3 hand-applied files were byte-identical to it. 12747 started 12:48:43 IST. COMPLETED 2000 iterations, exit 0, 4h14m; model_1999 on HF go2_spec_stairs_v8b/. Final log (its 1800-1999): row_up 6.14 / row_down 6.11, fell_over 0.062, illegal_contact 0.437, limb_contact -0.0385, speed 104%, stalled 0.005. v8a final for comparison: 6.02/6.05, fell 0.025, limb -0.036. Training log has no flight/delay metric: judge by laptop flights at 0/20/40 ms."
+    },
+    "generalist_v3_train": {
+      "status": "completed",
+      "slurm_job_id": "12816",
+      "task": "Unitree-Go2-GeneralistV3",
+      "experiment": "go2_generalist_v3",
+      "submit_command": "BUDGET=4000 SPEC=GeneralistV3 INIT_FROM=unitree_rl_mjlab/logs/rsl_rl/go2_spec_stairs_v8b/2026-10-09_12-49-32/model_1999.pt sbatch --gres=gpu:1 a100/train_specialist_slurm.sh",
+      "notes": "Matched generalist for the presentation (preregistration Addendum 8): StairsV8b's config on flat + rough + v8b stairs at equal class weight, 24 terrain columns. Started 20:36 IST 10-10 on asaicomputemaster (RTX 6000 Ada), 31 GB of 48, 3.35 s/iteration, ETA ~00:25 IST 10-11. Per-class row means logged (terrain_row_mean_{stairs_down,stairs_up,flat,rough}). COMPLETED 4000 iterations, exit 0, 3h58m (00:34 IST 10-11); model_3999 on HF go2_generalist_v3/. Last 200 iterations: speed 104%, rows stairs up 6.39 / down 5.99 / flat 6.01 / rough 6.08."
+    },
+    "presentation_eval": {
+      "status": "completed",
+      "slurm_job_ids": {
+        "record_scans": "12818 (layouts 2000-2011)",
+        "main": "12838 (layouts 1000-1023 x saro/training/saro_d20)",
+        "genv3": "12850",
+        "videos": "12852"
+      },
+      "script": "a100/switch_follow_present_slurm.sh",
+      "notes": "All completed. Classifier logs/switch_follow/clf_v8b.pt (89.9% held-out). Results: report_content/presentation_analysis.md and report_content/figures/presentation/results_tables.md; findings.md #36-#37. Headline: tipping-only, oracle switch 99.4 vs matched generalist 99.2 (+0.3, CI -0.1..+0.6); strict contact, +30.3 (24/24 layouts); onboard classifier deadlocks at 17 cm (switches ~0.2 m ahead)."
     }
   }
 }
