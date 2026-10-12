@@ -909,6 +909,38 @@ def unitree_go2_generalist_v3_env_cfg(play: bool = False) -> ManagerBasedRlEnvCf
   return cfg
 
 
+def _v8b_recipe_single_class(cls: str, play: bool) -> ManagerBasedRlEnvCfg:
+  """GeneralistV3's config (StairsV8b's recipe) with the terrain cut to one class.
+
+  So the switching bank's flat and rough specialists have exactly the recipe the matched
+  generalist and stairs v8b have (progress-gated pose/gait, limb contact penalised, progress
+  rows, 0-30 ms actuator delay, stage-0 commands), and differ from the generalist only in
+  terrain breadth. Meant to be warm-started from GeneralistV3's final checkpoint.
+  """
+  cfg = unitree_go2_generalist_v3_env_cfg(play=play)
+  assert cfg.scene.terrain is not None and cfg.scene.terrain.terrain_generator is not None
+  gen = cfg.scene.terrain.terrain_generator
+  available = _available_sub_terrains()
+  names = TERRAIN_CLASSES[cls]
+  cfg.scene.terrain.terrain_generator = replace(
+    gen, sub_terrains={n: replace(available[n], proportion=1.0) for n in names}, num_cols=20
+  )
+  if not play:
+    for k in [k for k in cfg.curriculum if k.startswith("terrain_row_mean_")]:
+      cfg.curriculum.pop(k)
+  return cfg
+
+
+def unitree_go2_spec_flat_v8b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Flat specialist with the v8b recipe (see `_v8b_recipe_single_class`)."""
+  return _v8b_recipe_single_class("flat", play)
+
+
+def unitree_go2_spec_rough_v8b_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
+  """Rough specialist with the v8b recipe (see `_v8b_recipe_single_class`)."""
+  return _v8b_recipe_single_class("rough", play)
+
+
 def unitree_go2_pas_env_cfg(play: bool = False) -> ManagerBasedRlEnvCfg:
   """Go2 config for replicating SARO's PAS low-level policy (arXiv:2407.16412).
 

@@ -132,7 +132,7 @@ Classifier: {'spec': 'clf:/dist_home/d_palmani/c-08/policyswitching/unitree_rl_m
 | onboard-scan switch − stairs v8b alone | **-21.1** (-30.8 to -12.2) | 0 / 24 / 0 |
 | soft blend − stairs v8b alone | **-6.3** (-7.6 to -5.0) | 0 / 24 / 0 |
 
-## Latency: no delay vs 20 ms (tipping only)
+## Latency: no delay vs 20 ms (tipping-only definition)
 
 | arm | 0 ms | 20 ms |
 |---|---|---|

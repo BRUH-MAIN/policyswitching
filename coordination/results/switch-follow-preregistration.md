@@ -292,3 +292,35 @@ lineage, more compute, differs only in terrain breadth.
   A - genv3, B - genv3, C - genv3. Secondary: A, B, C - v8b alone; each arm by riser height;
   the strict-definition and 20 ms repeats. Everything is reported; nothing is selected. If
   switching does not beat genv3, that is the result.
+
+## Addendum 9, 2026-10-11: switching with its known handicaps removed (written before any of it is trained or run)
+
+Addendum 8 found switching tied with the matched generalist on tipping-only success (~99% for
+all) and ahead by +30 points on strict (contact) success, and found two handicaps on the
+switching side, both training or engineering rather than the idea: (a) the bank's flat and rough
+specialists predate the v8b recipe (no delay randomisation; switching lost ~6 points at 20 ms);
+(b) the onboard classifier learned a label that turns to "stairs" only 0.3 m before the edge, and
+deadlocked in front of 17 cm risers (findings #37). This round removes both, gives the generalist
+the same extra compute, and is tested on fresh layouts.
+
+- **Bank R:** `Unitree-Go2-Spec-FlatV8b` and `-RoughV8b` (GeneralistV3's config cut to one terrain
+  class: identical recipe), each warm-started from GeneralistV3 `model_3999` and trained 2,000
+  iterations; stairs = v8b `model_1999` as before.
+- **Generalist, compute-matched:** GeneralistV3 resumed from `model_3999` to 6,000 iterations
+  (+2,000, the same as each new specialist), `model_5999`.
+- **Classifier B_R:** scans recorded on layouts 2000-2011 with bank R under arm A, labelled with a
+  **0.8 m lead** (`--label-lead 0.8`, the oracle's lead), trained by trial split as before. Its
+  filter `hold` is chosen from {5, 10, 20} (alpha 0.1) by strict success on layouts 2000-2011 only
+  (ties -> 10); the test layouts are never used to choose anything.
+- **Test:** fresh layouts, seeds **1100-1123**, risers `[0.09, 0.12, 0.15, 0.17][seed % 4]`,
+  10-step flights, noise on, 256 trials per layout per arm.
+- **Arms:** A_R `hard:0.8:label`, B_R `clf:<clf_R>:0.1:<hold>`, C_R `soft:0.8:0.0:label` (all bank R);
+  `fixed:genv3_6000`; `fixed:stairs` (v8b alone); and A with the old bank (reference, shows the
+  effect of retraining the bank).
+- **Primary measure (changed from Addendum 8, declared here before any data):** strict success,
+  any non-foot contact is a fall. Reason: on the robot a shin or knee striking a nosing is a real
+  failure, and Addendum 8 showed tipping-only success at ceiling (~99%), unable to separate the
+  arms. **Primary claims:** A_R, B_R, C_R each minus genv3_6000, strict. **Secondary:** each minus
+  v8b alone; tipping-only; strict at 20 ms actuator delay; A_R minus A with the old bank.
+- Analysis as Addendum 8: layout is the unit, bootstrap intervals over layouts, everything
+  reported, nothing selected. If switching does not beat the generalist, that is the result.

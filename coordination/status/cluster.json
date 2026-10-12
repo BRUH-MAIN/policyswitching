@@ -1,5 +1,5 @@
 {
-  "last_updated_utc": "2026-10-10T20:40:30Z",
+  "last_updated_utc": "2026-10-12T03:44:22Z",
   "last_commit": null,
   "cluster_repo_path": "/dist_home/d_palmani/c-08/policyswitching",
   "runs": {
@@ -422,6 +422,29 @@
       },
       "script": "a100/switch_follow_present_slurm.sh",
       "notes": "All completed. Classifier logs/switch_follow/clf_v8b.pt (89.9% held-out). Results: report_content/presentation_analysis.md and report_content/figures/presentation/results_tables.md; findings.md #36-#37. Headline: tipping-only, oracle switch 99.4 vs matched generalist 99.2 (+0.3, CI -0.1..+0.6); strict contact, +30.3 (24/24 layouts); onboard classifier deadlocks at 17 cm (switches ~0.2 m ahead)."
+    },
+    "presentation_round2": {
+      "status": "completed",
+      "preregistration": "Addendum 9",
+      "slurm_job_ids": {
+        "flat_v8b": "12891",
+        "rough_v8b": "12892",
+        "generalist_v3_to_6000": "12893",
+        "record_scans": "12907",
+        "calib": "12921",
+        "main": "12922",
+        "oldbank": "12923",
+        "clf": "12936",
+        "genv3": "12963",
+        "videos": "13088 (low priority, pending)"
+      },
+      "checkpoints": {
+        "flat_v8b": "logs/rsl_rl/go2_spec_flat_v8b/2026-10-11_09-37-31/model_1999.pt",
+        "rough_v8b": "logs/rsl_rl/go2_spec_rough_v8b/2026-10-11_10-48-57/model_1999.pt",
+        "generalist_v3_6000": "logs/rsl_rl/go2_generalist_v3/2026-10-11_12-08-05/model_5999.pt",
+        "classifier": "logs/switch_follow/clf_r2_lead08.pt"
+      },
+      "notes": "Strict (primary): A 44.6, B 44.7, C 39.6, generalist 14.9, v8b alone 44.4; A/B/C minus generalist +29.7/+29.8/+24.7. Onboard switch fixed (0.2% never-switched at 17 cm). findings.md #38."
     }
   }
 }

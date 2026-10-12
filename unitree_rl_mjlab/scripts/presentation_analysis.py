@@ -35,6 +35,19 @@ COLORS = ("#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300")
 INK, INK2, MUTED, GRID, AXIS, SURFACE = "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7", "#fcfcfb"
 CONTROLLERS = ARMS[:3]
 CONDITIONS = {"saro": "tipping only (primary)", "training": "strict: any non-foot contact", "saro_d20": "tipping only, 20 ms delay"}
+# Round 2 (Addendum 9): bank R, compute-matched generalist, strict falls primary.
+ROUNDS = {
+  "r1": dict(arms=ARMS, short=SHORT, conditions=CONDITIONS, primary="saro", clf_cond="saro", label_lead=0.3, clf_title="It switches late — too late for 17 cm risers", delay=("saro", "saro_d20"),
+             delay_label="tipping-only definition"),
+  "r2": dict(
+    arms=(("hard:0.8:label", "A  oracle switch"), ("clf", "B  onboard-scan switch"), ("soft:0.8:0.0:label", "C  soft blend"),
+          ("fixed:genv3", "Matched generalist (V3, 6k it)"), ("fixed:stairs", "Stairs v8b alone"),
+          ("oldbank:hard:0.8:label", "A with the old bank")),
+    short=("A", "B", "C", "G3", "v8b", "A-old"),
+    conditions={"training": "strict: any non-foot contact (primary)", "saro": "tipping only", "training_d20": "strict, 20 ms delay"},
+    primary="training", clf_cond="saro", label_lead=0.8, clf_title="Labels now lead by 0.8 m: it switches in time", delay=("training", "training_d20"), delay_label="strict definition"),
+}
+ROUND = ROUNDS["r1"]
 HEIGHTS = (0.09, 0.12, 0.15, 0.17)
 SEGMENT_NAMES = {"flat": "flat", "rough": "rough", "stairs_up": "up-flight", "stairs_down": "down-flight"}
 
@@ -59,7 +72,9 @@ def load_condition(directory: Path) -> dict[int, dict]:
     seed = int(f.stem.split("_")[0][1:])
     d = json.loads(f.read_text())
     rec = out.setdefault(seed, dict(layout=d["layout"], course=d["course"], conditions=d["conditions"], arms={}))
-    rec["arms"].update(d["arms"])
+    tag = f.stem.split("_", 1)[1]
+    prefix = "" if tag in ("main", "genv3", "clf") else f"{tag}:"
+    rec["arms"].update({prefix + k: v for k, v in d["arms"].items()})
   return out
 
 
@@ -283,7 +298,7 @@ def fig_delay(plt, base, delay, seeds, rng, out):
   ax.set_yticks(ys, [n for _, n in ARMS], color=INK, fontsize=10)
   ax.set_xlim(0, 118)
   ax.set_xlabel("course success (%): filled = no delay, hollow = every motor command 20 ms late", color=INK2)
-  ax.set_title("Robustness to control latency (tipping-only definition)", loc="left", color=INK, fontsize=12)
+  ax.set_title(f"Robustness to control latency ({ROUND['delay_label']})", loc="left", color=INK, fontsize=12)
   _style(ax)
   _save(fig, out, "fig07_delay")
   plt.close(fig)
@@ -308,7 +323,7 @@ def fig_classifier(plt, runs, seeds, out, cond, meta_path: Path | None = None):
     ax.set_xticks(range(3), ["flat", "rough", "stairs"])
     ax.set_yticks(range(3), ["flat", "rough", "stairs"])
     ax.set_xlabel("predicted", color=INK2)
-    ax.set_ylabel("true (footprint label)", color=INK2)
+    ax.set_ylabel(f"true (label, {ROUND['label_lead']} m lead)", color=INK2)
     ax.set_title(f"Held-out accuracy {100 * meta['val_accuracy']:.1f}%", loc="left", color=INK, fontsize=11)
     info.update(val_accuracy=meta["val_accuracy"], val_recall=meta["val_recall"])
   # (2) Per-trial agreement with the label during the evaluation.
@@ -335,13 +350,17 @@ def fig_classifier(plt, runs, seeds, out, cond, meta_path: Path | None = None):
     never[h] = 100 * nn / max(tot, 1)
     ax.hist(lv, bins=np.arange(-0.2, 1.0, 0.025), histtype="step", linewidth=2, color=c,
             label=f"{round(h * 100)} cm risers: never switched before stopping {never[h]:.0f}%")
-  ax.axvline(0.3, color=INK, linestyle="--", linewidth=1.2)
-  ax.text(0.31, ax.get_ylim()[1] * 0.92, "label switches\n0.3 m ahead", color=INK2, fontsize=8)
-  ax.axvline(0.8, color=COLORS[0], linestyle="--", linewidth=1.2)
-  ax.text(0.81, ax.get_ylim()[1] * 0.92, "oracle A\n0.8 m ahead", color=INK2, fontsize=8)
+  lead = ROUND["label_lead"]
+  ax.axvline(lead, color=INK, linestyle="--", linewidth=1.2)
+  ax.text(lead + 0.01, ax.get_ylim()[1] * 0.92, f"label switches\n{lead} m ahead", color=INK2, fontsize=8)
+  if abs(lead - 0.8) > 1e-6:
+    ax.axvline(0.8, color=COLORS[0], linestyle="--", linewidth=1.2)
+    ax.text(0.81, ax.get_ylim()[1] * 0.92, "oracle A\n0.8 m ahead", color=INK2, fontsize=8)
+  else:
+    ax.text(lead + 0.01, ax.get_ylim()[1] * 0.78, "(= oracle A's lead)", color=INK2, fontsize=8)
   ax.set_xlabel("distance before the first up-step when 'stairs' is first chosen (m)", color=INK2)
-  ax.set_title("It switches late — too late for 17 cm risers", loc="left", color=INK, fontsize=11)
-  ax.legend(frameon=False, fontsize=8, loc="center right", labelcolor=INK)
+  ax.set_title(ROUND["clf_title"], loc="left", color=INK, fontsize=11)
+  ax.legend(frameon=False, fontsize=8, loc="upper left", labelcolor=INK)
   info["never_switched_pct_by_height"] = {round(h * 100): v for h, v in never.items()}
   for ax in axes:
     _style(ax, "y")
@@ -394,6 +413,7 @@ def main() -> None:
   ap.add_argument("directory")
   ap.add_argument("--out", default="../report_content/figures/presentation")
   ap.add_argument("--regress", action="store_true")
+  ap.add_argument("--round", default="r1", choices=tuple(ROUNDS))
   args = ap.parse_args()
   if args.regress:
     regress(Path(args.directory))
@@ -403,6 +423,10 @@ def main() -> None:
   import matplotlib.pyplot as plt
   plt.rcParams["font.family"] = "DejaVu Sans"
 
+  global ARMS, SHORT, CONTROLLERS, CONDITIONS, ROUND
+  ROUND = ROUNDS[args.round]
+  ARMS, SHORT, CONDITIONS = ROUND["arms"], ROUND["short"], ROUND["conditions"]
+  CONTROLLERS = ARMS[:3]
   out = Path(args.out)
   out.mkdir(parents=True, exist_ok=True)
   root = Path(args.directory)
@@ -410,8 +434,8 @@ def main() -> None:
   data = {c: load_condition(root / c) for c in CONDITIONS if (root / c).exists()}
   md = ["# Presentation evaluation: results tables", "",
         "Generated by `unitree_rl_mjlab/scripts/presentation_analysis.py` from "
-        "`unitree_rl_mjlab/eval_results/switch_follow/present/`. Pre-registration: "
-        "`coordination/results/switch-follow-preregistration.md`, Addendum 8.", ""]
+        f"`unitree_rl_mjlab/eval_results/switch_follow/{root.name}/`. Pre-registration: "
+        f"`coordination/results/switch-follow-preregistration.md`, Addendum {'9' if args.round == 'r2' else '8'}.", ""]
   summary = {}
   for cond, runs in data.items():
     seeds = complete_seeds(runs, keys)
@@ -442,15 +466,18 @@ def main() -> None:
       md += ["", "| median over successful trials | " + " | ".join(n for _, n in ARMS) + " |", "|---|" + "---|" * len(ARMS)]
       md += [f"| `{m}` | " + " | ".join(f"{v:.3f}" for v in vals.values()) + " |" for m, vals in q.items()]
       summary[cond].update(by_height=byh, outcomes=oc, failure_location=fl, quality=q)
-      if cond == "saro":
+      # Classifier timing is read where few trials fail early (tipping-only): under the strict rule a
+      # trial that falls before the up-flight never reaches it, which would count as "never switched".
+      if cond == ROUND["clf_cond"]:
         summary[cond]["classifier"] = fig_classifier(plt, runs, seeds, out, cond, out / "classifier_meta.json")
         md += ["", f"Classifier: {summary[cond]['classifier']}"]
     md.append("")
-  if "saro" in data and "saro_d20" in data:
-    seeds = sorted(set(complete_seeds(data["saro"], keys)) & set(complete_seeds(data["saro_d20"], keys)))
+  c0, c1 = ROUND["delay"]
+  if c0 in data and c1 in data:
+    seeds = sorted(set(complete_seeds(data[c0], keys)) & set(complete_seeds(data[c1], keys)))
     if seeds:
-      rows = fig_delay(plt, data["saro"], data["saro_d20"], seeds, np.random.default_rng(0), out)
-      md += ["## Latency: no delay vs 20 ms (tipping only)", "", "| arm | 0 ms | 20 ms |", "|---|---|---|"]
+      rows = fig_delay(plt, data[c0], data[c1], seeds, np.random.default_rng(0), out)
+      md += [f"## Latency: no delay vs 20 ms ({ROUND['delay_label']})", "", "| arm | 0 ms | 20 ms |", "|---|---|---|"]
       md += [f"| {n} | {a:.1f} | {b:.1f} |" for n, a, b in rows] + [""]
   if "saro" in data and "training" in data:
     seeds = sorted(set(complete_seeds(data["saro"], keys)) & set(complete_seeds(data["training"], keys)))

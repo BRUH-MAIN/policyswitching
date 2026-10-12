@@ -8,6 +8,9 @@
 #   MODE=main   SEED_BASE=1000 CLF=<clf.pt> sbatch --array=0-23 a100/switch_follow_present_slurm.sh
 #   MODE=genv3  SEED_BASE=1000 GENV3=<ckpt> sbatch --array=0-23 a100/switch_follow_present_slurm.sh
 #
+# Round 2 (Addendum 9) sets FLAT/ROUGH (bank R), ROUND_DIR=present_r2, CONDS="training saro training_d20",
+# ARMS, TAG, and for recording LABEL_LEAD=0.8 SCANS_DIR=clf_r2_scans; see coordination/log/2026-10-11-cluster.md.
+#
 # Riser height per layout: [0.09, 0.12, 0.15, 0.17][seed % 4] m, 10-step flights.
 # Conditions per layout: saro (primary), training (strict), saro at 20 ms actuator delay.
 # Outputs: unitree_rl_mjlab/eval_results/switch_follow/present/<cond>/L<seed>_<main|genv3>.json
@@ -31,20 +34,26 @@ REPO=/dist_home/d_palmani/c-08/policyswitching
 W="$REPO/unitree_rl_mjlab"
 PY=/dist_home/d_palmani/.venvs/policyswitching-pas/bin/python3
 RL="$W/logs/rsl_rl"
-FLAT="$RL/go2_spec_flat/2026-09-06_17-17-15/model_9999.pt"
-ROUGH="$RL/go2_spec_rough/2026-09-06_12-07-49/model_9999.pt"
-STAIRS="$RL/go2_spec_stairs_v8b/2026-10-09_12-49-32/model_1999.pt"
+# Bank (override FLAT / ROUGH / STAIRS for a different bank; defaults = Addendum 8's bank).
+FLAT="${FLAT:-$RL/go2_spec_flat/2026-09-06_17-17-15/model_9999.pt}"
+ROUGH="${ROUGH:-$RL/go2_spec_rough/2026-09-06_12-07-49/model_9999.pt}"
+STAIRS="${STAIRS:-$RL/go2_spec_stairs_v8b/2026-10-09_12-49-32/model_1999.pt}"
 GEN2="$RL/go2_generalist_v2/2026-10-04_15-51-21/model_9999.pt"
 BANK=(--extra-policy "flat=$FLAT" --extra-policy "rough=$ROUGH" --extra-policy "stairs=$STAIRS")
+# Round: output folder, conditions, arms, file tag (defaults = Addendum 8).
+ROUND_DIR="${ROUND_DIR:-present}"
+CONDS="${CONDS:-saro training saro_d20}"   # training* = strict falls; *_d20 = 20 ms actuator delay
+TAG="${TAG:-main}"
+LABEL_LEAD="${LABEL_LEAD:-0.3}"
+SCANS_DIR="${SCANS_DIR:-clf_v8b_scans}"
 
 HEIGHTS=(0.09 0.12 0.15 0.17)
 H="${HEIGHTS[$((SEED % 4))]}"
-OUT="$W/eval_results/switch_follow/present"
-LOGD="$W/logs/switch_follow/present"
-mkdir -p "$OUT"/{saro,training,saro_d20} "$LOGD"
+OUT="$W/eval_results/switch_follow/$ROUND_DIR"
+for c in $CONDS; do mkdir -p "$OUT/$c"; done
 cd "$W"
 export PYTHONPATH="$W" MUJOCO_GL=egl PYTHONUNBUFFERED=1
-echo "[INFO] mode=$MODE layout=$SEED riser=$H host=$(hostname)"
+echo "[INFO] mode=$MODE layout=$SEED riser=$H round=$ROUND_DIR conds='$CONDS' host=$(hostname)"
 nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader
 
 run() {  # run <cond> <json> <arms...> -- <extra args...>
@@ -54,8 +63,8 @@ run() {  # run <cond> <json> <arms...> -- <extra args...>
   [ "${1:-}" = "--" ] && shift
   extra=("$@")
   local term=saro delay=()
-  [ "$cond" = "training" ] && term=training
-  [ "$cond" = "saro_d20" ] && delay=(--action-delay 1)
+  case "$cond" in training*) term=training ;; esac
+  case "$cond" in *_d20) delay=(--action-delay 1) ;; esac
   "$PY" scripts/switch_follow.py --random-layout "$SEED" --seed "$SEED" --num-envs 256 --obs-noise --resume \
     --step-height "$H" --stair-steps 10 --terminations "$term" "${delay[@]}" \
     --arms "${arms[@]}" --ckpt-root "$RL" "${BANK[@]}" "${extra[@]}" \
@@ -68,21 +77,25 @@ case "$MODE" in
     ;;
   record)
     # Scans for the classifier, from layouts never used for testing (2000-2011).
-    mkdir -p "$W/logs/switch_follow/clf_v8b_scans"
-    run saro "$OUT/record_L$SEED.json" hard:0.8:label -- \
-      --record-scans "$W/logs/switch_follow/clf_v8b_scans/scans_L$SEED.pt"
+    lead=(); [ "$LABEL_LEAD" != "0.3" ] && lead=(--label-lead "$LABEL_LEAD")
+    mkdir -p "$W/logs/switch_follow/$SCANS_DIR"
+    run saro "$OUT/record_L$SEED.json" hard:0.8:label -- "${lead[@]}" \
+      --record-scans "$W/logs/switch_follow/$SCANS_DIR/scans_L$SEED.pt"
     ;;
   main)
-    : "${CLF:?set CLF to the retrained classifier weights}"
-    for cond in saro training saro_d20; do
-      run "$cond" "$OUT/$cond/L${SEED}_main.json" \
-        hard:0.8:label "clf:$CLF:0.1:5" soft:0.8:0.0:label fixed:stairs fixed:gen2 -- \
-        --extra-policy "gen2=$GEN2"
+    # ARMS (space-separated) overrides the arm list; default = Addendum 8's (needs CLF).
+    if [ -z "${ARMS:-}" ]; then
+      : "${CLF:?set CLF to the retrained classifier weights}"
+      ARMS="hard:0.8:label clf:$CLF:0.1:5 soft:0.8:0.0:label fixed:stairs fixed:gen2"
+    fi
+    read -r -a arm_list <<< "$ARMS"
+    for cond in $CONDS; do
+      run "$cond" "$OUT/$cond/L${SEED}_${TAG}.json" "${arm_list[@]}" -- --extra-policy "gen2=$GEN2"
     done
     ;;
   genv3)
     : "${GENV3:?set GENV3 to the GeneralistV3 checkpoint}"
-    for cond in saro training saro_d20; do
+    for cond in $CONDS; do
       run "$cond" "$OUT/$cond/L${SEED}_genv3.json" fixed:genv3 -- --extra-policy "genv3=$GENV3"
     done
     ;;

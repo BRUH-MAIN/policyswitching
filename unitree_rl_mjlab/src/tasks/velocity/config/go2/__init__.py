@@ -7,6 +7,8 @@ from .env_cfgs import (
   unitree_go2_generalist_env_cfg,
   unitree_go2_generalist_v2_env_cfg,
   unitree_go2_generalist_v3_env_cfg,
+  unitree_go2_spec_flat_v8b_env_cfg,
+  unitree_go2_spec_rough_v8b_env_cfg,
   unitree_go2_pas_env_cfg,
   unitree_go2_rough_env_cfg,
   unitree_go2_spec_flat_env_cfg,
@@ -129,3 +131,17 @@ register_mjlab_task(
   rl_cfg=unitree_go2_ppo_runner_cfg(),
   runner_cls=HfSyncVelocityOnPolicyRunner,
 )
+
+# Flat and rough specialists with the v8b recipe (GeneralistV3's config cut to one class), so
+# the switching bank and the matched generalist share one training recipe.
+for _task_id, _cfg_fn in (
+  ("Unitree-Go2-Spec-FlatV8b", unitree_go2_spec_flat_v8b_env_cfg),
+  ("Unitree-Go2-Spec-RoughV8b", unitree_go2_spec_rough_v8b_env_cfg),
+):
+  register_mjlab_task(
+    task_id=_task_id,
+    env_cfg=_cfg_fn(),
+    play_env_cfg=_cfg_fn(play=True),
+    rl_cfg=unitree_go2_ppo_runner_cfg(),
+    runner_cls=HfSyncVelocityOnPolicyRunner,
+  )

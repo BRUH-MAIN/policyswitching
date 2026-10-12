@@ -133,7 +133,7 @@ def run_arm(env, bank: PolicyBank, course, spec: str, args, device: str, recorde
     blind_fill = bank.normalizer_mean(fixed)[scan_sl]
   # What the footprint rule (hard switch 0.3 m ahead, label mapping) would have active:
   # the classifier's training target, and the reference its decisions are scored against.
-  footprint = Schedule(0.3, 0.3)
+  footprint = Schedule(args.label_lead, args.label_lead)
   class_to_policy = torch.tensor([names.index(c) for c in CLASSES], device=device)
 
   spans = segment_spans(course)
@@ -389,6 +389,9 @@ def main() -> None:
   ap.add_argument("--stair-steps", type=int, default=None,
                   help="Override the number of steps in every stair segment (0.3 m tread each); the "
                        "built-in courses have 5.")
+  ap.add_argument("--label-lead", type=float, default=0.3,
+                  help="Lead (m) of the classifier's target label and agreement reference before each "
+                       "non-flat segment (default 0.3: the footprint rule).")
   ap.add_argument("--resume", action="store_true")
   ap.add_argument("--json-out", required=True)
   args = ap.parse_args()
@@ -433,7 +436,7 @@ def main() -> None:
                 if k not in ("arms", "arm_set", "resume", "json_out", "record_scans", "record_every")
                 and not (k == "scan_terrain_only" and not v)  # absent when off: older files stay resumable
                 and not (k == "action_delay" and v == 0) and not (k == "motor_strength" and v == 1.0)
-                and not (k == "payload" and v == 0.0)}
+                and not (k == "payload" and v == 0.0) and not (k == "label_lead" and v == 0.3)}
   out_path = Path(args.json_out)
   result = dict(conditions=conditions, course=asdict(course), layout=layout, arms={})
   if out_path.exists():
