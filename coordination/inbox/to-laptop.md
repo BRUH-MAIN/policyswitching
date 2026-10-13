@@ -17,55 +17,6 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
-## 2026-10-13 -- record the three Round-2 demo clips for Wednesday's deck (needed by 2026-10-14)
-Pure inference, one environment, no training. It is the same recording as the cluster job 13088
-(`a100/present_videos_r2_slurm.sh`), which is stuck pending in the queue; run it here instead.
-Do not use the SLURM script itself: it has cluster paths.
-
-Everything it needs is on the private HF repo `RohanRamesh/go2-specialists` (needs `HF_TOKEN`, as
-for the specialists pull). Today the two terrain classifiers were added there (they were on the
-cluster disk only): `switch_follow/clf_r2_lead08.pt` (Round 2) and `switch_follow/clf_v8b.pt`
-(Round 1). Also every previously unpushed intermediate specialist checkpoint was backfilled, which
-you do not need for this.
-
-1. `git pull --rebase`, then download into the gitignored `eval_ckpts/` (conda env `unitree_rl_mjlab`):
-   ```
-   cd unitree_rl_mjlab
-   python - <<'EOF'
-   from huggingface_hub import hf_hub_download
-   for f in ["go2_spec_flat_v8b/model_1999.pt", "go2_spec_rough_v8b/model_1999.pt",
-             "go2_spec_stairs_v8b/model_1999.pt",
-             "go2_spec_flat/model_9999.pt", "go2_spec_rough/model_9999.pt",
-             "switch_follow/clf_r2_lead08.pt", "switch_follow/clf_v8b.pt"]:
-       print(hf_hub_download("RohanRamesh/go2-specialists", f, local_dir="eval_ckpts/hf"))
-   EOF
-   ```
-2. Record three clips (seed 3; `--hold` differs between the Round-2 and Round-1 clips, keep it as written):
-   ```
-   H=eval_ckpts/hf; OUT=../report_content/videos/presentation
-   export PYTHONPATH=$PWD MUJOCO_GL=egl
-   NEW="--flat $H/go2_spec_flat_v8b/model_1999.pt --rough $H/go2_spec_rough_v8b/model_1999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
-   OLD="--flat $H/go2_spec_flat/model_9999.pt --rough $H/go2_spec_rough/model_9999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
-   for h in 15 17; do
-     python scripts/record_switching_demo.py --step-height 0.$h --seed 3 $NEW \
-       --classifier $H/switch_follow/clf_r2_lead08.pt --hold 10 --out $OUT/r2_switching_classifier_h${h}_s3.mp4
-   done
-   python scripts/record_switching_demo.py --step-height 0.17 --seed 3 $OLD \
-     --classifier $H/switch_follow/clf_v8b.pt --hold 5 --out $OUT/r1_switching_classifier_h17_s3.mp4
-   ```
-   If `MUJOCO_GL=egl` fails on this machine, say so in the reply and try `MUJOCO_GL=osmesa`.
-   If the stairs v8b checkpoint is not at `go2_spec_stairs_v8b/model_1999.pt` on HF, list the repo and tell me.
-3. Watch each clip before committing. What to expect: the Round-2 clips (15 and 17 cm) should cross
-   the course with the onboard switch behaving like the oracle; the Round-1 clip at 17 cm is the one
-   expected to deadlock at the stairs. If a clip shows something else (it falls, never switches,
-   or the Round-1 one crosses), do not commit it silently: record what happened under Results below.
-4. `git add report_content/videos/presentation/*.mp4 && git commit && git push` (the videos are tracked
-   in git), then move this entry to "## Done" with the three filenames and a one-line description of
-   each clip's outcome.
-
-Not a training or SLURM task; it only reads checkpoints. The cluster job 13088 may still run later and
-write the same three filenames; the clips should be equivalent (same seed), so ignore the duplicate.
-
 ## 2026-09-20 -- go2_spec_gaps step 9999 ready
 Source: local (cluster disk only, not on HF -- see findings.md bug #4).
 Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
@@ -181,6 +132,82 @@ behind the same thing. `cluster.json`'s `go2_spec_gaps` placeholder is therefore
   simultaneously the RTX 6000 Ada compute node.
 
 ## Done
+
+## 2026-10-13 -- record the three Round-2 demo clips for Wednesday's deck (needed by 2026-10-14)
+Pure inference, one environment, no training. It is the same recording as the cluster job 13088
+(`a100/present_videos_r2_slurm.sh`), which is stuck pending in the queue; run it here instead.
+Do not use the SLURM script itself: it has cluster paths.
+
+Everything it needs is on the private HF repo `RohanRamesh/go2-specialists` (needs `HF_TOKEN`, as
+for the specialists pull). Today the two terrain classifiers were added there (they were on the
+cluster disk only): `switch_follow/clf_r2_lead08.pt` (Round 2) and `switch_follow/clf_v8b.pt`
+(Round 1). Also every previously unpushed intermediate specialist checkpoint was backfilled, which
+you do not need for this.
+
+1. `git pull --rebase`, then download into the gitignored `eval_ckpts/` (conda env `unitree_rl_mjlab`):
+   ```
+   cd unitree_rl_mjlab
+   python - <<'EOF'
+   from huggingface_hub import hf_hub_download
+   for f in ["go2_spec_flat_v8b/model_1999.pt", "go2_spec_rough_v8b/model_1999.pt",
+             "go2_spec_stairs_v8b/model_1999.pt",
+             "go2_spec_flat/model_9999.pt", "go2_spec_rough/model_9999.pt",
+             "switch_follow/clf_r2_lead08.pt", "switch_follow/clf_v8b.pt"]:
+       print(hf_hub_download("RohanRamesh/go2-specialists", f, local_dir="eval_ckpts/hf"))
+   EOF
+   ```
+2. Record three clips (seed 3; `--hold` differs between the Round-2 and Round-1 clips, keep it as written):
+   ```
+   H=eval_ckpts/hf; OUT=../report_content/videos/presentation
+   export PYTHONPATH=$PWD MUJOCO_GL=egl
+   NEW="--flat $H/go2_spec_flat_v8b/model_1999.pt --rough $H/go2_spec_rough_v8b/model_1999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
+   OLD="--flat $H/go2_spec_flat/model_9999.pt --rough $H/go2_spec_rough/model_9999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
+   for h in 15 17; do
+     python scripts/record_switching_demo.py --step-height 0.$h --seed 3 $NEW \
+       --classifier $H/switch_follow/clf_r2_lead08.pt --hold 10 --out $OUT/r2_switching_classifier_h${h}_s3.mp4
+   done
+   python scripts/record_switching_demo.py --step-height 0.17 --seed 3 $OLD \
+     --classifier $H/switch_follow/clf_v8b.pt --hold 5 --out $OUT/r1_switching_classifier_h17_s3.mp4
+   ```
+   If `MUJOCO_GL=egl` fails on this machine, say so in the reply and try `MUJOCO_GL=osmesa`.
+   If the stairs v8b checkpoint is not at `go2_spec_stairs_v8b/model_1999.pt` on HF, list the repo and tell me.
+3. Watch each clip before committing. What to expect: the Round-2 clips (15 and 17 cm) should cross
+   the course with the onboard switch behaving like the oracle; the Round-1 clip at 17 cm is the one
+   expected to deadlock at the stairs. If a clip shows something else (it falls, never switches,
+   or the Round-1 one crosses), do not commit it silently: record what happened under Results below.
+4. `git add report_content/videos/presentation/*.mp4 && git commit && git push` (the videos are tracked
+   in git), then move this entry to "## Done" with the three filenames and a one-line description of
+   each clip's outcome.
+
+Not a training or SLURM task; it only reads checkpoints. The cluster job 13088 may still run later and
+write the same three filenames; the clips should be equivalent (same seed), so ignore the duplicate.
+
+*Handled 2026-10-13 (laptop).* Recorded as written (EGL worked; checkpoints from HF into
+`unitree_rl_mjlab/eval_ckpts/hf/`, stairs v8b found at `go2_spec_stairs_v8b/model_1999.pt`), each
+clip checked frame by frame before committing. All three on the same seed-3 course (42.5 m: flat
+and rough stretches, a 10-step flight up and down, more flat and rough, a 5-step flight up and down):
+
+- `report_content/videos/presentation/r2_switching_classifier_h15_s3.mp4` -- Round 2, 15 cm: crosses
+  the whole course and reaches the leader in 70 s, 22 switches, stairs policy on for both flights;
+  classifier agrees with the footprint rule on 81.5% of steps.
+- `report_content/videos/presentation/r2_switching_classifier_h17_s3.mp4` -- Round 2, 17 cm: crosses
+  the whole course and reaches the leader in 70 s, 24 switches; agreement 79.5%.
+- `report_content/videos/presentation/r1_switching_classifier_h17_s3.mp4` -- Round 1, 17 cm: **falls**
+  at 58 s, 27 switches; agreement 79.8%.
+
+### Results -- the Round-1 clip is not quite the expected deadlock
+It does show the deadlock first: at the 10-step flight it walks up to the bottom step on the flat
+specialist, the classifier's stairs bar stays empty, and it stands there about 5 s (t = 19.5-24.5 s)
+before switching to stairs at 24.5 s and climbing the flight. At the 5-step flight it again arrives
+on the flat specialist, the classifier flips flat -> stairs -> flat -> stairs within 0.4 s
+(t = 57.4-57.8 s), and the robot collapses on the bottom step (episode ends at 58.0 s). So: a 5 s
+stall that resolves on the first flight, then a fall during a late, flickering switch on the
+second, rather than a standstill. Committed anyway since it shows the Round-1 failure (late
+switching at the stairs) more starkly; re-record with another seed if the deck needs a clean
+standstill.
+
+Also visible in both Round-2 clips: short flat <-> rough flickers on the rough patches (e.g. the
+flat specialist active on rough ground at t = 12.5 s); harmless here, the robot never stumbles.
 
 ## 2026-10-04 -- go2_spec_stairs_v2 step 9999 ready
 Source: hf (RohanRamesh/go2-specialists, go2_spec_stairs_v2/model_9999.pt).
