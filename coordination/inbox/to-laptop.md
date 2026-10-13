@@ -17,6 +17,55 @@ Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-11_.../model_9999.pt
 
 ## Open
 
+## 2026-10-13 -- record the three Round-2 demo clips for Wednesday's deck (needed by 2026-10-14)
+Pure inference, one environment, no training. It is the same recording as the cluster job 13088
+(`a100/present_videos_r2_slurm.sh`), which is stuck pending in the queue; run it here instead.
+Do not use the SLURM script itself: it has cluster paths.
+
+Everything it needs is on the private HF repo `RohanRamesh/go2-specialists` (needs `HF_TOKEN`, as
+for the specialists pull). Today the two terrain classifiers were added there (they were on the
+cluster disk only): `switch_follow/clf_r2_lead08.pt` (Round 2) and `switch_follow/clf_v8b.pt`
+(Round 1). Also every previously unpushed intermediate specialist checkpoint was backfilled, which
+you do not need for this.
+
+1. `git pull --rebase`, then download into the gitignored `eval_ckpts/` (conda env `unitree_rl_mjlab`):
+   ```
+   cd unitree_rl_mjlab
+   python - <<'EOF'
+   from huggingface_hub import hf_hub_download
+   for f in ["go2_spec_flat_v8b/model_1999.pt", "go2_spec_rough_v8b/model_1999.pt",
+             "go2_spec_stairs_v8b/model_1999.pt",
+             "go2_spec_flat/model_9999.pt", "go2_spec_rough/model_9999.pt",
+             "switch_follow/clf_r2_lead08.pt", "switch_follow/clf_v8b.pt"]:
+       print(hf_hub_download("RohanRamesh/go2-specialists", f, local_dir="eval_ckpts/hf"))
+   EOF
+   ```
+2. Record three clips (seed 3; `--hold` differs between the Round-2 and Round-1 clips, keep it as written):
+   ```
+   H=eval_ckpts/hf; OUT=../report_content/videos/presentation
+   export PYTHONPATH=$PWD MUJOCO_GL=egl
+   NEW="--flat $H/go2_spec_flat_v8b/model_1999.pt --rough $H/go2_spec_rough_v8b/model_1999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
+   OLD="--flat $H/go2_spec_flat/model_9999.pt --rough $H/go2_spec_rough/model_9999.pt --stairs $H/go2_spec_stairs_v8b/model_1999.pt"
+   for h in 15 17; do
+     python scripts/record_switching_demo.py --step-height 0.$h --seed 3 $NEW \
+       --classifier $H/switch_follow/clf_r2_lead08.pt --hold 10 --out $OUT/r2_switching_classifier_h${h}_s3.mp4
+   done
+   python scripts/record_switching_demo.py --step-height 0.17 --seed 3 $OLD \
+     --classifier $H/switch_follow/clf_v8b.pt --hold 5 --out $OUT/r1_switching_classifier_h17_s3.mp4
+   ```
+   If `MUJOCO_GL=egl` fails on this machine, say so in the reply and try `MUJOCO_GL=osmesa`.
+   If the stairs v8b checkpoint is not at `go2_spec_stairs_v8b/model_1999.pt` on HF, list the repo and tell me.
+3. Watch each clip before committing. What to expect: the Round-2 clips (15 and 17 cm) should cross
+   the course with the onboard switch behaving like the oracle; the Round-1 clip at 17 cm is the one
+   expected to deadlock at the stairs. If a clip shows something else (it falls, never switches,
+   or the Round-1 one crosses), do not commit it silently: record what happened under Results below.
+4. `git add report_content/videos/presentation/*.mp4 && git commit && git push` (the videos are tracked
+   in git), then move this entry to "## Done" with the three filenames and a one-line description of
+   each clip's outcome.
+
+Not a training or SLURM task; it only reads checkpoints. The cluster job 13088 may still run later and
+write the same three filenames; the clips should be equivalent (same seed), so ignore the duplicate.
+
 ## 2026-09-20 -- go2_spec_gaps step 9999 ready
 Source: local (cluster disk only, not on HF -- see findings.md bug #4).
 Path: unitree_rl_mjlab/logs/rsl_rl/go2_spec_gaps/2026-09-17_08-48-35/model_9999.pt (sha256 in coordination/status/cluster.json).
